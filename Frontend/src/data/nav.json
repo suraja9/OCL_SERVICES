@@ -1,0 +1,70 @@
+{
+  "logo": {
+    "text": "OCL Services",
+    "tagline": ""
+  },
+  "navigation": [
+    {
+      "label": "Home",
+      "href": "/",
+      "type": "link"
+    },
+    {
+      "label": "Company",
+      "type": "dropdown",
+      "items": [
+        { "label": "About Us", "href": "/about" },
+        { "label": "Our Journey", "href": "/journey" },
+        { "label": "Vision & Mission", "href": "/vision" },
+        { "label": "Our Clients", "href": "/clients" }
+      ]
+    },
+    {
+      "label": "Accounts",
+      "type": "dropdown",
+      "items": [
+        { "label": "Business Info", "href": "/business-info" },
+        { "label": "Schedule Pickup", "href": "/schedule-pickup" },
+        { "label": "View Bills", "href": "/bills" },
+        { "label": "Apply Credit A/c.", "href": "/credit-account" },
+        { "label": "Tracking", "href": "/my-shipments" }
+      ]
+    },
+    {
+      "label": "Services",
+      "type": "dropdown",
+      "items": [
+        { "label": "Courier", "href": "/services/courier" },
+        { "label": "Logistics", "href": "/services/logistics" },
+        { "label": "Shipping Rates", "href": "/rates" }
+      ]
+    },
+    {
+      "label": "Resources",
+      "type": "dropdown",
+      "items": [
+        { "label": "Banned Items", "href": "/restricted" }
+      ]
+    },
+    {
+      "label": "Support",
+      "type": "dropdown",
+      "items": [
+        { "label": "Contact OCL", "href": "/contact" }
+      ]
+    },
+    {
+      "label": "Login",
+      "type": "dropdown",
+      "items": [
+        { "label": "Corporate", "href": "/corporate" },
+        { "label": "Medicine", "href": "/medicine" }
+      ]
+    },
+    {
+      "label": "Ship Now",
+      "href": "/user",
+      "type": "cta"
+    }
+  ]
+}
