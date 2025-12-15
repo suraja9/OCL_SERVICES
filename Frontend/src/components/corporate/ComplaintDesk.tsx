@@ -625,7 +625,7 @@ const ComplaintDesk: React.FC<ComplaintDeskProps> = ({ isDarkMode = false }) => 
             <p className={`text-xs font-medium ${isDarkMode ? 'text-slate-300' : 'text-gray-600'}`}>
               Tickets will be associated with <span className={isDarkMode ? 'text-white' : 'text-gray-900'}>
                 {corporateInfo.companyName}
-              </span>.
+              </span>
             </p>
           )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
