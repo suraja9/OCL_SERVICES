@@ -444,10 +444,10 @@ const AdminDashboard = () => {
                 ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md'
                 : 'text-gray-700 hover:bg-gray-50'
                 }`}
-              title={isSidebarCollapsed ? "Undelivered" : ""}
+              title={isSidebarCollapsed ? "Not Delivered" : ""}
             >
               <TrendingDown className="h-5 w-5" />
-              {!isSidebarCollapsed && <span className="font-medium text-sm">Undelivered</span>}
+              {!isSidebarCollapsed && <span className="font-medium text-sm">Not Delivered</span>}
             </button>
 
             <button

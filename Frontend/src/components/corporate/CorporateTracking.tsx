@@ -586,21 +586,26 @@ const CorporateTracking: React.FC<CorporateTrackingProps> = ({ isDarkMode }) => 
     }
 
     const activeDetail = getStepDetails(activeStepKey);
-    const metadataItems = [
+    // Route, Service Type, Package Count - shown in 3 columns
+    const topRowItems = [
       {
-        label: "Consignment",
-        value: trackingSummary.metadata.consignmentNumber || "N/A",
+        label: "Route",
+        value: trackingSummary.metadata.routeSummary || "Not available",
       },
       { label: "Service Type", value: trackingSummary.metadata.serviceType || "Not available" },
       {
-        label: "Packages",
+        label: "Package Count",
         value: trackingSummary.metadata.packageCount
           ? `${trackingSummary.metadata.packageCount}`
           : "Not available",
       },
+    ];
+    
+    // Other metadata items
+    const metadataItems = [
       {
-        label: "Chargeable Weight",
-        value: trackingSummary.metadata.totalWeight ? `${trackingSummary.metadata.totalWeight} kg` : "Not available",
+        label: "Consignment",
+        value: trackingSummary.metadata.consignmentNumber || "N/A",
       },
       {
         label: "Estimated Delivery",
@@ -1120,6 +1125,43 @@ const CorporateTracking: React.FC<CorporateTrackingProps> = ({ isDarkMode }) => 
               </div>
             </div>
           )}
+          {/* Route, Service Type, Package Count in 3 columns */}
+          <div
+            className={cn(
+              "grid mb-3",
+              isEmbedded ? "gap-1.5 grid-cols-3" : "gap-3 grid-cols-3"
+            )}
+          >
+            {topRowItems.map((item, index) => (
+              <div 
+                key={item.label} 
+                className={cn(
+                  "flex items-center gap-2",
+                  index === 0 && "justify-start", // Left align for Route
+                  index === 1 && "justify-center", // Center align for Service Type
+                  index === 2 && "justify-center" // Center align for Package Count
+                )}
+              >
+                <span
+                  className={cn(
+                    "text-[10px] uppercase tracking-wide whitespace-nowrap",
+                    isDarkMode ? "text-slate-400" : "text-slate-500"
+                  )}
+                >
+                  {item.label}:
+                </span>
+                <span
+                  className={cn(
+                    "text-xs font-semibold",
+                    isDarkMode ? "text-white" : "text-slate-900"
+                  )}
+                >
+                  {item.value}
+                </span>
+              </div>
+            ))}
+          </div>
+          {/* Other metadata items */}
           <div
             className={cn(
               "grid",

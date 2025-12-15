@@ -615,40 +615,38 @@ const MyShipments = () => {
 
                 {/* Shipment Details Section */}
                 <div className="text-sm font-semibold mb-3" style={{ color: '#1B1B1B' }}>Shipment Details</div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Route, Service Type, Package Count in 3 columns */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                   {trackingData.trackingSummary.metadata.routeSummary && (
-                    <div>
+                    <div className="text-left">
                       <div className="text-xs text-gray-600 mb-0.5">Route</div>
                       <div className="text-sm font-medium" style={{ color: '#1B1B1B' }}>{trackingData.trackingSummary.metadata.routeSummary}</div>
                     </div>
                   )}
                   {trackingData.trackingSummary.metadata.serviceType && (
-                    <div>
+                    <div className="text-center">
                       <div className="text-xs text-gray-600 mb-0.5">Service Type</div>
                       <div className="text-sm font-medium" style={{ color: '#1B1B1B' }}>{trackingData.trackingSummary.metadata.serviceType}</div>
                     </div>
                   )}
                   {trackingData.trackingSummary.metadata.packageCount && (
-                    <div>
+                    <div className="text-center">
                       <div className="text-xs text-gray-600 mb-0.5">Package Count</div>
-                      <div className="text-sm font-medium" style={{ color: '#1B1B1B' }}>{trackingData.trackingSummary.metadata.packageCount} {trackingData.trackingSummary.metadata.packageCount === 1 ? 'package' : 'packages'}</div>
+                      <div className="text-sm font-medium" style={{ color: '#1B1B1B' }}>{trackingData.trackingSummary.metadata.packageCount}</div>
                     </div>
                   )}
-                  {trackingData.trackingSummary.metadata.totalWeight && (
-                    <div>
-                      <div className="text-xs text-gray-600 mb-0.5">Total Weight</div>
-                      <div className="text-sm font-medium" style={{ color: '#1B1B1B' }}>{trackingData.trackingSummary.metadata.totalWeight} kg</div>
-                    </div>
-                  )}
-                  {trackingData.trackingSummary.metadata.estimatedDelivery && (
+                </div>
+                {/* Other details in 2 column layout */}
+                {trackingData.trackingSummary.metadata.estimatedDelivery && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div>
                       <div className="text-xs text-gray-600 mb-0.5">Estimated Delivery</div>
                       <div className="text-sm font-medium" style={{ color: '#1B1B1B' }}>
                         {new Date(trackingData.trackingSummary.metadata.estimatedDelivery).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' })}
                       </div>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </motion.div>
             );
           })()}

@@ -52,6 +52,11 @@ interface UndeliveredTracking {
       reason?: string;
       courierBoyName?: string;
       courierBoyPhone?: string;
+      location?: {
+        latitude?: number;
+        longitude?: number;
+        address?: string;
+      };
     }>;
     count?: number;
   };
@@ -102,18 +107,18 @@ const Undelivered: React.FC = () => {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch undelivered consignments (status ${response.status})`);
+        throw new Error(`Failed to fetch not delivered consignments (status ${response.status})`);
       }
 
       const result = await response.json();
       const records: UndeliveredTracking[] = result.data || [];
       setData(records);
     } catch (err) {
-      console.error('Error fetching undelivered consignments:', err);
-      setError('Failed to load undelivered consignments.');
+      console.error('Error fetching not delivered consignments:', err);
+      setError('Failed to load not delivered consignments.');
       toast({
         title: 'Error',
-        description: 'Failed to load undelivered consignments. Please try again.',
+        description: 'Failed to load not delivered consignments. Please try again.',
         variant: 'destructive'
       });
     } finally {
@@ -187,10 +192,10 @@ const Undelivered: React.FC = () => {
         <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Undelivered Consignments</h1>
+              <h1 className="text-xl font-bold text-gray-900">Not Delivered Consignments</h1>
               <p className="mt-1 text-xs text-gray-600">
                 Showing consignments from the <span className="font-semibold">'trackings'</span>{' '}
-                collection where <code>currentStatus = &quot;undelivered&quot;</code>.
+                collection where <code>currentStatus = &quot;undelivered&quot;</code> (Not delivered).
               </p>
             </div>
             <Button
@@ -260,7 +265,7 @@ const Undelivered: React.FC = () => {
             {loading && (
               <TableRow>
                 <TableCell colSpan={6} className="py-6 text-center text-sm text-gray-500">
-                  Loading undelivered consignments...
+                  Loading not delivered consignments...
                 </TableCell>
               </TableRow>
             )}
@@ -268,7 +273,7 @@ const Undelivered: React.FC = () => {
             {!loading && filteredData.length === 0 && (
               <TableRow>
                 <TableCell colSpan={6} className="py-6 text-center text-sm text-gray-500">
-                  No undelivered consignments found.
+                  No not delivered consignments found.
                 </TableCell>
               </TableRow>
             )}
@@ -347,6 +352,9 @@ const Undelivered: React.FC = () => {
                                   <div className="text-[11px] text-gray-500">
                                     {attempt.at ? formatDate(attempt.at) : '-'}
                                   </div>
+                                  <div className="text-[11px] text-gray-500">
+                                    {attempt.location?.address || '-'}
+                                  </div>
                                 </div>
                               ))}
                               <button
@@ -366,6 +374,10 @@ const Undelivered: React.FC = () => {
                                 {unreachableAttempts[unreachableAttempts.length - 1]?.at
                                   ? formatDate(unreachableAttempts[unreachableAttempts.length - 1].at)
                                   : '-'}
+                              </div>
+                              <div className="text-[11px] text-gray-500">
+                                {unreachableAttempts[unreachableAttempts.length - 1]?.location?.address ||
+                                  '-'}
                               </div>
                               {unreachableAttempts.length > 1 && (
                                 <button
