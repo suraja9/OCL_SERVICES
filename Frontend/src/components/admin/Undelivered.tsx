@@ -397,7 +397,7 @@ const Undelivered: React.FC = () => {
                           size="sm"
                           className="h-7 px-3 text-xs"
                         >
-                          Reverse
+                          Reserve
                         </Button>
                       </div>
                     </TableCell>

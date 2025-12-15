@@ -30,6 +30,8 @@ const STEP_TITLE_MAP = TRACKING_STEPS.reduce((acc, step) => {
 
 const deriveStepKeyFromStatus = (status = '') => {
   const normalized = status?.toString().toLowerCase() || '';
+  // Undelivered status -> treat as final step (same position as delivered)
+  if (['undelivered'].includes(normalized)) return 'delivered';
   // Delivered status -> delivered step
   if (['delivered'].includes(normalized)) return 'delivered';
   // OFP status -> out for delivery step
@@ -667,6 +669,9 @@ router.get('/:consignmentNumber', async (req, res) => {
     const ofdEvent = getLatestEntry(tracking.OFD);
     const courierAssignment = getLatestEntry(tracking.courierboy);
     const intransitData = tracking.intransit; // Direct intransit field from tracking document
+    const unreachableData = tracking.unreachable || {};
+    const unreachableAttempts = Array.isArray(unreachableData.attempts) ? unreachableData.attempts : [];
+    const lastUnreachableAttempt = unreachableAttempts.length > 0 ? unreachableAttempts[unreachableAttempts.length - 1] : null;
     
     // Handle delivered - use only deliveredAt field (actual delivery time)
     let deliveredTimestamp = null;
@@ -759,6 +764,15 @@ router.get('/:consignmentNumber', async (req, res) => {
       // If currentStatus is not "delivered", don't show delivered events
       deliveredTimestamp = null;
     }
+
+    // Undelivered timestamp (for steps & movement history when status is undelivered)
+    let undeliveredTimestamp = null;
+    if (rawStatus.toLowerCase() === 'undelivered') {
+      undeliveredTimestamp =
+        tracking.delivered?.lastUnreachableAttempt
+          ? toISO(tracking.delivered.lastUnreachableAttempt)
+          : (lastUnreachableAttempt?.at ? toISO(lastUnreachableAttempt.at) : null);
+    }
     
     // Build movement history - only include events that are actually confirmed
     // Order: booked → picked → received → in_transit → out_for_delivery → delivered
@@ -794,9 +808,11 @@ router.get('/:consignmentNumber', async (req, res) => {
       pushMovementEvent('out_for_delivery', 'Out for delivery', ofdTimestamp, destinationLabel);
     }
     
-    // 6. Delivered - last
+    // 6. Delivered / Not delivered - last
     if (deliveredTimestamp && rawStatus.toLowerCase() === 'delivered') {
       pushMovementEvent('delivered', 'Delivered', deliveredTimestamp, destinationLabel);
+    } else if (undeliveredTimestamp && rawStatus.toLowerCase() === 'undelivered') {
+      pushMovementEvent('not_delivered', 'Not delivered', undeliveredTimestamp, destinationLabel);
     }
     
     // Calculate movement history stats for use in step fields
@@ -875,26 +891,64 @@ router.get('/:consignmentNumber', async (req, res) => {
           ].filter(Boolean);
           break;
         case 'delivered':
-          // Only use delivered timestamp if currentStatus is actually "delivered"
-          // This prevents showing delivered data when currentStatus says something else
-          if (rawStatus.toLowerCase() === 'delivered') {
-            timestamp = deliveredTimestamp;
-            completed = !!deliveredTimestamp;
-            description = deliveredTimestamp ? 'Shipment delivered successfully.' : 'Awaiting delivery confirmation.';
-            const deliveredHistoryMeta = combinedHistory.find(entry => entry.status === 'delivered')?.meta || {};
-            fields = [
-              deliveredTimestamp ? { label: 'Delivered At', value: deliveredTimestamp, format: 'datetime' } : null,
-              destinationData?.name || destinationData?.companyName ? { label: 'Received By', value: destinationData.name || destinationData.companyName } : null,
-              destinationLabel ? { label: 'Delivery Location', value: destinationLabel } : null,
-              invoiceData?.finalPrice && paymentData?.paymentType === 'TP' ? { label: 'Payment Collected', value: `₹${invoiceData.finalPrice}` } : null
-            ].filter(Boolean);
-          } else {
-            // If currentStatus is not "delivered", don't show delivered data
-            timestamp = null;
-            completed = false;
-            description = 'Awaiting delivery confirmation.';
-            fields = [];
-          }
+        // Final step: handle both delivered and undelivered states
+        if (rawStatus.toLowerCase() === 'delivered') {
+          // Delivered flow
+          timestamp = deliveredTimestamp;
+          completed = !!deliveredTimestamp;
+          description = deliveredTimestamp ? 'Shipment delivered successfully.' : 'Awaiting delivery confirmation.';
+          const deliveredHistoryMeta = combinedHistory.find(entry => entry.status === 'delivered')?.meta || {};
+          fields = [
+            deliveredTimestamp ? { label: 'Delivered At', value: deliveredTimestamp, format: 'datetime' } : null,
+            destinationData?.name || destinationData?.companyName ? { label: 'Received By', value: destinationData.name || destinationData.companyName } : null,
+            destinationLabel ? { label: 'Delivery Location', value: destinationLabel } : null,
+            invoiceData?.finalPrice && paymentData?.paymentType === 'TP' ? { label: 'Payment Collected', value: `₹${invoiceData.finalPrice}` } : null
+          ].filter(Boolean);
+        } else if (rawStatus.toLowerCase() === 'undelivered') {
+          // Undelivered flow – show unreachable attempt details
+          timestamp = undeliveredTimestamp;
+          completed = true; // Final state
+          description = 'Shipment could not be delivered after multiple attempts.';
+
+          const lastReason = lastUnreachableAttempt?.reason || '';
+          const lastLocationObj = lastUnreachableAttempt?.location || {};
+          const lastLocation =
+            lastLocationObj.address ||
+            (lastLocationObj.latitude && lastLocationObj.longitude
+              ? `${lastLocationObj.latitude}, ${lastLocationObj.longitude}`
+              : null);
+
+          fields = [
+            undeliveredTimestamp
+              ? { label: 'Undelivered At', value: undeliveredTimestamp, format: 'datetime' }
+              : null,
+            unreachableData.count
+              ? { label: 'Total Attempts', value: unreachableData.count.toString() }
+              : (unreachableAttempts.length
+                  ? { label: 'Total Attempts', value: unreachableAttempts.length.toString() }
+                  : null),
+            lastReason
+              ? { label: 'Reason for Delivery Failure', value: lastReason }
+              : null,
+            lastLocation
+              ? { label: 'Last Attempt Location', value: lastLocation }
+              : null,
+            lastUnreachableAttempt?.courierBoyName
+              ? { label: 'Delivery Agent', value: lastUnreachableAttempt.courierBoyName }
+              : (courierAssignment?.courierBoyName
+                  ? { label: 'Delivery Agent', value: courierAssignment.courierBoyName }
+                  : null),
+            destinationLabel
+              ? { label: 'Delivery Location', value: destinationLabel }
+              : null
+          ].filter(Boolean);
+        } else {
+          // Other future states – keep generic
+          timestamp = null;
+          completed = false;
+          description = 'Awaiting delivery confirmation.';
+          fields = [];
+        }
           break;
       }
       
@@ -957,7 +1011,9 @@ router.get('/:consignmentNumber', async (req, res) => {
         paymentMethod: paymentData?.paymentType === 'TP' ? 'To Pay (COD)' : 'Prepaid (Corporate Credit)',
         routeSummary,
         bookingDate: toISO(bookingTimestamp),
-        statusLabel: STEP_TITLE_MAP[currentStepKey] || 'Booked',
+        statusLabel: rawStatus.toLowerCase() === 'undelivered'
+          ? 'Not delivered'
+          : (STEP_TITLE_MAP[currentStepKey] || 'Booked'),
         currentStepKey,
         estimatedDelivery: toISO(shipmentData?.estimatedDeliveryDate || invoiceData?.estimatedDeliveryDate),
         lastUpdated: toISO(tracking.updatedAt) || toISO(tracking.createdAt)
@@ -1103,6 +1159,9 @@ router.get('/:consignmentNumber/movement-history', async (req, res) => {
     const assignedEvent = getLatestEntry(tracking.assigned);
     const ofdEvent = getLatestEntry(tracking.OFD);
     const intransitData = tracking.intransit; // Direct intransit field from tracking document
+    const unreachableData = tracking.unreachable || {};
+    const unreachableAttempts = Array.isArray(unreachableData.attempts) ? unreachableData.attempts : [];
+    const lastUnreachableAttempt = unreachableAttempts.length > 0 ? unreachableAttempts[unreachableAttempts.length - 1] : null;
     
     // Handle delivered - use only deliveredAt field (actual delivery time)
     let deliveredTimestamp = null;
@@ -1188,6 +1247,15 @@ router.get('/:consignmentNumber/movement-history', async (req, res) => {
     if (rawStatus.toLowerCase() !== 'delivered') {
       deliveredTimestamp = null;
     }
+
+    // Undelivered timestamp (for movement history when status is undelivered)
+    let undeliveredTimestamp = null;
+    if (rawStatus.toLowerCase() === 'undelivered') {
+      undeliveredTimestamp =
+        tracking.delivered?.lastUnreachableAttempt
+          ? toISO(tracking.delivered.lastUnreachableAttempt)
+          : (lastUnreachableAttempt?.at ? toISO(lastUnreachableAttempt.at) : null);
+    }
     
     // Build movement history - only include events that are actually confirmed
     // Order: booked → picked → received → in_transit → out_for_delivery → delivered
@@ -1223,9 +1291,11 @@ router.get('/:consignmentNumber/movement-history', async (req, res) => {
       pushMovementEvent('out_for_delivery', 'Out for delivery', ofdTimestamp, destinationLabel);
     }
     
-    // 6. Delivered - last
+    // 6. Delivered / Not delivered - last
     if (deliveredTimestamp && rawStatus.toLowerCase() === 'delivered') {
       pushMovementEvent('delivered', 'Delivered', deliveredTimestamp, destinationLabel);
+    } else if (undeliveredTimestamp && rawStatus.toLowerCase() === 'undelivered') {
+      pushMovementEvent('not_delivered', 'Not delivered', undeliveredTimestamp, destinationLabel);
     }
     
     // Filter duplicates and sort chronologically

@@ -39,6 +39,7 @@ const MyShipments = () => {
   const [selectedStepKey, setSelectedStepKey] = useState<string | null>(null);
   const trackingNumber = searchParams.get('number');
   const trackingType = searchParams.get('type');
+  const isUndelivered = trackingData?.status === 'undelivered';
   
   // Handle search button click
   const handleSearch = () => {
@@ -401,6 +402,11 @@ const MyShipments = () => {
                       // Only allow clicking steps that are at or before the current step
                       // Steps after current step should not be clickable
                       const canSelect = index <= currentStepIndex && (stepDetail?.timestamp || stepDetail?.fields?.length > 0);
+
+                      const stepLabel =
+                        isUndelivered && step.key === 'delivered'
+                          ? 'Not delivered'
+                          : (stepDetail?.title || step.title);
                       
                       return (
                         <div key={step.key} className="flex-1 flex flex-col items-center text-center relative">
@@ -440,7 +446,7 @@ const MyShipments = () => {
                                 ? '#FDA11E' 
                                 : (isDone ? '#1B1B1B' : '#333333'),
                               fontWeight: isActive ? 700 : 500
-                            }}>{stepDetail?.title || step.title}</div>
+                            }}>{stepLabel}</div>
                           </div>
                           
                           {/* Clean gap between title and progress bar */}
@@ -479,6 +485,11 @@ const MyShipments = () => {
             const activeStep = trackerSteps.find(s => s.key === selectedStepKey);
             
             if (!activeStepDetail) return null;
+
+            const activeStepTitle =
+              isUndelivered && selectedStepKey === 'delivered'
+                ? 'Not delivered'
+                : (activeStep?.title || 'Step Details');
             
             const formatFieldValue = (field: any) => {
               if (!field.value) return 'Not available';
@@ -512,7 +523,7 @@ const MyShipments = () => {
                       return <Icon className="h-5 w-5" style={{ color: '#FDA11E' }} />;
                     })()}
                     <h3 className="text-lg font-semibold" style={{ color: '#1B1B1B' }}>
-                      {activeStep?.title || 'Step Details'}
+                      {activeStepTitle}
                     </h3>
                   </div>
                   <button

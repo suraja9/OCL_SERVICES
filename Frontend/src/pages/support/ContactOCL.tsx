@@ -713,7 +713,7 @@ const ContactOCL = () => {
                         <img src={twitterIcon} alt="Twitter" className="w-8 h-8" />
                       </a>
                       <a
-                        href="https://facebook.com/oclcourier"
+                        href="https://www.facebook.com/oclservices"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
