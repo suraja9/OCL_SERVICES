@@ -27,63 +27,55 @@ const Journey = () => {
       year: "2001",
       title: "Foundation Year",
       tag: "Foundation",
-      description: "Started operations with a promise of reliability and trust in every shipment.",
+      description: "I started OCL Services with nothing but a second-hand pickup, one helper, and a stubborn belief that reliability wins over shortcuts. Logistics in Assam was messy back then, full of delays and excuses. OCL was built to be the opposite - if we promise a date, we deliver on that date.\n\nThe early days were tough, barely 8-10 shipments a week, but every one went out on time. By year end, we grew to nearly 50 shipments a week - not because we were big but because we were consistent.",
       icon: <CheckCircle2 className="h-6 w-6" />,
       metrics: [
         { label: "Day-zero reliability", value: "~50 shipments / week" }
       ]
     },
     {
-      id: "2008",
-      year: "2008",
-      title: "Regional Growth",
+      id: "2007",
+      year: "2007",
+      title: "Regional Expansion",
       tag: "Expansion",
-      description: "Scaled network across regions, expanding routes and service partnerships.",
+      description: "By 2007, we learned that customers don't stick because you are cheap - they stick because you are predictable. Construction companies started choosing us because we never said \"kal ho jayega.\"\n\nWe expanded into Tezpur, Jorhat, Silchar and more, convincing local truck owners to follow the OCL way: no overloads, no excuses, no last-minute changes. Slowly, we became a preferred logistics partner for engineering and construction firms.",
       icon: <MapPin className="h-6 w-6" />,
-      metrics: [
-        { label: "Regional network", value: "1,200+ lanes active" }
-      ]
+      metrics: []
     },
     {
-      id: "2013",
-      year: "2013",
-      title: "National Presence",
+      id: "2014",
+      year: "2014",
+      title: "Growth & Modernisation",
       tag: "Scale",
-      description: "Established presence in major cities across India with dedicated hubs.",
-      icon: <MapPin className="h-6 w-6" />
-    },
-    {
-      id: "2017",
-      year: "2017",
-      title: "Digital Era",
-      tag: "Innovation",
-      description: "Launched online logistics platform with real-time tracking and booking.",
-      icon: <Monitor className="h-6 w-6" />,
-      metrics: [
-        { label: "Real-time visibility", value: "90%+ tracked live" }
-      ]
+      description: "Until 2014, everything was manual - registers, diaries, calls. Growth exposed our weak points. Customers needed tracking; we needed transparency.\n\nWe digitized operations, created structured routing systems, improved documentation and started handling bigger industrial consignments - pipes, machinery parts, cable drums. This was the turning point where OCL shifted from a local transporter to a regional logistics system.",
+      icon: <Monitor className="h-6 w-6" />
     },
     {
       id: "2020",
       year: "2020",
-      title: "Multi-Modal",
-      tag: "Growth",
-      description: "Expanded to road + rail delivery for comprehensive coverage.",
+      title: "The COVID Collapse",
+      tag: "Resilience",
+      description: "2020 completely broke us. Vehicles stopped, payments froze, three major clients shut projects, and within 45 days OCL collapsed.\n\nIt hurt to watch 19 years of work disappear. But we didn't run. We didn't quit. We waited, regrouped, stayed honest with clients, and survived the storm.",
       icon: <Plane className="h-6 w-6" />,
-      metrics: [
-        { label: "Greener routes", value: "-24% CO2 per shipment" }
-      ]
+      metrics: []
     },
     {
-      id: "2024",
-      year: "2024",
-      title: "Specialized",
-      tag: "Expertise",
-      description: "Industrial logistics launched for heavy and complex loads.",
+      id: "2022",
+      year: "2022",
+      title: "Revival & Rebuild",
+      tag: "Rebirth",
+      description: "Two years after COVID, we restarted from absolute zero - no investors, no outside help, only grit.\n\nWe rebuilt routes, regained old clients by proving our consistency again, and earned new ones because people trust companies that survive bad times. This wasn't growth - it was rebirth.",
       icon: <Factory className="h-6 w-6" />,
-      metrics: [
-        { label: "Global partnerships", value: "3.5M+ shipments / year" }
-      ]
+      metrics: []
+    },
+    {
+      id: "2025",
+      year: "2025",
+      title: "Future Forward",
+      tag: "Innovation",
+      description: "Today, OCL Services is stronger than ever. We partner with major construction companies across Assam and the Northeast, moving consignments that actually build cities - heavy pipes, machinery parts, fragile components, cable drums and more.\n\nWe are expanding into smarter scheduling, better tracking and faster inter-city operations - not for marketing, but because our clients depend on reliability.\n\nAfter everything we've survived, one thing is clear: OCL is here for the long run.",
+      icon: <Factory className="h-6 w-6" />,
+      metrics: []
     }
   ];
 
@@ -134,20 +126,20 @@ const Journey = () => {
       <AtlasHero image={logisticsBgImg} imageAlt="OCL Logistics Operations" />
 
       {/* 2. HORIZONTAL TIMELINE */}
-      <section className="pt-12 md:pt-16 pb-4 md:pb-6 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-5 md:px-8">
+      <section className="pt-8 sm:pt-12 md:pt-16 pb-4 md:pb-6 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-8">
           <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center mb-12"
+            className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 items-center mb-8 sm:mb-12"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-10%" }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="text-lg text-gray-600">
+            <p className="text-base sm:text-lg text-gray-600">
               Key milestones that shaped our growth from a local courier to a nationwide logistics leader
             </p>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 text-right md:text-right">
-              Our Journey
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 text-center md:text-center">
+              <span className="text-[#FFA019]">Our</span> Journey
             </h2>
           </motion.div>
           <AtlasTimeline milestones={timelineMilestones} />

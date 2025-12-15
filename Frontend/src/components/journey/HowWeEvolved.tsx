@@ -26,11 +26,9 @@ export function HowWeEvolved({ cards, className }: HowWeEvolvedProps) {
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
           <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
-            How We Evolved
+            How <span className="text-[#FFA019]">We</span> Evolved
           </h2>
-          <p className="text-base text-gray-600 max-w-xl">
-            Every part of our business has been redesigned for resilience, visibility, and customer confidence.
-          </p>
+          
         </motion.div>
 
         {/* Cards Grid */}
@@ -56,7 +54,7 @@ export function HowWeEvolved({ cards, className }: HowWeEvolvedProps) {
             >
               {/* Corner Badge */}
               {card.id === "tech" || card.id === "sustainability" ? (
-                <div className="absolute top-0 right-0 w-0 h-0 border-l-[60px] border-l-transparent border-t-[60px] border-t-[#FF7A00] rounded-tr-lg" />
+                <div className="absolute top-0 right-0 w-0 h-0 border-l-[60px] border-l-transparent border-t-[60px] border-t-[#FFA019] rounded-tr-lg" />
               ) : (
                 <div className="absolute top-0 right-0 w-0 h-0 border-l-[60px] border-l-transparent border-t-[60px] border-t-black rounded-tr-lg" />
               )}
@@ -65,7 +63,7 @@ export function HowWeEvolved({ cards, className }: HowWeEvolvedProps) {
               <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-3 ${
                 card.id === "tech" || card.id === "sustainability" 
                   ? "bg-black" 
-                  : "bg-[#FF7A00]"
+                  : "bg-[#FFA019]"
               }`}>
                 <span className="text-white font-bold text-base">
                   {card.iconLetters}

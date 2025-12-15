@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
-import { LucideIcon } from "lucide-react";
+import { motion, AnimatePresence, useReducedMotion, useSpring, useTransform } from "framer-motion";
 
 export type AtlasMilestone = {
   id: string;
@@ -21,144 +20,309 @@ type AtlasTimelineProps = {
 export function AtlasTimeline({ milestones, className }: AtlasTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const prefersReducedMotion = useReducedMotion();
-  const [activeYear, setActiveYear] = useState<string | null>(null);
-  const [progress, setProgress] = useState(0);
-
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start center", "end center"]
-  });
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!containerRef.current) return;
-      const rect = containerRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const scrollPosition = windowHeight / 2;
-      const timelineTop = rect.top;
-      const timelineHeight = rect.height;
-      
-      const relativePosition = (scrollPosition - timelineTop) / timelineHeight;
-      const clampedProgress = Math.max(0, Math.min(1, relativePosition));
-      setProgress(clampedProgress);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const [activeYear, setActiveYear] = useState<string>(milestones[0]?.year || "");
+  const [shimmerPosition, setShimmerPosition] = useState(0);
 
   const years = Array.from(new Set(milestones.map(m => m.year))).sort();
 
+  // Shimmer animation
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    
+    const interval = setInterval(() => {
+      setShimmerPosition((prev) => (prev + 2) % 100);
+    }, 50);
+
+    return () => clearInterval(interval);
+  }, [prefersReducedMotion]);
+
+  const activeIndex = years.findIndex((year) => year === activeYear);
+  const progress = activeIndex >= 0 ? (activeIndex / (years.length - 1)) * 100 : 0;
+
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
-      {/* White Card Container */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-100 pt-4 pb-8 md:pt-6 md:pb-12 px-8 md:px-12">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      {/* Enhanced Background with Vignette and Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-gray-900 via-black to-black rounded-lg overflow-hidden">
+        {/* Noise Texture */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='4' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E")`,
+            backgroundSize: '200px 200px'
+          }}
+        />
+        {/* Vignette */}
+        <div 
+          className="absolute inset-0"
+          style={{
+            background: "radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%)"
+          }}
+        />
+      </div>
+
+      {/* Black Card Container - Only for Header and Timeline */}
+      <div className="relative bg-black/60 backdrop-blur-xl rounded-lg shadow-2xl pt-4 pb-6 sm:pt-6 sm:pb-8 md:pt-8 md:pb-10 px-4 sm:px-6 md:px-8 lg:px-12 mb-6 sm:mb-8">
+        {/* Header Section with Typography Upgrade */}
+        <motion.div 
+          className="mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             {/* Left Side */}
-            <div>
-              <p className="text-sm text-gray-600">
+            <motion.div
+              initial={{ opacity: 0, letterSpacing: "0.1em" }}
+              animate={{ opacity: 1, letterSpacing: "0em" }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <p className="text-xs sm:text-sm md:text-base text-gray-300 font-medium leading-relaxed">
                 A decade and a half of building a resilient, data-driven logistics backbone.
               </p>
-            </div>
+            </motion.div>
             
             {/* Right Side */}
-            <div className="flex items-center gap-2">
-              <div className="px-3 py-1.5 bg-black text-white text-xs font-semibold rounded-full">
+            <div className="flex items-center gap-3">
+              <motion.div 
+                className="px-4 py-2 backdrop-blur-md text-white text-xs font-semibold rounded-full border"
+                style={{
+                  backgroundColor: '#FFA019',
+                  borderColor: '#FFA019',
+                  boxShadow: 'rgba(0, 0, 0, 0.07) 0px 1px 1px, rgba(0, 0, 0, 0.07) 0px 2px 2px, rgba(0, 0, 0, 0.07) 0px 4px 4px, rgba(0, 0, 0, 0.07) 0px 8px 8px, rgba(0, 0, 0, 0.07) 0px 16px 16px',
+                }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
                 {milestones.length} key milestones
-              </div>
-              <span className="text-xs text-gray-600 font-semibold">
+              </motion.div>
+              <motion.span 
+                className="text-xs text-gray-400 font-semibold"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.4 }}
+              >
                 {years[0]} - {years[years.length - 1]}
-              </span>
+              </motion.span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Timeline Section */}
-        <div className="mb-12">
-
-          {/* Timeline Line with Markers */}
+        {/* Premium Timeline Section */}
+        <div className="relative py-6">
           <div className="relative">
-            {/* Background Line */}
-            <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-200 -translate-y-1/2" />
-            
-            {/* Progress Line */}
-            <motion.div
-              className="absolute top-1/2 left-0 h-1 bg-[#FF7A00] -translate-y-1/2"
-              style={{
-                width: prefersReducedMotion ? "100%" : `${progress * 100}%`,
-                transition: prefersReducedMotion ? "none" : "width 0.1s linear"
-              }}
-            />
+            {/* Glowing Neon Track with Gradient - Behind circles */}
+            <div className="absolute top-[45%] left-0 right-0 h-1.5 -translate-y-1/2 rounded-full overflow-hidden z-0">
+              {/* Base gradient track */}
+              <div 
+                className="absolute inset-0 rounded-full opacity-30"
+                style={{
+                  background: "linear-gradient(90deg, #FF7A00 0%, #FF9500 30%, #FFB84D 60%, #FFD700 100%)",
+                }}
+              />
+              
+              {/* Dynamic Progress Glow */}
+              <motion.div
+                className="absolute top-0 left-0 h-full rounded-full"
+                style={{
+                  background: "linear-gradient(90deg, #FF7A00 0%, #FF9500 30%, #FFB84D 60%, #FFD700 100%)",
+                  boxShadow: "0 0 20px rgba(255, 122, 0, 0.6), 0 0 40px rgba(255, 149, 0, 0.4), 0 0 60px rgba(255, 184, 77, 0.2)",
+                  filter: "blur(0.5px)"
+                }}
+                initial={false}
+                animate={{
+                  width: `${progress}%`,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 100,
+                  damping: 20,
+                  mass: 1
+                }}
+              >
+                {/* Shimmer Effect */}
+                {!prefersReducedMotion && (
+                  <motion.div
+                    className="absolute inset-0"
+                    style={{
+                      background: "linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%)",
+                      width: "30%",
+                    }}
+                    animate={{
+                      x: `${shimmerPosition * 3.33}%`,
+                    }}
+                    transition={{
+                      duration: 3,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
+                  />
+                )}
+              </motion.div>
+            </div>
 
-            {/* Year Markers */}
-            <div className="relative flex justify-between items-center">
+            {/* Year Markers Container */}
+            <div className="relative flex justify-between items-center w-full pb-2 year-markers-container" style={{ minHeight: '56px' }}>
+              {/* Year Markers with Glassmorphism - Above the line */}
+              <div className="flex justify-between items-center w-full gap-2 sm:gap-4 md:gap-6">
               {years.map((year, index) => {
-                const yearProgress = (index + 1) / years.length;
-                const isPassed = progress >= yearProgress - 0.1;
                 const isActive = activeYear === year;
 
                 return (
                   <motion.button
                     key={year}
-                    className="relative z-10 focus:outline-none"
-                    onClick={() => setActiveYear(isActive ? null : year)}
-                    whileHover={{ scale: 1.1 }}
+                    className="relative z-20 focus:outline-none group flex-shrink-0"
+                    onClick={() => setActiveYear(year)}
+                    initial={{ opacity: 0, y: 20, scale: 0.8 }}
+                    animate={{ 
+                      opacity: 1, 
+                      y: 0, 
+                      scale: 1 
+                    }}
+                    whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: index * 0.1, duration: 0.5 }}
+                    transition={{ 
+                      delay: index * 0.1, 
+                      type: "spring",
+                      stiffness: 200,
+                      damping: 15
+                    }}
                   >
-                    {/* Circular Marker */}
-                    <div
-                      className={`w-12 h-12 rounded-full border-4 flex items-center justify-center transition-colors ${
-                        isPassed
-                          ? "bg-[#FF7A00] border-white shadow-lg"
-                          : "bg-white border-gray-300"
+                    {/* Glassmorphism Orb - Fully covers the line behind it */}
+                    <motion.div
+                      className={`relative w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isActive 
+                          ? "backdrop-blur-xl bg-gradient-to-br from-[#FF7A00]/30 to-[#FF9500]/20 border-2 border-[#FF7A00]/60" 
+                          : "backdrop-blur-md bg-white/10 border-2 border-white/20"
                       }`}
+                      style={{
+                        boxShadow: isActive 
+                          ? "0 8px 32px rgba(255, 122, 0, 0.4), 0 0 0 1px rgba(255, 122, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2)"
+                          : "0 4px 16px rgba(0, 0, 0, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2)",
+                        zIndex: 20,
+                        position: 'relative',
+                        backgroundColor: isActive ? 'rgba(0, 0, 0, 0.3)' : 'rgba(0, 0, 0, 0.4)', // Solid background to cover line
+                      }}
+                      animate={{
+                        scale: isActive ? 1.15 : 1,
+                        opacity: isActive ? 1 : 0.7
+                      }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 300,
+                        damping: 20
+                      }}
                     >
-                      {isPassed && !prefersReducedMotion && (
+                      {/* Inner Glow */}
+                      {isActive && (
                         <motion.div
-                          className="absolute inset-0 rounded-full bg-[#FF7A00]"
+                          className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF7A00]/40 to-transparent"
+                          style={{ zIndex: 1 }}
                           animate={{
-                            scale: [1, 1.5, 1.5],
-                            opacity: [0.3, 0, 0]
+                            opacity: [0.4, 0.6, 0.4]
                           }}
                           transition={{
                             duration: 2,
                             repeat: Infinity,
-                            ease: "easeOut"
+                            ease: "easeInOut"
                           }}
                         />
                       )}
+
+                      {/* Reflection Highlight */}
+                      <div 
+                        className="absolute top-1 left-1 w-4 h-4 rounded-full bg-white/30 blur-sm"
+                        style={{ transform: "rotate(-45deg)", zIndex: 2 }}
+                      />
+
+                      {/* Pulse Glow Ring for Active */}
+                      {isActive && !prefersReducedMotion && (
+                        <>
+                          <motion.div
+                            className="absolute inset-0 rounded-full border-2 border-[#FF7A00]"
+                            style={{ zIndex: 0 }}
+                            animate={{
+                              scale: [1, 1.3, 1.3],
+                              opacity: [0.8, 0, 0]
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              ease: "easeOut"
+                            }}
+                          />
+                          <motion.div
+                            className="absolute inset-0 rounded-full border border-[#FFB84D]"
+                            style={{ zIndex: 0 }}
+                            animate={{
+                              scale: [1, 1.5, 1.5],
+                              opacity: [0.6, 0, 0]
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              delay: 0.3,
+                              ease: "easeOut"
+                            }}
+                          />
+                        </>
+                      )}
+
+                      {/* Year Text */}
                       <span
-                        className={`text-xs font-semibold ${
-                          isPassed ? "text-white" : "text-gray-400"
+                        className={`text-xs md:text-sm font-bold relative z-10 ${
+                          isActive ? "text-white drop-shadow-lg" : "text-gray-400"
                         }`}
+                        style={{ zIndex: 3 }}
                       >
                         {year}
                       </span>
-                    </div>
+                    </motion.div>
                   </motion.button>
                 );
               })}
+              </div>
+            </div>
             </div>
           </div>
         </div>
 
-        {/* Milestone Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {milestones.map((milestone, index) => (
-            <MilestoneCard
-              key={milestone.id}
-              milestone={milestone}
-              index={index}
-              isActive={activeYear === null || activeYear === milestone.year}
-            />
-          ))}
+      {/* Milestone Content - Full Width, Fixed Height with Padding */}
+      <div className="relative min-h-[300px] sm:h-[350px] md:h-[400px] w-full pb-1 md:pb-1 pt-0 -mt-4">
+        {/* Orange Triangle in Bottom Right Corner - Touching outer border */}
+        <div 
+          className="absolute bottom-0 right-0 z-10 hidden sm:block"
+          style={{
+            width: '80px',
+            height: '80px',
+            background: '#FFA019',
+            clipPath: 'polygon(0 100%, 100% 0, 100% 100%)',
+            borderBottomRightRadius: '12px',
+          }}
+        />
+        <div 
+          className="absolute bottom-0 right-0 z-10 sm:hidden"
+          style={{
+            width: '60px',
+            height: '60px',
+            background: '#FFA019',
+            clipPath: 'polygon(0 100%, 100% 0, 100% 100%)',
+            borderBottomRightRadius: '8px',
+          }}
+        />
+        
+        <div className="h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+          <AnimatePresence mode="wait">
+            {milestones
+              .filter((milestone) => milestone.year === activeYear)
+              .map((milestone) => (
+                <MilestoneCard
+                  key={`${milestone.id}-${activeYear}`}
+                  milestone={milestone}
+                  isActive={true}
+                />
+              ))}
+          </AnimatePresence>
         </div>
       </div>
     </div>
@@ -167,67 +331,107 @@ export function AtlasTimeline({ milestones, className }: AtlasTimelineProps) {
 
 function MilestoneCard({
   milestone,
-  index,
   isActive
 }: {
   milestone: AtlasMilestone;
-  index: number;
   isActive: boolean;
 }) {
   const prefersReducedMotion = useReducedMotion();
+  const [hoverOffset, setHoverOffset] = useState(0);
+
+  useEffect(() => {
+    if (prefersReducedMotion) return;
+    
+    const interval = setInterval(() => {
+      setHoverOffset((prev) => (prev === 0 ? -1 : 0));
+    }, 3000);
+
+    return () => clearInterval(interval);
+  }, [prefersReducedMotion]);
 
   return (
     <motion.div
-      className={`bg-white rounded-lg border border-gray-100 p-6 transition-all ${
-        isActive ? "opacity-100" : "opacity-60"
-      }`}
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: isActive ? 1 : 0.6, y: 0 }}
-      viewport={{ once: true, margin: "-10%" }}
-      transition={{
-        duration: 0.6,
-        delay: index * 0.1,
-        ease: [0.16, 1, 0.3, 1]
+      className="relative w-full h-full"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ 
+        opacity: 1, 
+        y: 0
       }}
-      whileHover={{ y: -4, borderColor: "#FF7A00", opacity: 1 }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{
+        type: "spring",
+        stiffness: 200,
+        damping: 25,
+        mass: 0.8
+      }}
     >
-      {milestone.icon && (
-        <div className="text-[#FF7A00] mb-4">
-          {milestone.icon}
-        </div>
-      )}
-      
-      <div className="flex items-center gap-2 mb-3">
-        <span
-          className={`px-2 py-1 text-xs font-semibold rounded ${
-            milestone.tagColor || "bg-[#FF7A00]/10 text-[#FF7A00]"
-          }`}
+      <div className="relative w-full h-full flex flex-col">
+        {/* Icon and Tag in One Row */}
+        <motion.div
+          className="flex items-center justify-between mb-3"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 25,
+            delay: 0.05
+          }}
         >
-          {milestone.tag}
-        </span>
-      </div>
-      
-      <h3 className="text-lg font-bold text-gray-900 mb-2">
-        {milestone.title}
-      </h3>
-      
-      <p className="text-sm text-gray-600 leading-relaxed mb-4">
-        {milestone.description}
-      </p>
-
-      {/* Metrics */}
-      {milestone.metrics && milestone.metrics.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-4">
-          {milestone.metrics.map((metric, idx) => (
-            <span
-              key={idx}
-              className="px-2 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded"
+          {milestone.icon && (
+            <motion.div
+              className="text-[#FF7A00]"
+              initial={{ opacity: 0, scale: 0.9, rotate: -5 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{
+                type: "spring",
+                stiffness: 400,
+                damping: 25,
+                delay: 0.1
+              }}
             >
-              {metric.label}: {metric.value}
-            </span>
-          ))}
-        </div>
-      )}
+              {milestone.icon}
+            </motion.div>
+          )}
+          
+          <span
+            className={`px-3 py-1.5 text-xs font-semibold rounded-full backdrop-blur-md border ${
+              milestone.tagColor || "bg-[#FF7A00]/20 text-[#FF7A00] border-[#FF7A00]/30"
+            }`}
+          >
+            {milestone.tag}
+          </span>
+        </motion.div>
+        
+        <motion.h3
+          className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white mb-2 leading-tight"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 25,
+            delay: 0.15
+          }}
+        >
+          {milestone.title}
+        </motion.h3>
+        
+        <motion.p
+          className="text-sm sm:text-base md:text-lg text-gray-300 leading-relaxed whitespace-pre-line flex-1 overflow-y-auto"
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 25,
+            delay: 0.2
+          }}
+        >
+          {milestone.description}
+        </motion.p>
+
+      </div>
     </motion.div>
   );
 }

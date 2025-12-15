@@ -77,6 +77,7 @@ import SalesForm from '@/components/admin/SalesForm';
 import MedicineBookingOverview from '@/components/admin/medicineBookingOverview';
 import CustomerBookingOverview from '@/components/admin/CustomerBookingOverview';
 import AllBookings from '@/components/admin/AllBookings';
+import Undelivered from '@/components/admin/Undelivered';
 
 interface AdminInfo {
   id: string;
@@ -435,6 +436,18 @@ const AdminDashboard = () => {
             >
               <Zap className="h-5 w-5" />
               {!isSidebarCollapsed && <span className="font-medium text-sm">Force Delivery</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('undelivered')}
+              className={`w-full ${isSidebarCollapsed ? 'flex justify-center p-2' : 'text-left flex items-center gap-3 px-3 py-2'} rounded-xl transition ${activeTab === 'undelivered'
+                ? 'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-md'
+                : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              title={isSidebarCollapsed ? "Undelivered" : ""}
+            >
+              <TrendingDown className="h-5 w-5" />
+              {!isSidebarCollapsed && <span className="font-medium text-sm">Undelivered</span>}
             </button>
 
             <button
@@ -1449,6 +1462,7 @@ const AdminDashboard = () => {
           {activeTab === 'assignCourierBoy' && <AssignCourierBoy />}
           {activeTab === 'delivery' && <Delivery />}
           {activeTab === 'forceDelivery' && <ForceDelivery />}
+          {activeTab === 'undelivered' && <Undelivered />}
           {activeTab === 'customerComplain' && <CustomerComplain />}
           {activeTab === 'coldCalling' && <ColdCalling />}
           {activeTab === 'payments' && <PaymentStatus />}

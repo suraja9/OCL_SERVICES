@@ -17,26 +17,16 @@ export function FutureVision({ tags, className }: FutureVisionProps) {
           viewport={{ once: true, margin: "-10%" }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <motion.div
-            className="inline-block px-3 py-1 bg-[#FF7A00]/10 text-[#FF7A00] text-xs font-semibold rounded-full mb-6"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-          >
-            Looking ahead
-          </motion.div>
-
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            A more intelligent, predictable logistics future.
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4 text-center">
+            A more intelligent, predictable <span className="text-[#FFA019]">logistics</span> future.
           </h2>
 
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl">
+          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto text-center">
             We're investing in AI-powered tracking, predictive analytics, and deeper integrations to make logistics more transparent and efficient for everyone.
           </p>
 
           {/* Tag Chips */}
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3 justify-center">
             {tags.map((tag, index) => (
               <motion.span
                 key={tag}
