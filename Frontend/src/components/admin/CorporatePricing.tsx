@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DollarSign, Save, Calculator, Mail, User, Building, Send } from 'lucide-react';
+import { DollarSign, Save, Calculator, Mail, User, Building, Send, Package, TrendingUp, FileText, Plane, Truck, Train } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -520,308 +520,335 @@ const CorporatePricing = () => {
   };
 
   return (
-    <div className="space-y-8">
-
-      {/* Pricing Name Input */}
-      <Card className="border border-gray-200 shadow-sm">
-        <CardHeader className="bg-blue-50 border-b border-gray-200 py-3">
-          <CardTitle className="text-lg font-semibold text-gray-800">Pricing Information</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="pricingName" className="text-sm font-medium">
-                Pricing List Name <span className="text-red-500">*</span>
-              </Label>
-              <Input
-                id="pricingName"
-                value={pricingName}
-                onChange={(e) => setPricingName(e.target.value)}
-                placeholder="e.g., Premium Corporate Rates 2024, Standard Pricing Plan, etc."
-                className="w-full"
-                required
-              />
-              <p className="text-xs text-gray-500">
-                Enter a descriptive name for this pricing list. This will help identify it in the management system.
-              </p>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-7xl mx-auto space-y-4">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-md">
+                <DollarSign className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Corporate Pricing</h1>
+                <p className="text-sm text-gray-600">Create and manage corporate pricing plans</p>
+              </div>
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="fuelChargePercentage" className="text-sm font-medium">
-                Fuel Charge Percentage <span className="text-red-500">*</span>
-              </Label>
-              <div className="relative">
+          </div>
+        </div>
+
+        {/* Pricing Name and Fuel Charge Input */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="bg-blue-50 border-b border-gray-200 py-3">
+            <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-blue-600" />
+              Pricing Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="pricingName" className="text-sm font-medium text-gray-700">
+                  Pricing List Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
-                  id="fuelChargePercentage"
-                  type="number"
-                  value={fuelChargePercentage}
-                  onChange={(e) => setFuelChargePercentage(e.target.value)}
-                  placeholder="15"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  className="w-full pr-8"
+                  id="pricingName"
+                  value={pricingName}
+                  onChange={(e) => setPricingName(e.target.value)}
+                  placeholder="e.g., Premium Corporate Rates 2024, Standard Pricing Plan, etc."
+                  className="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   required
                 />
-                <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
               </div>
-              <p className="text-xs text-gray-500">
-                Enter the fuel charge percentage that will be applied to freight charges in settlement invoices.
-              </p>
+              
+              <div className="space-y-2">
+                <Label htmlFor="fuelChargePercentage" className="text-sm font-medium text-gray-700">
+                  Fuel Charge % <span className="text-red-500">*</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="fuelChargePercentage"
+                    type="number"
+                    value={fuelChargePercentage}
+                    onChange={(e) => setFuelChargePercentage(e.target.value)}
+                    placeholder="15"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    className="w-full pr-8 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                  <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm">%</span>
+                </div>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
 
-      {/* Email Approval Section */}
-      <Card className="border border-gray-200 shadow-sm">
-        <CardHeader className="bg-green-50 border-b border-gray-200 py-3">
-          <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-            <Mail className="h-5 w-5 text-green-600" />
-            Email Approval (Optional)
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="sendEmailApproval"
-                checked={sendEmailApproval}
-                onCheckedChange={(checked) => setSendEmailApproval(checked as boolean)}
-              />
-              <Label htmlFor="sendEmailApproval" className="text-sm font-medium">
-                Send pricing for email approval to corporate client
-              </Label>
-            </div>
-            <p className="text-xs text-gray-500">
-              Enable this to automatically send the pricing table to the client via email for approval.
-            </p>
+        {/* Email Approval Section */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="bg-green-50 border-b border-gray-200 py-3">
+            <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+              <Mail className="h-5 w-5 text-green-600" />
+              Email Approval (Optional)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <div className="">
+              <div className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg ">
+                <Checkbox
+                  id="sendEmailApproval"
+                  checked={sendEmailApproval}
+                  onCheckedChange={(checked) => setSendEmailApproval(checked as boolean)}
+                  className="border-gray-300 [&>svg]:h-5 [&>svg]:w-5"
+                  style={{ width: '20px', height: '20px', minWidth: '20px', minHeight: '20px' }}
+                />
+                <Label htmlFor="sendEmailApproval" className="text-sm font-medium text-gray-700 cursor-pointer">
+                  Send pricing for email approval to corporate client
+                </Label>
+              </div>
 
-            {sendEmailApproval && (
-              <div className="space-y-4 p-4 bg-green-50 rounded-lg border border-green-200">
-                <h4 className="font-medium text-green-800">Client Information</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {sendEmailApproval && (
+                <div className="space-y-4 p-5 bg-green-50 rounded-lg border border-green-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="clientEmail" className="text-sm font-medium text-gray-700">
+                        Company Email <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="clientEmail"
+                          type="email"
+                          value={clientEmail}
+                          onChange={(e) => setClientEmail(e.target.value)}
+                          placeholder="client@company.com"
+                          className="pl-10 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="clientName" className="text-sm font-medium text-gray-700">
+                        Concern Person Name <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                          id="clientName"
+                          value={clientName}
+                          onChange={(e) => setClientName(e.target.value)}
+                          placeholder="John Doe"
+                          className="pl-10 border-gray-300 focus:border-green-500 focus:ring-green-500"
+                          required
+                        />
+                      </div>
+                    </div>
+                  </div>
                   <div className="space-y-2">
-                    <Label htmlFor="clientEmail" className="text-sm font-medium">
-                      Client Email <span className="text-red-500">*</span>
+                    <Label htmlFor="clientCompany" className="text-sm font-medium text-gray-700">
+                      Company Name <span className="text-red-500">*</span>
                     </Label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                      <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                       <Input
-                        id="clientEmail"
-                        type="email"
-                        value={clientEmail}
-                        onChange={(e) => setClientEmail(e.target.value)}
-                        placeholder="client@company.com"
-                        className="pl-10"
+                        id="clientCompany"
+                        value={clientCompany}
+                        onChange={(e) => setClientCompany(e.target.value)}
+                        placeholder="ABC Corporation Ltd."
+                        className="pl-10 border-gray-300 focus:border-green-500 focus:ring-green-500"
                         required
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="clientName" className="text-sm font-medium">
-                      Client Name <span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="clientName"
-                        value={clientName}
-                        onChange={(e) => setClientName(e.target.value)}
-                        placeholder="John Doe"
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="clientCompany" className="text-sm font-medium">
-                    Company Name <span className="text-red-500">*</span>
-                  </Label>
-                  <div className="relative">
-                    <Building className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="clientCompany"
-                      value={clientCompany}
-                      onChange={(e) => setClientCompany(e.target.value)}
-                      placeholder="ABC Corporation Ltd."
-                      className="pl-10"
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-700">
-                    <strong>📧 Email Preview:</strong> When you save this pricing, an email will be sent to <strong>{clientEmail || 'client@company.com'}</strong> 
-                    with a complete pricing table and approval/rejection buttons. The client can approve or reject directly from the email.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
 
-      {/* Section 1: Standard Service - DOX (By Air & Surface) Upto 1 Kg */}
-      <Card className="border border-gray-200 shadow-sm">
-        <CardHeader className="bg-blue-50 border-b border-gray-200 py-3">
-          <CardTitle className="text-lg font-semibold text-gray-800">Standard Service</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Sub Headers */}
-          <div className="bg-gray-50 border-b border-gray-200">
-            <div className="px-4 py-2">
+        {/* Section 1: Standard Service - DOX (By Air & Surface) Upto 1 Kg */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="bg-blue-50 border-b border-gray-200 py-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Package className="h-5 w-5 text-blue-600" />
+                Standard Service
+              </CardTitle>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">For Corporate</Badge>
-                <Badge variant="secondary" className="text-xs">DOX (By Air & Surface) Upto 1 Kg.</Badge>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">For Corporate</Badge>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">DOX (By Air & Surface) Upto 1 Kg.</Badge>
               </div>
             </div>
-          </div>
-          
-          {/* Pricing Table */}
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-white border-b border-gray-200">
-                  <TableHead className="font-medium text-gray-700 text-sm py-2">Weight</TableHead>
-                  <TableHead className="font-medium text-gray-700 text-sm py-2">Assam</TableHead>
-                  <TableHead className="font-medium text-gray-700 text-sm py-2">NE By Surface</TableHead>
-                  <TableHead className="font-medium text-gray-700 text-sm py-2">NE By Air AGT IMP</TableHead>
-                  <TableHead className="font-medium text-gray-700 text-sm py-2">Rest of India</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                <TableRow className="border-b border-gray-100">
-                  <TableCell className="font-medium text-sm py-2">01 gm. to 250 gm.</TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing['01gm-250gm'].assam}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '01gm-250gm.assam')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '01gm-250gm.assam')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing['01gm-250gm'].neBySurface}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '01gm-250gm.neBySurface')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '01gm-250gm.neBySurface')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing['01gm-250gm'].neByAirAgtImp}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '01gm-250gm.neByAirAgtImp')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '01gm-250gm.neByAirAgtImp')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing['01gm-250gm'].restOfIndia}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '01gm-250gm.restOfIndia')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '01gm-250gm.restOfIndia')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                </TableRow>
-                <TableRow className="border-b border-gray-100">
-                  <TableCell className="font-medium text-sm py-2">251 gm. to 500 gm.</TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing['251gm-500gm'].assam}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '251gm-500gm.assam')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '251gm-500gm.assam')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing['251gm-500gm'].neBySurface}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '251gm-500gm.neBySurface')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '251gm-500gm.neBySurface')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing['251gm-500gm'].neByAirAgtImp}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '251gm-500gm.neByAirAgtImp')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '251gm-500gm.neByAirAgtImp')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing['251gm-500gm'].restOfIndia}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '251gm-500gm.restOfIndia')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '251gm-500gm.restOfIndia')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className="font-medium text-sm py-2">Add. 500 gm.</TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing.add500gm.assam}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, 'add500gm.assam')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, 'add500gm.assam')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing.add500gm.neBySurface}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, 'add500gm.neBySurface')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, 'add500gm.neBySurface')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing.add500gm.neByAirAgtImp}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, 'add500gm.neByAirAgtImp')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, 'add500gm.neByAirAgtImp')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                  <TableCell className="text-sm py-2">
-                    <Input
-                      type="text"
-                      value={doxPricing.add500gm.restOfIndia}
-                      onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, 'add500gm.restOfIndia')}
-                      onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, 'add500gm.restOfIndia')}
-                      className="w-20 h-8 text-xs text-right [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
-                      placeholder="0.00"
-                    />
-                  </TableCell>
-                </TableRow>
+          </CardHeader>
+          <CardContent className="p-0">
+            {/* Pricing Table */}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 border-b border-gray-200">
+                    <TableHead className="font-medium text-gray-700 text-sm py-3 px-4">Weight</TableHead>
+                    <TableHead className="font-medium text-gray-700 text-sm py-3 px-4 text-center">Assam</TableHead>
+                    <TableHead className="font-medium text-gray-700 text-sm py-3 px-4 text-center">NE By Surface</TableHead>
+                    <TableHead className="font-medium text-gray-700 text-sm py-3 px-4 text-center">NE By Air AGT IMP</TableHead>
+                    <TableHead className="font-medium text-gray-700 text-sm py-3 px-4 text-center">Rest of India</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <TableCell className="font-medium text-sm py-3 px-4">01 gm. to 250 gm.</TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing['01gm-250gm'].assam}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '01gm-250gm.assam')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '01gm-250gm.assam')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing['01gm-250gm'].neBySurface}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '01gm-250gm.neBySurface')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '01gm-250gm.neBySurface')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing['01gm-250gm'].neByAirAgtImp}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '01gm-250gm.neByAirAgtImp')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '01gm-250gm.neByAirAgtImp')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing['01gm-250gm'].restOfIndia}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '01gm-250gm.restOfIndia')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '01gm-250gm.restOfIndia')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                    <TableCell className="font-medium text-sm py-3 px-4">251 gm. to 500 gm.</TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing['251gm-500gm'].assam}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '251gm-500gm.assam')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '251gm-500gm.assam')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing['251gm-500gm'].neBySurface}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '251gm-500gm.neBySurface')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '251gm-500gm.neBySurface')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing['251gm-500gm'].neByAirAgtImp}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '251gm-500gm.neByAirAgtImp')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '251gm-500gm.neByAirAgtImp')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing['251gm-500gm'].restOfIndia}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, '251gm-500gm.restOfIndia')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, '251gm-500gm.restOfIndia')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  <TableRow className="hover:bg-gray-50 transition-colors">
+                    <TableCell className="font-medium text-sm py-3 px-4">Add. 500 gm.</TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing.add500gm.assam}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, 'add500gm.assam')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, 'add500gm.assam')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing.add500gm.neBySurface}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, 'add500gm.neBySurface')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, 'add500gm.neBySurface')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing.add500gm.neByAirAgtImp}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, 'add500gm.neByAirAgtImp')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, 'add500gm.neByAirAgtImp')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm py-3 px-4">
+                      <div className="flex justify-center">
+                        <Input
+                          type="text"
+                          value={doxPricing.add500gm.restOfIndia}
+                          onChange={(e) => handlePriceChange(e.target.value, setDoxPricing, 'add500gm.restOfIndia')}
+                          onBlur={(e) => handlePriceBlur(e.target.value, setDoxPricing, 'add500gm.restOfIndia')}
+                          className="w-24 h-9 text-xs text-right border-gray-300 focus:border-blue-500 focus:ring-blue-500 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </TableCell>
+                  </TableRow>
               </TableBody>
             </Table>
           </div>
@@ -835,22 +862,22 @@ const CorporatePricing = () => {
         </CardContent>
       </Card>
 
-      {/* Section 2: NON DOX (By Surface) Upto 1 Kg */}
-      <Card className="border border-gray-200 shadow-sm">
-        <CardHeader className="bg-blue-50 border-b border-gray-200 py-3">
-          <CardTitle className="text-lg font-semibold text-gray-800">NON DOX (By Surface) Upto 1 Kg.</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Sub Headers */}
-          <div className="bg-gray-50 border-b border-gray-200">
-            <div className="px-4 py-2">
+        {/* Section 2: NON DOX (By Surface) Upto 1 Kg */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="bg-blue-50 border-b border-gray-200 py-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Truck className="h-5 w-5 text-blue-600" />
+                NON DOX (By Surface) Upto 1 Kg.
+              </CardTitle>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">Upto 1 Kg.</Badge>
-                <Badge variant="secondary" className="text-xs">For Corporate</Badge>
-                <Badge variant="secondary" className="text-xs">NON DOX (By Surface)</Badge>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">Upto 1 Kg.</Badge>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">For Corporate</Badge>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">NON DOX (By Surface)</Badge>
               </div>
             </div>
-          </div>
+          </CardHeader>
+          <CardContent className="p-0">
           
           {/* Pricing Table */}
           <div className="overflow-x-auto">
@@ -914,21 +941,21 @@ const CorporatePricing = () => {
         </CardContent>
       </Card>
 
-      {/* Section 3: NON DOX (By Air) Upto 1 Kg */}
-      <Card className="border border-gray-200 shadow-sm">
-        <CardHeader className="bg-blue-50 border-b border-gray-200 py-3">
-          <CardTitle className="text-lg font-semibold text-gray-800">NON DOX (By Air) Upto 1 Kg.</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Sub Headers */}
-          <div className="bg-gray-50 border-b border-gray-200">
-            <div className="px-4 py-2">
+        {/* Section 3: NON DOX (By Air) Upto 1 Kg */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="bg-blue-50 border-b border-gray-200 py-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Plane className="h-5 w-5 text-blue-600" />
+                NON DOX (By Air) Upto 1 Kg.
+              </CardTitle>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">For Corporate</Badge>
-                <Badge variant="secondary" className="text-xs">NON DOX (By Air)</Badge>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">For Corporate</Badge>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">NON DOX (By Air)</Badge>
               </div>
             </div>
-          </div>
+          </CardHeader>
+          <CardContent className="p-0">
           
           {/* Pricing Table */}
           <div className="overflow-x-auto">
@@ -992,21 +1019,21 @@ const CorporatePricing = () => {
         </CardContent>
       </Card>
 
-      {/* Section 4: Priority Service - DOX (By Air & Surface) Upto 1 Kg */}
-      <Card className="border border-gray-200 shadow-sm">
-        <CardHeader className="bg-blue-50 border-b border-gray-200 py-3">
-          <CardTitle className="text-lg font-semibold text-gray-800">Priority Service</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Sub Headers */}
-          <div className="bg-gray-50 border-b border-gray-200">
-            <div className="px-4 py-2">
+        {/* Section 4: Priority Service - DOX (By Air & Surface) Upto 1 Kg */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="bg-blue-50 border-b border-gray-200 py-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-blue-600" />
+                Priority Service
+              </CardTitle>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">For Corporate</Badge>
-                <Badge variant="secondary" className="text-xs">DOX (By Air & Surface) Upto 1 Kg.</Badge>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">For Corporate</Badge>
+                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-700">DOX (By Air & Surface) Upto 1 Kg.</Badge>
               </div>
             </div>
-          </div>
+          </CardHeader>
+          <CardContent className="p-0">
           
           {/* Pricing Table */}
           <div className="overflow-x-auto">
@@ -1120,22 +1147,22 @@ const CorporatePricing = () => {
         </CardContent>
       </Card>
 
-      {/* Section 5: Reverse Pricing - From Rest of India to Guwahati/Assam and North East */}
-      <Card className="border border-gray-200 shadow-sm">
-        <CardHeader className="bg-green-50 border-b border-gray-200 py-3">
-          <CardTitle className="text-lg font-semibold text-gray-800">Reverse Pricing</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {/* Sub Headers */}
-          <div className="bg-gray-50 border-b border-gray-200">
-            <div className="px-4 py-2">
+        {/* Section 5: Reverse Pricing - From Rest of India to Guwahati/Assam and North East */}
+        <Card className="border border-gray-200 shadow-sm">
+          <CardHeader className="bg-green-50 border-b border-gray-200 py-3">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <Train className="h-5 w-5 text-green-600" />
+                Reverse Pricing
+              </CardTitle>
               <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">For Corporate</Badge>
-                <Badge variant="secondary" className="text-xs">From Rest of India to Guwahati/Assam & North East</Badge>
-                <Badge variant="secondary" className="text-xs">Per Kg Rate</Badge>
+                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">For Corporate</Badge>
+                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">From Rest of India to Guwahati/Assam & North East</Badge>
+                <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Per Kg Rate</Badge>
               </div>
             </div>
-          </div>
+          </CardHeader>
+          <CardContent className="p-0">
           
           {/* Pricing Table */}
           <div className="overflow-x-auto">
@@ -1335,6 +1362,37 @@ const CorporatePricing = () => {
           </div>
         </CardContent>
       </Card>
+
+        {/* Save Button Section */}
+        <Card className="border border-gray-200 shadow-sm bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center gap-4">
+              <Button 
+                onClick={handleSave}
+                disabled={isSubmitting || !hasAnyValue()}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 min-w-[220px] text-base font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Save className="h-5 w-5 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-5 w-5 mr-2" />
+                    Save Pricing List
+                  </>
+                )}
+              </Button>
+              {!hasAnyValue() && (
+                <div className="flex items-center gap-2 text-sm text-amber-600 bg-amber-50 px-4 py-2 rounded-lg border border-amber-200">
+                  <span className="text-amber-600">⚠</span>
+                  <p>Please fill in at least one pricing field to save</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
       {/* Testing Section - Only show after data is saved */}
       {isDataSaved && (
@@ -1590,6 +1648,7 @@ const CorporatePricing = () => {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 };

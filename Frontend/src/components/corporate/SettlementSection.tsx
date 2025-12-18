@@ -399,17 +399,13 @@ const SettlementSection: React.FC<SettlementSectionProps> = ({ isDarkMode = fals
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 px-4">
           <div>
             <h1 className={cn(
-              "text-3xl font-bold bg-clip-text text-transparent mb-1",
+              "text-xl font-bold bg-clip-text text-transparent mb-1",
               isDarkMode
                 ? "bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200"
                 : "bg-gradient-to-r from-slate-800 via-slate-700 to-slate-800"
             )}>
-              Statement
+              Statement for the month of {getMonthName(selectedMonth)} {selectedYear}
             </h1>
-            <p className={cn(
-              "text-sm font-medium",
-              isDarkMode ? "text-slate-400" : "text-slate-500"
-            )}>View and manage your consolidated invoice with all unpaid bills</p>
           </div>
           {unpaidBills.length > 0 && (
             <div className="flex flex-wrap gap-3 lg:ml-auto">
@@ -525,18 +521,7 @@ const SettlementSection: React.FC<SettlementSectionProps> = ({ isDarkMode = fals
           </div>
         </div>
         
-        <div className="px-4 pb-0.5 -mt-0.5">
-          <div className={cn(
-            "p-3.5 border rounded-xl text-xs font-medium shadow-sm",
-            isDarkMode
-              ? "bg-gradient-to-r from-blue-900/40 to-indigo-900/30 border-blue-700/60 text-blue-300"
-              : "bg-gradient-to-r from-blue-50 to-indigo-50/50 border-blue-200/60 text-blue-700"
-          )}>
-            <span>
-              Showing invoices for: <strong>{getMonthName(selectedMonth)} {selectedYear}</strong>
-            </span>
-          </div>
-        </div>
+       
 
         {/* Premium Invoice Container */}
         <div className={cn(

@@ -55,7 +55,10 @@ const trackingSchema = new mongoose.Schema({
       'OFP',
       'delivered',
       'cancelled',
-      'returned'
+      'returned',
+      'undelivered',
+      'rto',
+      'reserve'
     ],
     default: 'booked',
     required: true,

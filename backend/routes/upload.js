@@ -359,6 +359,40 @@ router.post('/booknow/declaration-document', uploadBookNowDeclaration, handleUpl
   }
 });
 
+// Upload corporate declaration document
+router.post('/corporate/declaration-document', uploadBookNowDeclaration, handleUploadError, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        error: 'No file uploaded',
+        message: 'Please select a declaration document'
+      });
+    }
+
+    // Upload file to S3 in corporate/booking folder
+    const uploadResult = await S3Service.uploadFile(req.file, 'uploads/corporate/booking');
+    
+    if (!uploadResult.success) {
+      return res.status(500).json({
+        error: 'Upload failed',
+        message: 'Failed to upload declaration document to S3'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: 'Declaration document uploaded successfully',
+      file: uploadResult
+    });
+  } catch (error) {
+    console.error('Error uploading corporate declaration document:', error);
+    res.status(500).json({
+      error: 'Upload failed',
+      message: 'Failed to upload declaration document'
+    });
+  }
+});
+
 // Get upload statistics
 router.get('/stats', (req, res) => {
   try {

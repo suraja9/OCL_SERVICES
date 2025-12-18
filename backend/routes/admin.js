@@ -1881,6 +1881,93 @@ router.post('/tracking/update-weight', authenticateAdmin, async (req, res) => {
   }
 });
 
+// Update tracking status (e.g., from undelivered to rto or reverse)
+router.post('/tracking/update-status', authenticateAdmin, async (req, res) => {
+  try {
+    const { consignmentNumber, newStatus } = req.body;
+
+    if (!consignmentNumber || !newStatus) {
+      return res.status(400).json({ error: 'consignmentNumber and newStatus are required.' });
+    }
+
+    // Validate status values
+    const validStatuses = ['rto', 'reserve', 'undelivered'];
+    if (!validStatuses.includes(newStatus)) {
+      return res.status(400).json({ 
+        error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` 
+      });
+    }
+
+    const numericConsignment = Number(consignmentNumber);
+    const tracking = await Tracking.findOne(Number.isNaN(numericConsignment)
+      ? { consignmentNumber: consignmentNumber }
+      : {
+        $or: [
+          { consignmentNumber: numericConsignment },
+          { consignmentNumber: consignmentNumber }
+        ]
+      }
+    );
+
+    if (!tracking) {
+      return res.status(404).json({ error: 'Tracking record not found for consignment number.' });
+    }
+
+    // Only allow updating from undelivered status
+    if (tracking.currentStatus !== 'undelivered') {
+      return res.status(400).json({
+        error: `Consignment must be in 'undelivered' status to update. Current status: ${tracking.currentStatus}`,
+        currentStatus: tracking.currentStatus
+      });
+    }
+
+    // Update status
+    const oldStatus = tracking.currentStatus;
+    tracking.currentStatus = newStatus;
+    
+    // Add to status history
+    if (!tracking.statusHistory) {
+      tracking.statusHistory = [];
+    }
+    tracking.statusHistory.push({
+      status: newStatus,
+      timestamp: new Date(),
+      notes: `Status changed from ${oldStatus} to ${newStatus} by ${req.admin.name || req.admin.email}`
+    });
+
+    await tracking.save();
+
+    // Attempt to sync FormData record if present
+    const formUpdateCriteria = Number.isNaN(numericConsignment)
+      ? { consignmentNumber: consignmentNumber }
+      : { consignmentNumber: numericConsignment };
+
+    await FormData.findOneAndUpdate(
+      formUpdateCriteria,
+      { $set: { 'assignmentData.status': newStatus } },
+      { new: true }
+    );
+
+    console.log(`✅ Tracking status updated by admin ${req.admin.name}: ${consignmentNumber} from ${oldStatus} to ${newStatus}`);
+
+    res.json({
+      success: true,
+      message: `Tracking status updated from ${oldStatus} to ${newStatus}.`,
+      data: {
+        consignmentNumber: tracking.consignmentNumber,
+        oldStatus,
+        newStatus,
+        updatedAt: tracking.updatedAt
+      }
+    });
+  } catch (error) {
+    console.error('Update tracking status error:', error);
+    res.status(500).json({
+      error: 'Failed to update tracking status.'
+    });
+  }
+});
+
 // Get CustomerBooking by consignment number
 router.get('/customerbookings/consignment/:consignmentNumber', authenticateAdmin, async (req, res) => {
   if (!req.admin.hasPermission('addressForms')) {
@@ -8759,6 +8846,87 @@ router.put('/customer-booking/:bookingId/assign-pickup-courier', authenticateAdm
       error: 'Failed to assign courier boy',
       message: error.message || 'An error occurred while assigning courier boy'
     });
+  }
+});
+
+// Assign courier boy for reserve orders (reassign from reserve status)
+router.post('/tracking/reserve/assign-courier-boy', authenticateAdmin, async (req, res) => {
+  try {
+    const { trackingId, courierBoyId } = req.body;
+
+    if (!trackingId || !courierBoyId) {
+      return res.status(400).json({ error: 'Tracking ID and Courier Boy ID are required.' });
+    }
+
+    const Tracking = (await import('../models/Tracking.js')).default;
+    const CourierBoy = (await import('../models/CourierBoy.js')).default;
+
+    const tracking = await Tracking.findById(trackingId);
+    if (!tracking) {
+      return res.status(404).json({ error: 'Tracking record not found.' });
+    }
+
+    // Verify that the tracking is in "reserve" status
+    if (tracking.currentStatus !== 'reserve') {
+      return res.status(400).json({ 
+        error: `Cannot assign courier boy. Order status is "${tracking.currentStatus}", expected "reserve".` 
+      });
+    }
+
+    const courierBoy = await CourierBoy.findById(courierBoyId).lean();
+    if (!courierBoy) {
+      return res.status(404).json({ error: 'Courier boy not found.' });
+    }
+
+    // Update status from "reserve" to "OFP"
+    tracking.currentStatus = 'OFP';
+
+    // Create new OFD entry (this will replace/add to existing OFD array)
+    const ofdEntry = {
+      courierBoyId: courierBoy._id,
+      courierBoyName: courierBoy.fullName,
+      courierBoyPhone: courierBoy.phone,
+      assignedAt: new Date(),
+      assignedBy: req.admin._id,
+      assignedByName: req.admin.name,
+      consignmentNumber: tracking.consignmentNumber,
+      receiverName: tracking.booked?.[0]?.destinationData?.name || tracking.booked?.[0]?.receiverName,
+      destination: tracking.booked?.[0]?.destinationData,
+      paymentStatus: tracking.booked?.[0]?.paymentData?.paymentStatus,
+      finalPrice: tracking.booked?.[0]?.invoiceData?.finalPrice,
+      paymentType: tracking.booked?.[0]?.paymentData?.paymentType
+    };
+
+    // Replace the entire OFD array with the new assignment
+    // This ensures the courier boy app sees the correct courier boy assignment
+    // (whether it queries OFD[0] or the last entry)
+    // Use set to explicitly replace the array, not add to it
+    tracking.set('OFD', [ofdEntry]);
+    tracking.markModified('OFD');
+
+    // Update history
+    if (!tracking.statusHistory) {
+      tracking.statusHistory = [];
+    }
+    tracking.statusHistory.push({
+      status: 'OFP',
+      timestamp: new Date(),
+      notes: `Reassigned to courier boy ${courierBoy.fullName} for delivery from reserve status`
+    });
+
+    await tracking.save();
+
+    console.log(`✅ Courier boy reassigned from reserve by admin ${req.admin.name}: ${tracking.consignmentNumber} to ${courierBoy.fullName}`);
+
+    res.json({
+      success: true,
+      message: 'Courier boy assigned successfully from reserve status.',
+      data: tracking
+    });
+
+  } catch (error) {
+    console.error('Assign courier boy from reserve error:', error);
+    res.status(500).json({ error: 'Failed to assign courier boy from reserve.' });
   }
 });
 

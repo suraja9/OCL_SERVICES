@@ -308,7 +308,7 @@ class EmailService {
         <div class="container">
             <div class="header">
                 <h1>📋 Corporate Pricing Approval</h1>
-                <p>OCL Courier & Logistics</p>
+                <p>OCL Services</p>
             </div>
             
             <div class="content">
@@ -318,9 +318,7 @@ class EmailService {
                 
                 <p>We are pleased to present the corporate pricing proposal for <strong>${clientCompany || 'your company'}</strong>. Please review the pricing details below and take action to approve or reject this proposal.</p>
                 
-                <div class="urgent-notice">
-                    <strong>⏰ Action Required:</strong> Please review and respond to this pricing proposal within 7 days to ensure timely processing.
-                </div>
+                
 
                 <div class="company-info">
                     <h3>📊 Pricing Proposal: ${name}</h3>
@@ -566,7 +564,7 @@ class EmailService {
       }
 
       const mailOptions = {
-        from: `"OCL Courier & Logistics" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
+        from: `"OCL Services" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
         to: clientEmail,
         subject: `📋 Corporate Pricing Approval Required - ${name}`,
         html: this.generatePricingApprovalEmail(pricingData, approvalUrl, rejectionUrl),
@@ -611,7 +609,7 @@ For questions, contact us at:
 - Phone: +91-XXX-XXXX-XXXX
 
 Best regards,
-OCL Courier & Logistics Team
+OCL Services Team
     `;
   }
 
@@ -742,7 +740,7 @@ OCL Courier & Logistics Team
         <div class="container">
             <div class="header">
                 <h1>🎉 Registration Complete!</h1>
-                <p>OCL Courier & Logistics</p>
+                <p>OCL Services</p>
             </div>
             
             <div class="content">
@@ -750,7 +748,7 @@ OCL Courier & Logistics Team
                     Dear ${companyName} Team,
                 </div>
                 
-                <p>Congratulations! Your corporate registration with OCL Courier & Logistics has been successfully completed.</p>
+                <p>Congratulations! Your corporate registration with OCL Services has been successfully completed.</p>
                 
                 <div class="company-info">
                     <h3>📋 Registration Details</h3>
@@ -805,7 +803,7 @@ OCL Courier & Logistics Team
             </div>
             
             <div class="footer">
-                <p>This is an automated message from OCL Courier & Logistics.</p>
+                <p>This is an automated message from OCL Services.</p>
                 <p>Please do not reply to this email. For support, contact us at info@oclservices.com</p>
             </div>
         </div>
@@ -856,7 +854,7 @@ OCL Courier & Logistics Team
       }
 
       const mailOptions = {
-        from: `"OCL Courier & Logistics" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
+        from: `"OCL Services" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
         to: email,
         subject: `🎉 Corporate Registration Complete - ${companyName} (${corporateId})`,
         html: this.generateCorporateRegistrationEmail(corporateData),
@@ -887,7 +885,7 @@ Corporate Registration Complete - ${companyName}
 
 Dear ${companyName} Team,
 
-Congratulations! Your corporate registration with OCL Courier & Logistics has been successfully completed.
+Congratulations! Your corporate registration with OCL Services has been successfully completed.
 
 REGISTRATION DETAILS:
 - Corporate ID: ${corporateId}
@@ -914,7 +912,7 @@ For questions or assistance, contact our corporate team:
 - Business Hours: Monday - Friday, 9:00 AM - 6:00 PM
 
 Best regards,
-OCL Courier & Logistics Team
+OCL Services Team
     `;
   }
 
@@ -932,7 +930,7 @@ OCL Courier & Logistics Team
         : `Your pricing proposal "${name}" has been rejected. Please contact us for further discussion.`;
 
       const mailOptions = {
-        from: `"OCL Courier & Logistics" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
+        from: `"OCL Services" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
         to: clientEmail,
         subject: subject,
         html: `
@@ -942,12 +940,12 @@ OCL Courier & Logistics Team
             </h2>
             <p>Dear ${clientName || 'Valued Client'},</p>
             <p>${message}</p>
-            <p>Thank you for your business with OCL Courier & Logistics.</p>
+            <p>Thank you for your business with OCL Services.</p>
             <hr>
             <p><small>This is an automated message. For support, contact us at info@oclservices.com</small></p>
           </div>
         `,
-        text: `Dear ${clientName || 'Valued Client'},\n\n${message}\n\nThank you for your business with OCL Courier & Logistics.`,
+        text: `Dear ${clientName || 'Valued Client'},\n\n${message}\n\nThank you for your business with OCL Services.`,
         attachments: []
       };
 
@@ -1092,7 +1090,7 @@ OCL Courier & Logistics Team
         <div class="container">
             <div class="header">
                 <h1>🎉 Employee Registration Complete!</h1>
-                <p>OCL Courier & Logistics</p>
+                <p>OCL Services</p>
             </div>
             
             <div class="content">
@@ -1100,7 +1098,7 @@ OCL Courier & Logistics Team
                     Dear ${name},
                 </div>
                 
-                <p>Congratulations! Your employee registration with OCL Courier & Logistics has been successfully completed.</p>
+                <p>Congratulations! Your employee registration with OCL Services has been successfully completed.</p>
                 
                 <div class="employee-info">
                     <h3>📋 Registration Details</h3>
@@ -1155,7 +1153,7 @@ OCL Courier & Logistics Team
             </div>
             
             <div class="footer">
-                <p>This is an automated message from OCL Courier & Logistics.</p>
+                <p>This is an automated message from OCL Services.</p>
                 <p>Please do not reply to this email. For support, contact us at info@oclservices.com</p>
             </div>
         </div>
@@ -1206,7 +1204,7 @@ OCL Courier & Logistics Team
       }
 
       const mailOptions = {
-        from: `"OCL Courier & Logistics" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
+        from: `"OCL Services" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
         to: email,
         subject: `🎉 Employee Registration Complete - ${name} (${employeeId})`,
         html: this.generateEmployeeRegistrationEmail(employeeData),
@@ -1237,7 +1235,7 @@ Employee Registration Complete - ${name}
 
 Dear ${name},
 
-Congratulations! Your employee registration with OCL Courier & Logistics has been successfully completed.
+Congratulations! Your employee registration with OCL Services has been successfully completed.
 
 REGISTRATION DETAILS:
 - Employee ID: ${employeeId}
@@ -1264,7 +1262,7 @@ For questions or assistance, contact our HR team:
 - Business Hours: Monday - Friday, 9:00 AM - 6:00 PM
 
 Best regards,
-OCL Courier & Logistics Team
+OCL Services Team
     `;
   }
 
@@ -1274,8 +1272,11 @@ OCL Courier & Logistics Team
       return [];
     }
 
+    // Remove duplicates first
+    const uniqueUrls = [...new Set(imageUrls.filter(url => url && typeof url === 'string'))];
+
     const validatedUrls = [];
-    for (const imageUrl of imageUrls) {
+    for (const imageUrl of uniqueUrls) {
       try {
         // Check if URL is valid
         new URL(imageUrl);
@@ -1866,7 +1867,7 @@ style="background:#ffffff; border-radius:0; overflow:hidden; box-shadow:0 10px 2
         emailHtml = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <h2>📦 Shipment Confirmed - AWB: ${consignmentNumber}</h2>
-            <p>Your shipment has been successfully booked with OCL Courier & Logistics.</p>
+            <p>Your shipment has been successfully booked with OCL Services.</p>
             <p>Due to technical issues, images could not be included in this email.</p>
             <p>Please contact support if you need to view your shipment images.</p>
             <hr>
@@ -1880,7 +1881,7 @@ style="background:#ffffff; border-radius:0; overflow:hidden; box-shadow:0 10px 2
       const emailSubject = `${consignmentNumber}  ${originCity} - ${destinationCity}`;
 
       const mailOptions = {
-        from: `"OCL Courier & Logistics" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
+        from: `"OCL Services" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
         to: senderEmail,
         subject: emailSubject,
         html: emailHtml,
@@ -2073,7 +2074,7 @@ Email: info@oclservices.com
 Phone: +91 8453 994 809
 Website: https://oclservices.com
 
-Thank you for choosing OCL Courier & Logistics.
+Thank you for choosing OCL Services.
     `;
   }
 
@@ -2567,7 +2568,7 @@ Email: info@oclservices.com
 Phone: +91 8453 994 809
 Website: https://oclservices.com
 
-Thank you for choosing OCL Courier & Logistics.
+Thank you for choosing OCL Services.
     `;
   }
 
@@ -2652,7 +2653,7 @@ Thank you for choosing OCL Courier & Logistics.
     }));
 
     const mailOptions = {
-      from: `"OCL Courier & Logistics" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
+      from: `"OCL Services" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
       to: senderEmail,
       subject: bookingSubject,
       html: await this.generateOnlineBookingConfirmationEmail(bookingData, packageImageAttachments),
@@ -3130,7 +3131,7 @@ SUPPORT
 - Email: info@oclservices.com
 - Phone: +91 8453 994 809
 
-Thank you for shipping with OCL Courier & Logistics.
+Thank you for shipping with OCL Services.
     `;
   }
 
@@ -3281,7 +3282,7 @@ Thank you for shipping with OCL Courier & Logistics.
     const bookingSubject = `${consignmentDisplay} ${originCity} → ${destinationCity}`;
 
     const mailOptions = {
-      from: `"OCL Courier & Logistics" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
+      from: `"OCL Services" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
       to: senderEmail,
       subject: bookingSubject,
       html: await this.generateCorporateBookingConfirmationEmail(normalizedData, packageImageAttachments),
@@ -3319,7 +3320,7 @@ Thank you for shipping with OCL Courier & Logistics.
   async sendEmailWithPdfAttachment({ to, subject, html, text, pdfBuffer, filename = 'manifest.pdf' }) {
     try {
       const mailOptions = {
-        from: `"OCL Courier & Logistics" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
+        from: `"OCL Services" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
         to,
         subject,
         html,

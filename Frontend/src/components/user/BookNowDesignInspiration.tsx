@@ -1063,6 +1063,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
   const [previousAddressData, setPreviousAddressData] = useState<any>(null);
   const [newAddressData, setNewAddressData] = useState<any>(null);
   const [selectedAddressIndex, setSelectedAddressIndex] = useState<number>(0); // 0 for previous, 1 for new
+  const [showAlternateNumber, setShowAlternateNumber] = useState<{ origin: boolean; destination: boolean }>({ origin: false, destination: false });
   const [shipmentDetails, setShipmentDetails] = useState<ShipmentDetails>({
     natureOfConsignment: '',
     insurance: '',
@@ -2934,13 +2935,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
       }
       
       // Priority uses single base500gm rate per 500gm (same for both routes)
-      // Handle both number (from API) and string (edge cases) formats
-      const base500gmValue = customerPricing.priorityPricing?.base500gm;
-      const pricePer500gm = typeof base500gmValue === 'number' 
-        ? base500gmValue 
-        : parseFloat(String(base500gmValue || 0)) || 0;
-      
-      // Always calculate price (even if 0, so user can see pricing needs to be configured)
+      const pricePer500gm = parseFloat(customerPricing.priorityPricing?.base500gm || 0);
       const units = Math.ceil(weightInGrams / 500);
       price = pricePer500gm * units;
     } else {
@@ -3730,7 +3725,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
   }
 
   return (
-    <div className="w-full [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+    <div className="w-full min-w-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
       <Stepper 
         currentStep={currentStep} 
         steps={steps} 
@@ -3761,7 +3756,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 sm:space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
             {/* Origin Pincode */}
             <div className="space-y-2">
               <FloatingInput
@@ -3809,10 +3804,10 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                 </div>
               )}
             </div>
-              </div>
+          </div>
 
-              {/* Next Button */}
-              <div className="flex justify-end pt-2 sm:pt-4">
+          {/* Next Button */}
+          <div className="flex justify-end pt-2 sm:pt-4">
             <Button
               onClick={handleNextStep}
               disabled={originServiceable !== true || destinationServiceable !== true}
@@ -3826,7 +3821,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
               Next
               <ArrowRight className="w-4 h-4 ml-2" />
             </Button>
-              </div>
+          </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -3837,7 +3832,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-4 sm:space-y-6"
+          className="space-y-4 sm:space-y-6 mt-4 sm:mt-6"
         >
           <div>
             <h3 className={cn(
@@ -3918,7 +3913,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-4 sm:space-y-6 md:space-y-8"
+          className="space-y-4 sm:space-y-6 md:space-y-8 mt-4 sm:mt-6"
         >
           <div className="space-y-2">
             <h3
@@ -4270,7 +4265,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-4 sm:space-y-6 md:space-y-8"
+          className="space-y-4 sm:space-y-6 md:space-y-8 mt-4 sm:mt-6"
         >
           
 
@@ -4740,7 +4735,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="space-y-3"
+          className="space-y-3 mt-4 sm:mt-6"
         >
           {loadingPricing ? (
             <div className="flex items-center justify-center py-6">
@@ -4858,7 +4853,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
               )}
 
               {/* Mode Selection - Only show when Standard is selected */}
-              {selectedServiceType === 'standard' && (
+              {selectedServiceType === 'standard' && availableModes && (
                 <div
                   className={cn(
                     'rounded-xl p-4 transition-all duration-300',
@@ -4872,7 +4867,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                         Select Shipping Mode
                       </h4>
                     <div className="grid gap-2 grid-cols-1 md:grid-cols-3">
-                      {(!availableModes || availableModes.byAir) && (
+                      {availableModes.byAir && (
                         <button
                           type="button"
                           onClick={() => {
@@ -4919,7 +4914,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                           </div>
                         </button>
                       )}
-                      {(!availableModes || availableModes.byTrain) && (
+                      {availableModes.byTrain && (
                         <button
                           type="button"
                           onClick={() => {
@@ -4966,7 +4961,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                           </div>
                         </button>
                       )}
-                      {(!availableModes || availableModes.byRoad) && (
+                      {availableModes.byRoad && (
                         <button
                           type="button"
                           onClick={() => {
@@ -5150,7 +5145,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-            className="space-y-2"
+            className="space-y-2 mt-4 sm:mt-6"
         >
             <div className="space-y-2.5">
               {/* Origin Address */}
@@ -6763,27 +6758,67 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
       <Dialog open={phoneModalOpen.type !== null} onOpenChange={() => {}}>
         <DialogContent 
           className={cn(
-            "w-[95vw] sm:w-auto max-w-[400px] sm:max-w-[460px] md:max-w-[530px] [&>button]:hidden px-3 sm:px-4 md:px-4 py-3 sm:py-4 md:py-5 mx-auto rounded-2xl sm:rounded-xl md:rounded-lg [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
-            isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
+            "w-[95vw] sm:w-auto max-w-[500px] sm:max-w-[580px] md:max-w-[650px] [&>button]:hidden px-6 sm:px-8 md:px-10 py-6 sm:py-7 md:py-8 mx-auto rounded-2xl sm:rounded-2xl md:rounded-2xl [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
+            "shadow-[0_20px_60px_rgba(0,0,0,0.3)]",
+            isDarkMode 
+              ? "bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-slate-700/50" 
+              : "bg-gradient-to-br from-white via-blue-50/30 to-white border-slate-200/80"
           )}
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
-          <DialogHeader className="pb-0 px-0">
+          <DialogHeader className="pb-4 px-0">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
             <DialogTitle className={cn(
-              "text-sm sm:text-base md:text-lg font-semibold text-left leading-tight mb-0",
+              "text-lg sm:text-xl md:text-2xl font-bold text-left leading-tight mb-1",
               isDarkMode ? "text-slate-100" : "text-slate-900"
             )}>
               {phoneModalOpen.type === 'origin' ? 'Sender' : 'Recipient'} - Phone No.
             </DialogTitle>
+            <p className={cn(
+              "text-xs sm:text-sm text-left mt-1",
+              isDarkMode ? "text-slate-400" : "text-slate-600"
+            )}>
+              Enter your 10-digit mobile number
+            </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  // Close the phone modal
+                  setPhoneModalOpen({ type: null });
+                  // Reset phone number digits
+                  if (phoneModalOpen.type === 'origin') {
+                    setOriginMobileDigits(Array(10).fill(''));
+                    setOriginData(prev => ({ ...prev, mobileNumber: '' }));
+                  } else {
+                    setDestinationMobileDigits(Array(10).fill(''));
+                    setDestinationData(prev => ({ ...prev, mobileNumber: '' }));
+                  }
+                  // Go back to step 0 (pincode entering part)
+                  setCurrentStep(0);
+                }}
+                className={cn(
+                  "p-2 rounded-md transition-colors flex-shrink-0 hover:bg-opacity-80",
+                  isDarkMode
+                    ? "text-slate-300 hover:bg-slate-700 hover:text-slate-100"
+                    : "text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+                )}
+                aria-label="Close and go back to pincode entry"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
           </DialogHeader>
-          <div className="flex items-center justify-start gap-0.5 sm:gap-2 md:gap-1.5 px-0 py-1.5 sm:py-3 md:py-2 w-full overflow-hidden">
+          <div className="flex items-center justify-start gap-2 sm:gap-2.5 md:gap-2.5 px-0 py-2 sm:py-3 md:py-3 pr-2 sm:pr-3 md:pr-4 w-full">
                 {/* Country Code */}
                 <div className={cn(
-                  "flex items-center justify-center gap-1 h-8 sm:h-11 md:h-10 w-auto sm:w-auto md:w-auto px-1.5 sm:px-2 md:px-2.5 rounded-md border-2 transition-all duration-200 flex-shrink-0",
+                  "flex items-center justify-center gap-2 h-10 sm:h-12 md:h-12 w-auto px-3 sm:px-3.5 md:px-4 rounded-xl transition-all duration-200 flex-shrink-0",
+                  "shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
                   isDarkMode
-                    ? "border-slate-700 bg-slate-800/60 text-slate-300"
-                    : "border-slate-200 bg-slate-50 text-slate-700 shadow-sm"
+                    ? "bg-slate-800 text-slate-200"
+                    : "bg-white text-slate-800"
                 )}>
                   <svg 
                     className="w-3 h-2 sm:w-4 sm:h-3 md:w-5 md:h-3.5 flex-shrink-0" 
@@ -6846,17 +6881,17 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                     <path d="M71.82,41.37c-0.04-0.27-0.29-0.46-0.56-0.43c-0.27,0.04-0.46,0.29-0.43,0.56c0.04,0.27,0.29,0.46,0.56,0.43 C71.67,41.9,71.86,41.65,71.82,41.37L71.82,41.37z"/>
                     <polygon points="64.02,52.37 62.8,46.51 61.73,43.84 62.14,46.68 64.02,52.37"/>
                   </svg>
-                  <span className="text-[10px] sm:text-base md:text-base font-bold">+91</span>
+                  <span className="text-sm sm:text-base md:text-base font-bold">+91</span>
                 </div>
                 
                 {/* Divider */}
                 <div className={cn(
-                  "h-6 sm:h-9 md:h-8 w-[1px] flex-shrink-0",
-                  isDarkMode ? "bg-slate-700" : "bg-slate-200"
+                  "h-10 sm:h-12 md:h-12 w-[1.5px] flex-shrink-0 rounded-full",
+                  isDarkMode ? "bg-gradient-to-b from-slate-600 to-slate-700" : "bg-gradient-to-b from-slate-300 to-slate-400"
                 )} />
                 
                 {/* Phone Number Inputs */}
-                <div className="flex items-center gap-0.5 sm:gap-1.5 md:gap-1 flex-shrink-0 overflow-hidden">
+                <div className="flex items-center gap-1 sm:gap-1.5 md:gap-1.5 flex-shrink-0 min-w-0">
                   {(phoneModalOpen.type === 'origin' ? originMobileDigits : destinationMobileDigits).map((digit, index) => (
                     <input
                       key={index}
@@ -6889,15 +6924,16 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                       }}
                       onFocus={(e) => e.target.select()}
                       className={cn(
-                        "h-8 sm:h-11 md:h-10 w-7 sm:w-10 md:w-9 rounded-md border-2 text-center text-[10px] sm:text-base md:text-base font-bold transition-all duration-200 flex-shrink-0",
-                        "focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200",
+                        "h-10 sm:h-12 md:h-12 w-8 sm:w-10 md:w-10 rounded-xl border-2 text-center text-sm sm:text-base md:text-lg font-bold transition-all duration-200 flex-shrink-0",
+                        "hover:shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+                        "focus:outline-none focus:border-blue-500 focus:border-[1px] focus:shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
                         isDarkMode
                           ? digit
-                            ? "border-blue-500 bg-blue-500/20 text-blue-200"
-                            : "border-slate-600 bg-slate-800/80 text-slate-300 focus:ring-blue-500/30"
+                            ? "border-blue-500/80 bg-gradient-to-br from-blue-500/30 to-blue-600/20 text-blue-200"
+                            : "border-slate-600/60 bg-gradient-to-br from-slate-800/90 to-slate-700/90 text-slate-300 focus:border-blue-500/80"
                           : digit
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-slate-300 bg-white text-slate-700"
+                            ? "border-blue-500/80 bg-gradient-to-br from-blue-50 to-blue-100/50 text-blue-700"
+                            : "border-slate-300/80 bg-gradient-to-br from-white to-slate-50/50 text-slate-700 focus:border-blue-500/80"
                       )}
                     />
                   ))}
@@ -6911,7 +6947,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
       <Dialog open={formModalOpen.type !== null} onOpenChange={() => {}}>
         <DialogContent 
           className={cn(
-            "w-[90%] sm:w-full max-w-3xl max-h-[90vh] overflow-y-auto p-0 rounded-[15px] [&>button]:hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
+            "w-[90%] sm:w-full max-w-3xl max-h-[90vh] overflow-y-auto p-0 rounded-[15px] [&>button]:hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] shadow-none",
           isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
           )}
           onInteractOutside={(e) => e.preventDefault()}
@@ -6920,13 +6956,27 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
           {!showPreviewInModal ? (
             <>
           {/* Simple Header */}
-          <div className="px-6 pt-6 pb-2">
+          <div className="px-6 pt-6 pb-2 flex items-center justify-between">
             <DialogTitle className={cn(
               "text-xl font-bold",
               isDarkMode ? "text-slate-100" : "text-slate-900"
             )}>
               {formModalOpen.type === 'origin' ? "Sender's (Consigner)" : "Recipent's ( Consignee )" } Address : 
             </DialogTitle>
+            <button
+              type="button"
+              onClick={() => {
+                setShowPreviewInModal(true);
+              }}
+              className={cn(
+                "p-2 rounded-md transition-colors flex-shrink-0",
+                isDarkMode
+                  ? "text-slate-300 hover:bg-slate-700 hover:text-slate-100"
+                  : "text-slate-600 hover:bg-slate-200 hover:text-slate-900"
+              )}
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           <div className="px-5 py-5 space-y-3">
@@ -6939,6 +6989,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
               return (
                 <>
                   <div className="grid gap-3 md:grid-cols-2">
+                    {/* 1. Concern name */}
                     <FloatingInput
                       label="Concern Person :"
                       value={data.name}
@@ -6950,26 +7001,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                       required
                       isDarkMode={isDarkMode}
                     />
-                    <FloatingInput
-                      label="Mobile No. :"
-                      value={`+91 ${isOrigin ? originMobileDigits.join('') : destinationMobileDigits.join('')}`}
-                      onChange={() => {}}
-                      disabled
-                      placeholder="We'll call this number to coordinate delivery."
-                      isDarkMode={isDarkMode}
-                    />
-                    <FloatingInput
-                      label="Email ID :"
-                      value={data.email}
-                      onChange={(value) =>
-                        isOrigin
-                          ? setOriginData((prev) => ({ ...prev, email: value }))
-                          : setDestinationData((prev) => ({ ...prev, email: value }))
-                      }
-                      type="email"
-                      className="md:col-span-2"
-                      isDarkMode={isDarkMode}
-                    />
+                    {/* 2. Company name */}
                     <FloatingInput
                       label="Company Name :"
                       value={data.companyName}
@@ -6980,27 +7012,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                       }
                       isDarkMode={isDarkMode}
                     />
-                    <FloatingInput
-                      label="GST No. :"
-                      value={data.gstNumber}
-                      onChange={(value) =>
-                        isOrigin
-                          ? setOriginData((prev) => ({ ...prev, gstNumber: value }))
-                          : setDestinationData((prev) => ({ ...prev, gstNumber: value }))
-                      }
-                      isDarkMode={isDarkMode}
-                    />
-                    <FloatingInput
-                      label="Building / Flat No. :"
-                      value={data.flatBuilding}
-                      onChange={(value) =>
-                        isOrigin
-                          ? setOriginData((prev) => ({ ...prev, flatBuilding: value }))
-                          : setDestinationData((prev) => ({ ...prev, flatBuilding: value }))
-                      }
-                      required
-                      isDarkMode={isDarkMode}
-                    />
+                    {/* 3. Locality / Street */}
                     <FloatingInput
                       label="Locality / Street :"
                       value={data.locality}
@@ -7012,6 +7024,19 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                       required
                       isDarkMode={isDarkMode}
                     />
+                    {/* 4. Building / Flat No. */}
+                    <FloatingInput
+                      label="Building / Flat No. :"
+                      value={data.flatBuilding}
+                      onChange={(value) =>
+                        isOrigin
+                          ? setOriginData((prev) => ({ ...prev, flatBuilding: value }))
+                          : setDestinationData((prev) => ({ ...prev, flatBuilding: value }))
+                      }
+                      required
+                      isDarkMode={isDarkMode}
+                    />
+                    {/* 5. Landmark */}
                     <FloatingInput
                       label="Landmark :"
                       value={data.landmark}
@@ -7020,9 +7045,44 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                           ? setOriginData((prev) => ({ ...prev, landmark: value }))
                           : setDestinationData((prev) => ({ ...prev, landmark: value }))
                       }
-                      className="md:col-span-2"
                       isDarkMode={isDarkMode}
                     />
+                    {/* 6. GST */}
+                    <FloatingInput
+                      label="GST No. :"
+                      value={data.gstNumber}
+                      onChange={(value) =>
+                        isOrigin
+                          ? setOriginData((prev) => ({ ...prev, gstNumber: value }))
+                          : setDestinationData((prev) => ({ ...prev, gstNumber: value }))
+                      }
+                      isDarkMode={isDarkMode}
+                    />
+                    {/* 7. PINCode */}
+                    <FloatingInput
+                      label="Pincode"
+                      value={data.pincode}
+                      onChange={(_value) => {}}
+                      disabled
+                      isDarkMode={isDarkMode}
+                    />
+                    {/* 8. State */}
+                    <FloatingInput
+                      label="State"
+                      value={data.state}
+                      onChange={(_value) => {}}
+                      disabled
+                      isDarkMode={isDarkMode}
+                    />
+                    {/* 9. City */}
+                    <FloatingInput
+                      label="City"
+                      value={data.city}
+                      onChange={(_value) => {}}
+                      disabled
+                      isDarkMode={isDarkMode}
+                    />
+                    {/* 10. Area */}
                     {pincodeValue.length === 6 && areas.length > 0 ? (
                       <FloatingSelect
                         label="Area"
@@ -7050,34 +7110,19 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                         isDarkMode={isDarkMode}
                       />
                     )}
+                    {/* 11. Email */}
                     <FloatingInput
-                      label="Pincode"
-                      value={data.pincode}
-                      onChange={(_value) => {}}
-                      disabled
+                      label="Email ID :"
+                      value={data.email}
+                      onChange={(value) =>
+                        isOrigin
+                          ? setOriginData((prev) => ({ ...prev, email: value }))
+                          : setDestinationData((prev) => ({ ...prev, email: value }))
+                      }
+                      type="email"
                       isDarkMode={isDarkMode}
                     />
-                    <FloatingInput
-                      label="City"
-                      value={data.city}
-                      onChange={(_value) => {}}
-                      disabled
-                      isDarkMode={isDarkMode}
-                    />
-                    <FloatingInput
-                      label="State"
-                      value={data.state}
-                      onChange={(_value) => {}}
-                      disabled
-                      isDarkMode={isDarkMode}
-                    />
-                    <FloatingInput
-                      label="District"
-                      value={data.district}
-                      onChange={(_value) => {}}
-                      disabled
-                      isDarkMode={isDarkMode}
-                    />
+                    {/* 12. Website */}
                     <FloatingInput
                       label="Website :"
                       value={data.website}
@@ -7088,17 +7133,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                       }
                       isDarkMode={isDarkMode}
                     />
-                    <FloatingInput
-                      label="BirthDay :"
-                      value={data.birthday}
-                      onChange={(value) =>
-                        isOrigin
-                          ? setOriginData((prev) => ({ ...prev, birthday: value }))
-                          : setDestinationData((prev) => ({ ...prev, birthday: value }))
-                      }
-                      type="date"
-                      isDarkMode={isDarkMode}
-                    />
+                    {/* 13. Anniversary */}
                     <FloatingInput
                       label="Anniversary :"
                       value={data.anniversary}
@@ -7110,6 +7145,71 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                       type="date"
                       isDarkMode={isDarkMode}
                     />
+                    {/* 14. Birthday */}
+                    <FloatingInput
+                      label="BirthDay :"
+                      value={data.birthday}
+                      onChange={(value) =>
+                        isOrigin
+                          ? setOriginData((prev) => ({ ...prev, birthday: value }))
+                          : setDestinationData((prev) => ({ ...prev, birthday: value }))
+                      }
+                      type="date"
+                      isDarkMode={isDarkMode}
+                    />
+                    {/* Mobile No. */}
+                    <FloatingInput
+                      label="Mobile No. :"
+                      value={`+91 ${isOrigin ? originMobileDigits.join('') : destinationMobileDigits.join('')}`}
+                      onChange={() => {}}
+                      disabled
+                      placeholder="We'll call this number to coordinate delivery."
+                      isDarkMode={isDarkMode}
+                    />
+                    {/* Alternate Number - Card with conditional textbox */}
+                    <div className="flex items-center gap-3">
+                      {/* Alt. No. Card */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (isOrigin) {
+                            setShowAlternateNumber(prev => ({ ...prev, origin: !prev.origin }));
+                          } else {
+                            setShowAlternateNumber(prev => ({ ...prev, destination: !prev.destination }));
+                          }
+                        }}
+                        className={cn(
+                          "px-3 py-2 rounded-md text-xs sm:text-sm font-medium transition-all duration-200 flex-shrink-0",
+                          "shadow-[rgba(0,0,0,0.15)_0px_3px_3px_0px]",
+                          "bg-white text-slate-800 hover:bg-white hover:text-slate-800 border-0",
+                          isDarkMode
+                            ? "bg-slate-800 text-slate-200"
+                            : "bg-white text-slate-800"
+                        )}
+                      >
+                        Alt. No.
+                      </button>
+                      {/* Alternate Number Input - appears on right when card is clicked */}
+                      {((isOrigin && showAlternateNumber.origin) || (!isOrigin && showAlternateNumber.destination)) && (
+                        <div className="flex-1">
+                          <FloatingInput
+                            label="Alternate Number"
+                            value={(data.alternateNumbers && data.alternateNumbers[0]) || ''}
+                            onChange={(value) => {
+                              const updatedNumbers = [...(data.alternateNumbers || [])];
+                              updatedNumbers[0] = value;
+                              if (isOrigin) {
+                                setOriginData((prev) => ({ ...prev, alternateNumbers: updatedNumbers }));
+                              } else {
+                                setDestinationData((prev) => ({ ...prev, alternateNumbers: updatedNumbers }));
+                              }
+                            }}
+                            type="tel"
+                      isDarkMode={isDarkMode}
+                    />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   {/* Save As Section */}
@@ -7144,61 +7244,6 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
               );
             })()}
 
-            {/* Alternate Numbers Section */}
-            {formModalOpen.type && (() => {
-              const isOrigin = formModalOpen.type === 'origin';
-              const data = isOrigin ? originData : destinationData;
-
-              return (
-                <div className="pt-3">
-                  <div className="flex items-center justify-between mb-3">
-                    <div />
-                    {/* Push to right: justify-end and border styles for button */}
-                    <button
-                      type="button"
-                      onClick={() => addAlternateNumber(formModalOpen.type!)}
-                      className={cn(
-                        'h-7 rounded-md border border-dashed px-4 text-xs font-medium transition-colors flex items-center justify-center ml-auto',
-                        isDarkMode
-                          ? 'border-blue-500 text-blue-200 hover:bg-blue-500/20 hover:border-blue-400'
-                          : 'border-blue-400 text-blue-600 hover:bg-blue-50 hover:border-blue-500'
-                      )}
-                      style={{ minWidth: 'fit-content' }}
-                    >
-                      + Add Alternate Number
-                    </button>
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {(data.alternateNumbers || ['']).map((number, index) => (
-                      <div key={index} className="flex items-center gap-2">
-                        <FloatingInput
-                          label={`Alternate Number ${index + 1}`}
-                          value={number}
-                          onChange={(value) => handleAlternateNumberChange(formModalOpen.type!, index, value)}
-                          type="tel"
-                          className="flex-1"
-                          isDarkMode={isDarkMode}
-                        />
-                        {(data.alternateNumbers || []).length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => removeAlternateNumber(formModalOpen.type!, index)}
-                            className={cn(
-                              'h-10 w-10 rounded-md flex items-center justify-center flex-shrink-0 transition-colors',
-                              isDarkMode
-                                ? 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                                : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'
-                            )}
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })()}
           </div>
 
           {/* Footer with Full-Width Button */}
@@ -7224,13 +7269,14 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
               }}
               className={cn(
                 "w-full h-12 rounded-md font-semibold text-base transition-all",
+                "shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
                 formModalOpen.type === 'origin' ? !isOriginFormComplete : !isDestinationFormComplete
                   ? isDarkMode
                     ? "bg-slate-700/50 text-slate-400 cursor-not-allowed opacity-60"
                     : "bg-slate-300 text-slate-500 cursor-not-allowed opacity-60"
                   : isDarkMode
-                    ? "bg-blue-500 hover:bg-blue-600 text-white shadow-lg shadow-blue-900/30"
-                    : "bg-blue-500 hover:bg-blue-600 text-white shadow-sm"
+                    ? "bg-blue-500 hover:bg-blue-600 text-white"
+                    : "bg-blue-500 hover:bg-blue-600 text-white"
               )}
             >
               {formModalOpen.type === 'origin' ? "SAVE " : 'SAVE '}
@@ -7294,10 +7340,11 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                           }}
                           className={cn(
                             'rounded-xl border overflow-hidden transition-all duration-300 p-2.5 sm:p-4 cursor-pointer',
+                            'shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]',
                             selectedAddressIndex === 0
                               ? isDarkMode
-                                ? 'border-blue-500 bg-blue-500/10 shadow-lg'
-                                : 'border-blue-500 bg-blue-50 shadow-lg'
+                                ? 'border-blue-500 bg-blue-500/10'
+                                : 'border-blue-500 bg-blue-50'
                               : isDarkMode
                                 ? 'border-slate-800/60 bg-slate-900/80 hover:border-slate-700'
                                 : 'border-slate-200 bg-white hover:border-slate-300'
@@ -7333,10 +7380,10 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                                 </h4>
                                 {previousAddressData.addressType && (
                                   <span className={cn(
-                                    'px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium uppercase flex-shrink-0',
+                                    'px-1.5 sm:px-2 py-0.5 rounded-none text-[10px] sm:text-xs font-medium uppercase flex-shrink-0',
                                     isDarkMode
-                                      ? 'bg-blue-500/20 text-blue-200'
-                                      : 'bg-blue-100 text-blue-700'
+                                      ? 'bg-blue-500/20 text-black'
+                                      : 'bg-blue-100 text-black'
                                   )}>
                                     {previousAddressData.addressType}
                                   </span>
@@ -7477,10 +7524,11 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                           }}
                           className={cn(
                             'rounded-xl border overflow-hidden transition-all duration-300 p-2.5 sm:p-4 cursor-pointer',
+                            'shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]',
                             selectedAddressIndex === 1
                               ? isDarkMode
-                                ? 'border-blue-500 bg-blue-500/10 shadow-lg'
-                                : 'border-blue-500 bg-blue-50 shadow-lg'
+                                ? 'border-blue-500 bg-blue-500/10'
+                                : 'border-blue-500 bg-blue-50'
                               : isDarkMode
                                 ? 'border-slate-800/60 bg-slate-900/80 hover:border-slate-700'
                                 : 'border-slate-200 bg-white hover:border-slate-300'
@@ -7516,10 +7564,10 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                                 </h4>
                                 {newAddressData.addressType && (
                                   <span className={cn(
-                                    'px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium uppercase flex-shrink-0',
+                                    'px-1.5 sm:px-2 py-0.5 rounded-none text-[10px] sm:text-xs font-medium uppercase flex-shrink-0',
                                     isDarkMode
-                                      ? 'bg-blue-500/20 text-blue-200'
-                                      : 'bg-blue-100 text-blue-700'
+                                      ? 'bg-blue-500/20 text-black'
+                                      : 'bg-blue-100 text-black'
                                   )}>
                                     {newAddressData.addressType}
                                   </span>
@@ -7642,23 +7690,23 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                         </div>
                       </div>
                     ) : hasMultipleRecords ? (
-                      <div className="space-y-3 max-h-[50vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                      <div className="max-h-[50vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                         {phoneSearchResults.map((record, index) => (
+                          <div key={index}>
                           <div
-                            key={index}
                             onClick={() => {
                               setSelectedRecordIndex(index);
                               handleSelectPhoneRecord(record, formModalOpen.type!, false);
                             }}
                             className={cn(
-                              'rounded-xl border overflow-hidden transition-all duration-300 p-2.5 sm:p-4 cursor-pointer',
+                                'transition-all duration-300 p-2.5 sm:p-4 cursor-pointer',
                               selectedRecordIndex === index
                                 ? isDarkMode
-                                  ? 'border-blue-500 bg-blue-500/10 shadow-lg'
-                                  : 'border-blue-500 bg-blue-50 shadow-lg'
+                                    ? 'bg-blue-500/10'
+                                    : 'bg-blue-50'
                                 : isDarkMode
-                                  ? 'border-slate-800/60 bg-slate-900/80 hover:border-slate-700'
-                                  : 'border-slate-200 bg-white hover:border-slate-300'
+                                    ? 'bg-transparent hover:bg-slate-900/40'
+                                    : 'bg-transparent hover:bg-slate-50'
                             )}
                           >
                             <div className="flex items-start gap-1.5 sm:gap-3">
@@ -7691,10 +7739,10 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                                   </h4>
                                   {record.addressType && (
                                     <span className={cn(
-                                      'px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium uppercase flex-shrink-0',
+                                      'px-1.5 sm:px-2 py-0.5 rounded-none text-[10px] sm:text-xs font-medium uppercase flex-shrink-0',
                                       isDarkMode
-                                        ? 'bg-blue-500/20 text-blue-200'
-                                        : 'bg-blue-100 text-blue-700'
+                                        ? 'bg-blue-500/20 text-black'
+                                        : 'bg-blue-100 text-black'
                                     )}>
                                       {record.addressType}
                                     </span>
@@ -7815,6 +7863,14 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                               </div>
                             </div>
                           </div>
+                            {/* Separator line - show between items, not after last */}
+                            {index < phoneSearchResults.length - 1 && (
+                              <div className={cn(
+                                "h-[1px] w-full",
+                                isDarkMode ? "bg-slate-700" : "bg-slate-200"
+                              )} />
+                            )}
+                          </div>
                         ))}
                       </div>
                     ) : (
@@ -7822,9 +7878,10 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                       <div
                         className={cn(
                           'rounded-xl border overflow-hidden transition-all duration-300 p-2.5 sm:p-4',
+                          'shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]',
                           isDarkMode
-                            ? 'border-slate-800/60 bg-slate-900/80 shadow-[0_20px_50px_rgba(0,0,0,0.5)]'
-                            : 'border-slate-200 bg-white shadow-[0_20px_50px_rgba(0,0,0,0.25)]'
+                            ? 'border-slate-800/60 bg-slate-900/80'
+                            : 'border-slate-200 bg-white'
                         )}
                       >
                         <div className="flex items-start gap-1.5 sm:gap-3">
@@ -7853,10 +7910,10 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                               </h4>
                               {data.addressType && (
                                 <span className={cn(
-                                  'px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs font-medium uppercase flex-shrink-0',
+                                  'px-1.5 sm:px-2 py-0.5 rounded-none text-[10px] sm:text-xs font-medium uppercase flex-shrink-0',
                                   isDarkMode
-                                    ? 'bg-blue-500/20 text-blue-200'
-                                    : 'bg-blue-100 text-blue-700'
+                                    ? 'bg-blue-500/20 text-black'
+                                    : 'bg-blue-100 text-black'
                                 )}>
                                   {data.addressType}
                                 </span>
@@ -8036,13 +8093,14 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                           }}
                           variant="outline"
                           className={cn(
-                            "h-9 sm:h-10 rounded-md text-xs sm:text-sm font-medium",
+                            "h-9 sm:h-10 rounded-md text-xs sm:text-sm font-medium border-0",
+                            "shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+                            "bg-white text-slate-800 hover:bg-white hover:text-slate-800",
                             isDarkMode
-                              ? "border-blue-500 bg-blue-500/10 hover:bg-blue-500/20 text-blue-400"
-                              : "border-blue-500 bg-blue-50 hover:bg-blue-100 text-blue-600"
+                              ? ""
+                              : ""
                           )}
                         >
-                          <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5" />
                           Add Another Address
                         </Button>
                       )}
@@ -8093,6 +8151,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                         }}
                         className={cn(
                           "flex-1 h-9 sm:h-10 rounded-md text-xs sm:text-sm font-medium",
+                          "shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
                           isDarkMode
                             ? "bg-blue-500 hover:bg-blue-600 text-white"
                             : "bg-blue-500 hover:bg-blue-600 text-white"

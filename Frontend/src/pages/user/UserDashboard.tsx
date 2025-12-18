@@ -116,7 +116,7 @@ const UserDashboard: React.FC = () => {
   }, [isMobile]);
 
   const pageBackground = isDarkMode
-    ? "bg-slate-950 text-slate-50"
+    ? "bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50"
     : "bg-gradient-to-b from-white to-sky-100 text-slate-900";
   const accentGradient = isDarkMode
     ? "from-blue-500/20 via-blue-400/10 to-transparent"
@@ -125,9 +125,9 @@ const UserDashboard: React.FC = () => {
     ? "from-purple-500/25 via-indigo-400/10 to-transparent"
     : "from-purple-400/15 via-violet-300/10 to-transparent";
   const sidebarBackground = isDarkMode
-    ? "bg-slate-900/80 border-slate-800/60"
-    : "bg-white/90 border-slate-200/60";
-  const sidebarTextMuted = isDarkMode ? "text-slate-300/80" : "text-slate-500";
+    ? "bg-slate-900/95 border-slate-700/80 backdrop-blur-xl"
+    : "bg-white/95 border-slate-200/80 backdrop-blur-xl";
+  const sidebarTextMuted = isDarkMode ? "text-slate-300/90" : "text-slate-600";
 
   const handleItemClick = (itemId: SidebarItem["id"]) => {
     setActiveItem(itemId);
@@ -145,7 +145,10 @@ const UserDashboard: React.FC = () => {
           <img 
             src={oclLogo} 
             alt="OCL Logo" 
-            className="h-24 w-36 object-contain"
+            className={cn(
+              "h-24 w-36 object-contain transition-opacity",
+              isDarkMode ? "opacity-90 brightness-110" : "opacity-100"
+            )}
           />
         </Link>
       </div>
@@ -162,14 +165,14 @@ const UserDashboard: React.FC = () => {
             key={item.id}
             onClick={() => handleItemClick(item.id)}
             className={cn(
-              "group w-full rounded-xl border px-3 py-2 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+              "group w-full rounded-xl border px-3 py-2 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2",
               isDarkMode
-                ? "border-transparent hover:border-blue-500/20 hover:bg-blue-500/5"
-                : "border-transparent hover:border-blue-400/25 hover:bg-blue-400/10",
+                ? "focus-visible:ring-blue-400 border-transparent hover:border-blue-500/30 hover:bg-blue-500/10"
+                : "focus-visible:ring-blue-500 border-transparent hover:border-blue-400/30 hover:bg-blue-400/10",
               activeItem === item.id
                 ? isDarkMode
-                  ? "border-blue-500/40 bg-blue-500/15"
-                  : "border-blue-400/40 bg-blue-400/15"
+                  ? "border-blue-500/50 bg-blue-500/20 shadow-lg shadow-blue-500/10"
+                  : "border-blue-400/50 bg-blue-400/20 shadow-lg shadow-blue-400/10"
                 : ""
             )}
           >
@@ -178,11 +181,15 @@ const UserDashboard: React.FC = () => {
                 <img 
                   src={homeIcon} 
                   alt="Home" 
-                className={cn(
-                    "h-5 w-5 object-contain transition",
+                  className={cn(
+                    "h-5 w-5 object-contain transition-all",
                     activeItem === item.id 
-                      ? "opacity-100" 
-                      : "opacity-50"
+                      ? isDarkMode 
+                        ? "opacity-100 brightness-125" 
+                        : "opacity-100"
+                      : isDarkMode
+                        ? "opacity-60 brightness-110"
+                        : "opacity-50"
                   )}
                 />
                 ) : item.id === "booknow" ? (
@@ -190,10 +197,14 @@ const UserDashboard: React.FC = () => {
                   src={bookNowIcon} 
                   alt="Book now" 
                   className={cn(
-                    "h-5 w-5 object-contain transition",
+                    "h-5 w-5 object-contain transition-all",
                     activeItem === item.id 
-                      ? "opacity-100" 
-                      : "opacity-50"
+                      ? isDarkMode 
+                        ? "opacity-100 brightness-125" 
+                        : "opacity-100"
+                      : isDarkMode
+                        ? "opacity-60 brightness-110"
+                        : "opacity-50"
                   )}
                 />
                 ) : item.id === "mybooking" ? (
@@ -201,10 +212,14 @@ const UserDashboard: React.FC = () => {
                   src={myBookingIcon} 
                   alt="My Booking" 
                   className={cn(
-                    "h-5 w-5 object-contain transition",
+                    "h-5 w-5 object-contain transition-all",
                     activeItem === item.id 
-                      ? "opacity-100" 
-                      : "opacity-50"
+                      ? isDarkMode 
+                        ? "opacity-100 brightness-125" 
+                        : "opacity-100"
+                      : isDarkMode
+                        ? "opacity-60 brightness-110"
+                        : "opacity-50"
                   )}
                 />
                 ) : item.id === "tracking" ? (
@@ -212,10 +227,14 @@ const UserDashboard: React.FC = () => {
                   src={trackingIcon} 
                   alt="Tracking" 
                   className={cn(
-                    "h-5 w-5 object-contain transition",
+                    "h-5 w-5 object-contain transition-all",
                     activeItem === item.id 
-                      ? "opacity-100" 
-                      : "opacity-50"
+                      ? isDarkMode 
+                        ? "opacity-100 brightness-125" 
+                        : "opacity-100"
+                      : isDarkMode
+                        ? "opacity-60 brightness-110"
+                        : "opacity-50"
                   )}
                 />
                 ) : item.id === "contactsupport" ? (
@@ -223,10 +242,14 @@ const UserDashboard: React.FC = () => {
                   src={contactSupportIcon} 
                   alt="Contact Support" 
                   className={cn(
-                    "h-5 w-5 object-contain transition",
+                    "h-5 w-5 object-contain transition-all",
                     activeItem === item.id 
-                      ? "opacity-100" 
-                      : "opacity-50"
+                      ? isDarkMode 
+                        ? "opacity-100 brightness-125" 
+                        : "opacity-100"
+                      : isDarkMode
+                        ? "opacity-60 brightness-110"
+                        : "opacity-50"
                   )}
                 />
               ) : (
@@ -234,14 +257,27 @@ const UserDashboard: React.FC = () => {
                   src={homeIcon} 
                   alt="Home" 
                   className={cn(
-                    "h-5 w-5 object-contain transition",
+                    "h-5 w-5 object-contain transition-all",
                     activeItem === item.id 
-                      ? "opacity-100" 
-                      : "opacity-50"
+                      ? isDarkMode 
+                        ? "opacity-100 brightness-125" 
+                        : "opacity-100"
+                      : isDarkMode
+                        ? "opacity-60 brightness-110"
+                        : "opacity-50"
                   )}
                 />
               )}
-              <span className="text-sm font-medium text-black">
+              <span className={cn(
+                "text-sm font-medium transition-colors",
+                isDarkMode 
+                  ? activeItem === item.id 
+                    ? "text-slate-50" 
+                    : "text-slate-300"
+                  : activeItem === item.id
+                    ? "text-slate-900"
+                    : "text-slate-700"
+              )}>
                 {item.label}
               </span>
             </div>
@@ -255,15 +291,23 @@ const UserDashboard: React.FC = () => {
           <button
             onClick={handleLogout}
             className={cn(
-              "group w-full rounded-xl border px-3 py-2 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500",
+              "group w-full rounded-xl border px-3 py-2 text-left transition-all duration-200 focus:outline-none focus-visible:ring-2",
               isDarkMode
-                ? "border-transparent hover:border-red-500/20 hover:bg-red-500/5"
-                : "border-transparent hover:border-red-400/25 hover:bg-red-400/10"
+                ? "focus-visible:ring-red-400 border-transparent hover:border-red-500/30 hover:bg-red-500/10"
+                : "focus-visible:ring-red-500 border-transparent hover:border-red-400/30 hover:bg-red-400/10"
             )}
           >
             <div className="flex items-center gap-2">
-              <LogOut className="h-5 w-5 text-black transition" />
-              <span className="text-sm font-medium text-black">Logout</span>
+              <LogOut className={cn(
+                "h-5 w-5 transition-colors",
+                isDarkMode ? "text-red-400 group-hover:text-red-300" : "text-red-600 group-hover:text-red-700"
+              )} />
+              <span className={cn(
+                "text-sm font-medium transition-colors",
+                isDarkMode ? "text-red-400 group-hover:text-red-300" : "text-red-600 group-hover:text-red-700"
+              )}>
+                Logout
+              </span>
             </div>
           </button>
         </div>
@@ -300,7 +344,7 @@ const UserDashboard: React.FC = () => {
 
       {/* Scrolling Marquee/Ticker */}
       <div 
-        className="marquee-container relative z-20 w-full overflow-hidden"
+        className="marquee-container fixed top-0 left-0 right-0 z-50 w-full overflow-hidden"
         style={{
           background: "linear-gradient(to bottom, #000000 0%, #000000 85%, #FF9A0C 100%)"
         }}
@@ -309,7 +353,9 @@ const UserDashboard: React.FC = () => {
           <div className={cn(
             "marquee-content flex animate-scroll items-center whitespace-nowrap py-1.5 text-xs font-medium sm:py-2 sm:text-sm",
             "text-white"
-          )}>
+          )}
+          style={{ width: "200%" }}
+          >
             <span className="mx-4">
               📊 Today's Network Update: Our delivery operations are running smoothly with 93% of shipments reaching on time across all active zones.  ⏱ Current pickup estimate ranges between 60-75 minutes depending on your location, and we are continuously optimizing routes for faster service.  😊 Customer satisfaction remains strong at 4.4/5 based on recent feedback.  🔍 AI Delay Monitor: No major disruptions predicted today, but minor slowdowns may occur during peak evening hours - we'll keep you updated in real time.
             </span>
@@ -320,11 +366,14 @@ const UserDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative z-10 flex min-h-screen flex-col lg:flex-row">
+      <div className="relative z-10 flex min-h-screen flex-col lg:flex-row pt-[2.5rem]">
         {/* Desktop Sidebar - Hidden on mobile */}
         <aside
           className={cn(
-            "hidden lg:fixed lg:left-0 lg:top-28 lg:flex lg:w-64 lg:max-w-64 lg:h-[calc(100vh-7rem)] lg:border-r lg:rounded-tl-none lg:rounded-tr-3xl lg:shadow-[rgba(0,0,0,0.19)_0px_10px_20px,rgba(0,0,0,0.23)_0px_6px_6px] backdrop-blur-xl transition-all duration-500",
+            "hidden lg:fixed lg:left-0 lg:top-[2.5rem] lg:flex lg:w-64 lg:max-w-64 lg:h-[calc(100vh-2.5rem)] lg:border-r lg:rounded-tl-none lg:rounded-tr-3xl transition-all duration-500",
+            isDarkMode
+              ? "lg:shadow-[0_10px_40px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.05)]"
+              : "lg:shadow-[rgba(0,0,0,0.19)_0px_10px_20px,rgba(0,0,0,0.23)_0px_6px_6px]",
             sidebarBackground
           )}
         >
@@ -348,8 +397,8 @@ const UserDashboard: React.FC = () => {
           "flex-1 lg:ml-80 min-w-0"
         )}>
           <div className={cn(
-            "flex w-full flex-col gap-4 py-4 sm:gap-5 sm:py-6 lg:pt-28",
-            "pl-6 pr-6 sm:pl-8 sm:pr-8 lg:pl-8 lg:pr-20",
+            "flex w-full flex-col gap-4 py-4 sm:gap-5 sm:py-6 lg:pt-[5vh]",
+            "pl-6 pr-6 sm:pl-8 sm:pr-8 lg:pl-[5%] lg:pr-[5%]",
             "box-border"
           )}>
             {/* Mobile Header with Hamburger Menu */}
@@ -369,7 +418,10 @@ const UserDashboard: React.FC = () => {
                 <span className="sr-only">Open menu</span>
               </Button>
               <div className="flex-1">
-                <h1 className="text-xl font-semibold text-inherit">
+                <h1 className={cn(
+                  "text-xl font-semibold",
+                  isDarkMode ? "text-slate-50" : "text-slate-900"
+                )}>
                   OCL User Panel
                 </h1>
               </div>
@@ -405,6 +457,32 @@ const UserDashboard: React.FC = () => {
                   
                 </p>
               </div>
+              <Button
+                variant="outline"
+                onClick={() => setIsDarkMode((prev) => !prev)}
+                className={cn(
+                  "flex items-center gap-2 rounded-full border transition",
+                  isDarkMode
+                    ? "border-slate-700 bg-slate-900/80 text-slate-200 hover:bg-slate-800/70"
+                    : "border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-100"
+                )}
+              >
+                {isDarkMode ? (
+                  <>
+                    <Sun size={16} />
+                    <span className="text-sm font-medium">Light mode</span>
+                  </>
+                ) : (
+                  <>
+                    <MoonStar size={16} />
+                    <span className="text-sm font-medium">Dark mode</span>
+                  </>
+                )}
+              </Button>
+            </div>
+
+            {/* Desktop Dark Mode Toggle - Top Right */}
+            <div className="hidden lg:flex justify-end mb-2">
               <Button
                 variant="outline"
                 onClick={() => setIsDarkMode((prev) => !prev)}
@@ -564,10 +642,10 @@ const UserDashboard: React.FC = () => {
                       <div key={index} className="flex flex-col items-center">
                         <div
                           className={cn(
-                            "h-32 w-full border shadow-[rgba(50,50,93,0.25)_0px_6px_12px_-2px,rgba(0,0,0,0.3)_0px_3px_7px_-3px] transition overflow-hidden",
+                            "h-32 w-full border transition overflow-hidden rounded-lg",
                             isDarkMode
-                              ? "border-slate-800/50 bg-slate-900/70"
-                              : `border-slate-200/80 bg-gradient-to-br ${item.gradient}`
+                              ? "border-slate-700/60 bg-slate-800/60 shadow-[0_4px_12px_rgba(0,0,0,0.3)]"
+                              : `border-slate-200/80 bg-gradient-to-br ${item.gradient} shadow-[rgba(50,50,93,0.25)_0px_6px_12px_-2px,rgba(0,0,0,0.3)_0px_3px_7px_-3px]`
                           )}
                         >
                           {item.image && (
@@ -584,12 +662,20 @@ const UserDashboard: React.FC = () => {
                         </div>
                         <h4
                           className={cn(
-                            "mt-3 text-center text-base font-semibold",
-                            isDarkMode ? "text-white" : "text-slate-900"
+                            "mt-3 text-center text-base font-semibold transition-colors",
+                            isDarkMode ? "text-slate-100" : "text-slate-900"
                           )}
                         >
                           {item.heading}
                         </h4>
+                        <p
+                          className={cn(
+                            "mt-1 text-center text-xs transition-colors",
+                            isDarkMode ? "text-slate-400" : "text-slate-600"
+                          )}
+                        >
+                          {item.subtext}
+                        </p>
                       </div>
                     ))}
                   </div>

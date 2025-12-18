@@ -109,6 +109,13 @@ interface ShipmentData {
     timestamp: string;
     description: string;
   }>;
+  tracking?: {
+    booked?: Array<{
+      shipmentData?: {
+        contentDescription?: string;
+      };
+    }>;
+  };
 }
 
 interface ShipmentOverviewProps {
@@ -224,13 +231,25 @@ const ShipmentOverview: React.FC<ShipmentOverviewProps> = ({ isDarkMode = false 
           || booking.bookingData?.createdAt
           || new Date().toISOString();
 
+        // Extract description from tracking data if available
+        const trackingDescription = booking?.tracking?.booked?.[0]?.shipmentData?.contentDescription
+          || booking?.trackingData?.booked?.[0]?.shipmentData?.contentDescription
+          || null;
+
+        // Get shipment data and update description if tracking description is available
+        const shipmentData = booking.shipmentData || booking.bookingData?.shipmentData || {};
+        const finalShipmentData = {
+          ...shipmentData,
+          description: trackingDescription || shipmentData.description || ''
+        };
+
         return {
           _id: booking._id || booking.bookingReference || `local-${index}-${Date.now()}`,
           bookingReference: booking.bookingReference || booking.bookingData?.bookingReference,
           consignmentNumber: booking.consignmentNumber || booking.bookingData?.consignmentNumber,
           originData: booking.originData || booking.bookingData?.originData || {},
           destinationData: booking.destinationData || booking.bookingData?.destinationData || {},
-          shipmentData: booking.shipmentData || booking.bookingData?.shipmentData || {},
+          shipmentData: finalShipmentData,
           invoiceData: booking.invoiceData || booking.bookingData?.invoiceData || {
             calculatedPrice: 0,
             gst: 0,
@@ -246,6 +265,7 @@ const ShipmentOverview: React.FC<ShipmentOverviewProps> = ({ isDarkMode = false 
           bookingDate: bookingDate,
           pickupDate: booking.pickupDate || booking.bookingData?.shipmentData?.pickupDate,
           deliveryDate: booking.deliveryDate || booking.bookingData?.shipmentData?.deliveryDate,
+          tracking: booking.tracking || booking.trackingData || null,
           trackingUpdates: baseTrackingUpdates.length > 0 ? baseTrackingUpdates.map((update: any) => ({
             status: update.status || mappedStatus,
             location: update.location || booking.originData?.city || booking.bookingData?.originData?.city || 'Unknown',
@@ -315,13 +335,25 @@ const ShipmentOverview: React.FC<ShipmentOverviewProps> = ({ isDarkMode = false 
       || booking.bookingData?.updatedAt
       || new Date().toISOString();
 
+    // Extract description from tracking data if available
+    const trackingDescription = booking?.tracking?.booked?.[0]?.shipmentData?.contentDescription
+      || booking?.trackingData?.booked?.[0]?.shipmentData?.contentDescription
+      || null;
+
+    // Get shipment data and update description if tracking description is available
+    const shipmentData = booking.bookingData.shipmentData || {};
+    const finalShipmentData = {
+      ...shipmentData,
+      description: trackingDescription || shipmentData.description || ''
+    };
+
     return {
       _id: booking._id?.toString?.() || booking._id || booking.bookingReference || `booking-${Date.now()}`,
       bookingReference: booking.bookingReference || booking.bookingData?.bookingReference,
       consignmentNumber: booking.consignmentNumber || booking.bookingData?.consignmentNumber,
       originData: booking.bookingData.originData || {},
       destinationData: booking.bookingData.destinationData || {},
-      shipmentData: booking.bookingData.shipmentData || {},
+      shipmentData: finalShipmentData,
       invoiceData,
       status: mappedStatus,
       paymentStatus: booking.paymentStatus || booking.paymentData?.paymentStatus || 'unpaid',
@@ -329,6 +361,7 @@ const ShipmentOverview: React.FC<ShipmentOverviewProps> = ({ isDarkMode = false 
       bookingDate: bookingDate,
       pickupDate: booking.pickupDate || booking.bookingData?.shipmentData?.pickupDate,
       deliveryDate: booking.deliveryDate || booking.bookingData?.shipmentData?.deliveryDate,
+      tracking: booking.tracking || booking.trackingData || null,
       trackingUpdates: baseTrackingUpdates.length > 0 ? baseTrackingUpdates.map((update: any) => ({
         status: update.status || mappedStatus,
         location: update.location || booking.bookingData.originData?.city || 'Unknown',
@@ -638,7 +671,7 @@ const ShipmentOverview: React.FC<ShipmentOverviewProps> = ({ isDarkMode = false 
   };
 
   const renderDetailCards = (shipment: ShipmentData) => (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
       {/* Origin Card */}
       <div className={cn(
         "group relative backdrop-blur-xl rounded-xl p-3 border transition-all duration-300 overflow-hidden",
@@ -720,40 +753,12 @@ const ShipmentOverview: React.FC<ShipmentOverviewProps> = ({ isDarkMode = false 
         <div className="space-y-1 text-xs relative z-10">
           <div className="flex items-center gap-1"><Package className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Nature:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.shipmentData.natureOfConsignment}</span></div>
           <div className="flex items-center gap-1"><Truck className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Service:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.shipmentData.services}</span></div>
-          <div className="flex items-center gap-1"><Truck className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Mode:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.shipmentData.mode}</span></div>
+          {shipment.shipmentData.services?.toLowerCase() === 'standard' && (
+            <div className="flex items-center gap-1"><Truck className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Mode:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.shipmentData.mode}</span></div>
+          )}
           <div className="flex items-center gap-1"><Scale className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Weight:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.shipmentData.actualWeight} kg</span></div>
           <div className="flex items-center gap-1"><Package className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Packages:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.shipmentData.totalPackages}</span></div>
-          <div className="flex items-center gap-1"><FileText className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Description:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.shipmentData.description}</span></div>
-        </div>
-      </div>
-
-      {/* Invoice Card */}
-      <div className={cn(
-        "group relative backdrop-blur-xl rounded-xl p-3 border transition-all duration-300 overflow-hidden",
-        isDarkMode
-          ? "bg-gradient-to-br from-slate-800/80 via-slate-700/60 to-slate-800/80 border-purple-500/40"
-          : "bg-gradient-to-br from-purple-50/80 via-indigo-50/60 to-purple-50/80 border-purple-200/60"
-      )}
-      style={{
-        boxShadow: 'rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px'
-      }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-indigo-500/10 to-purple-500/10 opacity-100 transition-opacity duration-300"></div>
-        <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl"></div>
-        <div className="absolute top-3 right-3 z-10">
-          <div className={cn(
-            "px-2 py-1 font-bold text-xs bg-white border border-gray-300",
-            isDarkMode ? "text-gray-800" : "text-gray-800"
-          )}>
-            Invoice
-          </div>
-        </div>
-        <div className="space-y-1 text-xs relative z-10">
-          <div className="flex items-center gap-1"><Package className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Service Type:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.invoiceData.serviceType}</span></div>
-          <div className="flex items-center gap-1"><MapPin className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Location Zone:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.invoiceData.location}</span></div>
-          <div className="flex items-center gap-1"><Truck className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Transport Mode:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.invoiceData.transportMode}</span></div>
-          <div className="flex items-center gap-1"><DollarSign className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Base Price:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>₹{shipment.invoiceData.calculatedPrice.toFixed(2)}</span></div>
-          <div className="flex items-center gap-1"><Receipt className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>GST (18%):</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>₹{shipment.invoiceData.gst.toFixed(2)}</span></div>
-          <div className="flex items-center gap-1"><DollarSign className={cn("h-3 w-3", isDarkMode ? "text-purple-300" : "text-purple-700")} /><strong className={isDarkMode ? "text-purple-300" : "text-purple-700"}>Total:</strong> <span className={isDarkMode ? "text-purple-300" : "text-purple-700"}>₹{shipment.invoiceData.finalPrice.toFixed(2)}</span></div>
+          <div className="flex items-center gap-1"><FileText className={cn("h-3 w-3", isDarkMode ? "text-slate-200" : "text-gray-800")} /><strong className={isDarkMode ? "text-slate-200" : "text-gray-800"}>Description:</strong> <span className={isDarkMode ? "text-slate-400" : "text-gray-500"}>{shipment.shipmentData.description || 'N/A'}</span></div>
         </div>
       </div>
     </div>

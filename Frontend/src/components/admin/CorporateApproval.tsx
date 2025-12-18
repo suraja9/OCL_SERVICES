@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Clock, X, Eye, Check, AlertCircle, DollarSign, User, Calendar, Building, Package, Truck, Plane, Zap, RotateCcw, TrendingUp, MapPin, RefreshCw, Search, Edit, Trash2, MoreVertical, Plus, Minus } from 'lucide-react';
+import { CheckCircle, Clock, X, Eye, Check, AlertCircle, DollarSign, User, Calendar, Building, Package, Truck, Plane, Zap, RotateCcw, TrendingUp, MapPin, RefreshCw, Search, Edit, Trash2, MoreVertical, Plus, Minus, MoonStar, Sun } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 interface CorporatePricing {
   _id: string;
@@ -82,6 +83,7 @@ const CorporateApproval = () => {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(false);
   const [editFormData, setEditFormData] = useState({
     name: '',
     fuelChargePercentage: '',
@@ -557,11 +559,24 @@ const CorporateApproval = () => {
     if (!data || Object.keys(data).length === 0) return null;
 
     return (
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50">
+      <div className={cn(
+        "rounded-2xl border overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 h-full flex flex-col",
+        isDarkMode
+          ? "bg-slate-800/60 border-slate-700/60 backdrop-blur-xl"
+          : "bg-white border-gray-200"
+      )}>
+        <div className={cn(
+          "flex items-center justify-between p-5 border-b transition-colors",
+          isDarkMode
+            ? "border-slate-700 bg-gradient-to-r from-slate-800 via-slate-800 to-slate-800"
+            : "border-gray-100 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50"
+        )}>
           <div className="flex items-center space-x-4">
             {icon}
-            <h3 className="text-base font-bold text-gray-800" style={{ fontFamily: 'Calibri' }}>
+            <h3 className={cn(
+              "text-base font-bold transition-colors",
+              isDarkMode ? "text-slate-50" : "text-gray-800"
+            )} style={{ fontFamily: 'Calibri' }}>
               {title}
             </h3>
           </div>
@@ -577,33 +592,74 @@ const CorporateApproval = () => {
                 <th className="px-5 py-4 text-center text-sm font-semibold text-white" style={{ fontFamily: 'Calibr' }}>Rest of India</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
+            <tbody className={cn(
+              "divide-y transition-colors",
+              isDarkMode ? "bg-slate-800/40 divide-slate-700" : "bg-white divide-gray-100"
+            )}>
               {isWeightBased ? (
                 Object.entries(data).map(([weight, prices]: [string, any], index) => (
-                  <tr key={weight} className={`hover:bg-blue-50 transition-colors ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                    <td className="px-5 py-4 text-sm font-medium text-gray-900" style={{ fontFamily: 'Calibri' }}>
+                  <tr key={weight} className={cn(
+                    "transition-colors",
+                    isDarkMode
+                      ? `hover:bg-slate-700/50 ${index % 2 === 0 ? 'bg-slate-800/40' : 'bg-slate-800/60'}`
+                      : `hover:bg-blue-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`
+                  )}>
+                    <td className={cn(
+                      "px-5 py-4 text-sm font-medium transition-colors",
+                      isDarkMode ? "text-slate-200" : "text-gray-900"
+                    )} style={{ fontFamily: 'Calibri' }}>
                       {formatWeightRange(weight)}
                     </td>
-                    <td className="px-5 py-4 text-sm text-center text-gray-700 font-semibold" style={{ fontFamily: 'Calibri' }}>₹{prices.assam || 0}</td>
-                    <td className="px-5 py-4 text-sm text-center text-gray-700 font-semibold" style={{ fontFamily: 'Calibri' }}>₹{prices.neBySurface || 0}</td>
-                    <td className="px-5 py-4 text-sm text-center text-gray-700 font-semibold" style={{ fontFamily: 'Calibri' }}>₹{prices.neByAirAgtImp || 0}</td>
-                    <td className="px-5 py-4 text-sm text-center text-gray-700 font-semibold" style={{ fontFamily: 'Calibri' }}>₹{prices.restOfIndia || 0}</td>
+                    <td className={cn(
+                      "px-5 py-4 text-sm text-center font-semibold transition-colors",
+                      isDarkMode ? "text-slate-300" : "text-gray-700"
+                    )} style={{ fontFamily: 'Calibri' }}>₹{prices.assam || 0}</td>
+                    <td className={cn(
+                      "px-5 py-4 text-sm text-center font-semibold transition-colors",
+                      isDarkMode ? "text-slate-300" : "text-gray-700"
+                    )} style={{ fontFamily: 'Calibri' }}>₹{prices.neBySurface || 0}</td>
+                    <td className={cn(
+                      "px-5 py-4 text-sm text-center font-semibold transition-colors",
+                      isDarkMode ? "text-slate-300" : "text-gray-700"
+                    )} style={{ fontFamily: 'Calibri' }}>₹{prices.neByAirAgtImp || 0}</td>
+                    <td className={cn(
+                      "px-5 py-4 text-sm text-center font-semibold transition-colors",
+                      isDarkMode ? "text-slate-300" : "text-gray-700"
+                    )} style={{ fontFamily: 'Calibri' }}>₹{prices.restOfIndia || 0}</td>
                   </tr>
                 ))
               ) : (
                 <>
-                  <tr className="hover:bg-blue-50 transition-colors bg-white">
-                    <td className="px-5 py-4 text-sm font-medium text-gray-900" style={{ fontFamily: 'Calibri' }}>All Weights</td>
-                    <td className="px-5 py-4 text-sm text-center text-gray-700 font-semibold" style={{ fontFamily: 'Calibri' }}>₹{data.assam || 0}</td>
-                    <td className="px-5 py-4 text-sm text-center text-gray-700 font-semibold" style={{ fontFamily: 'Calibri' }}>₹{data.neBySurface || 0}</td>
-                    <td className="px-5 py-4 text-sm text-center text-gray-700 font-semibold" style={{ fontFamily: 'Calibri' }}>₹{data.neByAirAgtImp || 0}</td>
-                    <td className="px-5 py-4 text-sm text-center text-gray-700 font-semibold" style={{ fontFamily: 'Calibri' }}>₹{data.restOfIndia || 0}</td>
+                  <tr className={cn(
+                    "transition-colors",
+                    isDarkMode ? "hover:bg-slate-700/50 bg-slate-800/40" : "hover:bg-blue-50 bg-white"
+                  )}>
+                    <td className={cn(
+                      "px-5 py-4 text-sm font-medium transition-colors",
+                      isDarkMode ? "text-slate-200" : "text-gray-900"
+                    )} style={{ fontFamily: 'Calibri' }}>All Weights</td>
+                    <td className={cn(
+                      "px-5 py-4 text-sm text-center font-semibold transition-colors",
+                      isDarkMode ? "text-slate-300" : "text-gray-700"
+                    )} style={{ fontFamily: 'Calibri' }}>₹{data.assam || 0}</td>
+                    <td className={cn(
+                      "px-5 py-4 text-sm text-center font-semibold transition-colors",
+                      isDarkMode ? "text-slate-300" : "text-gray-700"
+                    )} style={{ fontFamily: 'Calibri' }}>₹{data.neBySurface || 0}</td>
+                    <td className={cn(
+                      "px-5 py-4 text-sm text-center font-semibold transition-colors",
+                      isDarkMode ? "text-slate-300" : "text-gray-700"
+                    )} style={{ fontFamily: 'Calibri' }}>₹{data.neByAirAgtImp || 0}</td>
+                    <td className={cn(
+                      "px-5 py-4 text-sm text-center font-semibold transition-colors",
+                      isDarkMode ? "text-slate-300" : "text-gray-700"
+                    )} style={{ fontFamily: 'Calibri' }}>₹{data.restOfIndia || 0}</td>
                   </tr>
                   {/* Add empty rows to match height with weight-based tables */}
-                  <tr className="bg-gray-50">
+                  <tr className={isDarkMode ? "bg-slate-800/60" : "bg-gray-50"}>
                     <td colSpan={5} className="px-5 py-4 text-sm text-center text-transparent" style={{ fontFamily: 'Calibri' }}>₹0</td>
                   </tr>
-                  <tr className="bg-white">
+                  <tr className={isDarkMode ? "bg-slate-800/40" : "bg-white"}>
                     <td colSpan={5} className="px-5 py-4 text-sm text-center text-transparent" style={{ fontFamily: 'Calibri' }}>₹0</td>
                   </tr>
                 </>
@@ -620,13 +676,26 @@ const CorporateApproval = () => {
     if (!data || Object.keys(data).length === 0) return null;
 
     return (
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50">
+      <div className={cn(
+        "rounded-2xl border overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300",
+        isDarkMode
+          ? "bg-slate-800/60 border-slate-700/60 backdrop-blur-xl"
+          : "bg-white border-gray-200"
+      )}>
+        <div className={cn(
+          "flex items-center justify-between p-5 border-b transition-colors",
+          isDarkMode
+            ? "border-slate-700 bg-gradient-to-r from-slate-800 via-slate-800 to-slate-800"
+            : "border-gray-100 bg-gradient-to-r from-gray-50 via-gray-100 to-gray-50"
+        )}>
           <div className="flex items-center space-x-4">
             <div className="w-7 h-7 bg-gradient-to-br from-purple-500 to-violet-600 rounded-xl flex items-center justify-center shadow-lg">
               <RotateCcw className="h-4 w-4 text-white" />
             </div>
-            <h3 className="text-base font-bold text-gray-800" style={{ fontFamily: 'Calibri' }}>
+            <h3 className={cn(
+              "text-base font-bold transition-colors",
+              isDarkMode ? "text-slate-50" : "text-gray-800"
+            )} style={{ fontFamily: 'Calibri' }}>
               {title}
             </h3>
           </div>
@@ -641,18 +710,38 @@ const CorporateApproval = () => {
                 <th className="px-5 py-4 text-center text-sm font-semibold text-white" style={{ fontFamily: 'Calibr' }}>Priority</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-100">
+            <tbody className={cn(
+              "divide-y transition-colors",
+              isDarkMode ? "bg-slate-800/40 divide-slate-700" : "bg-white divide-gray-100"
+            )}>
               {Object.entries(data).map(([region, transport]: [string, any], regionIndex) => (
                 Object.entries(transport).map(([mode, pricing]: [string, any], modeIndex) => {
                   const rowIndex = regionIndex * Object.keys(transport).length + modeIndex;
                   return (
-                    <tr key={`${region}-${mode}`} className={`hover:bg-purple-50 transition-colors ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`}>
-                      <td className="px-5 py-4 text-sm font-medium text-gray-900" style={{ fontFamily: 'Calibri' }}>
+                    <tr key={`${region}-${mode}`} className={cn(
+                      "transition-colors",
+                      isDarkMode
+                        ? `hover:bg-slate-700/50 ${rowIndex % 2 === 0 ? 'bg-slate-800/40' : 'bg-slate-800/60'}`
+                        : `hover:bg-purple-50 ${rowIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'}`
+                    )}>
+                      <td className={cn(
+                        "px-5 py-4 text-sm font-medium transition-colors",
+                        isDarkMode ? "text-slate-200" : "text-gray-900"
+                      )} style={{ fontFamily: 'Calibri' }}>
                         {formatRegionName(region)}
                       </td>
-                      <td className="px-5 py-4 text-sm text-center text-gray-700 capitalize font-semibold" style={{ fontFamily: 'Calibri' }}>{mode}</td>
-                      <td className="px-5 py-4 text-sm text-center text-gray-700 font-semibold" style={{ fontFamily: 'Calibri' }}>₹{pricing?.normal || 0}</td>
-                      <td className="px-5 py-4 text-sm text-center text-gray-700 font-semibold" style={{ fontFamily: 'Calibri' }}>₹{pricing?.priority || 0}</td>
+                      <td className={cn(
+                        "px-5 py-4 text-sm text-center capitalize font-semibold transition-colors",
+                        isDarkMode ? "text-slate-300" : "text-gray-700"
+                      )} style={{ fontFamily: 'Calibri' }}>{mode}</td>
+                      <td className={cn(
+                        "px-5 py-4 text-sm text-center font-semibold transition-colors",
+                        isDarkMode ? "text-slate-300" : "text-gray-700"
+                      )} style={{ fontFamily: 'Calibri' }}>₹{pricing?.normal || 0}</td>
+                      <td className={cn(
+                        "px-5 py-4 text-sm text-center font-semibold transition-colors",
+                        isDarkMode ? "text-slate-300" : "text-gray-700"
+                      )} style={{ fontFamily: 'Calibri' }}>₹{pricing?.priority || 0}</td>
                     </tr>
                   );
                 })
@@ -667,17 +756,100 @@ const CorporateApproval = () => {
 
   console.log('Rendering CorporateApproval with loading:', loading, 'pricingList:', pricingList.length);
 
+  // Theme variables
+  const pageBackground = isDarkMode
+    ? "bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-50"
+    : "bg-gradient-to-b from-white to-sky-100 text-slate-900";
+  const accentGradient = isDarkMode
+    ? "from-blue-500/20 via-blue-400/10 to-transparent"
+    : "from-blue-400/15 via-blue-300/10 to-transparent";
+  const accentGradientAlt = isDarkMode
+    ? "from-purple-500/25 via-indigo-400/10 to-transparent"
+    : "from-purple-400/15 via-violet-300/10 to-transparent";
+  const cardBackground = isDarkMode
+    ? "bg-slate-900/95 border-slate-700/80 backdrop-blur-xl"
+    : "bg-white/95 border-slate-200/80 backdrop-blur-xl";
+
   return (
-    <div className="space-y-6">
-      <Card className="rounded-2xl border border-gray-100 shadow-sm">
+    <div
+      className={cn(
+        "relative min-h-screen transition-colors duration-500 ease-out p-6",
+        pageBackground
+      )}
+    >
+      {/* Decorative gradient blurs */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className={cn(
+            "absolute -right-24 top-[-10%] h-[280px] w-[280px] rounded-full blur-3xl",
+            `bg-gradient-to-br ${accentGradient}`
+          )}
+        />
+        <div
+          className={cn(
+            "absolute bottom-[-15%] left-[-10%] h-[340px] w-[340px] rounded-full blur-3xl",
+            `bg-gradient-to-tr ${accentGradientAlt}`
+          )}
+        />
+      </div>
+
+      <div className="relative z-10 space-y-6">
+        {/* Dark Mode Toggle */}
+        <div className="flex justify-end mb-4">
+          <Button
+            variant="outline"
+            onClick={() => setIsDarkMode((prev) => !prev)}
+            className={cn(
+              "flex items-center gap-2 rounded-full border transition shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+              isDarkMode
+                ? "border-slate-700 bg-slate-900/80 text-slate-200 hover:bg-slate-800/70"
+                : "border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-100"
+            )}
+          >
+            {isDarkMode ? (
+              <>
+                <Sun size={16} />
+                <span className="text-sm font-medium">Light mode</span>
+              </>
+            ) : (
+              <>
+                <MoonStar size={16} />
+                <span className="text-sm font-medium">Dark mode</span>
+              </>
+            )}
+          </Button>
+        </div>
+
+      <Card className={cn(
+        "rounded-2xl border transition-all duration-300 shadow-[rgba(0,0,0,0.19)_0px_10px_20px,rgba(0,0,0,0.23)_0px_6px_6px]",
+        isDarkMode
+          ? "border-slate-800/60 bg-slate-900/60 backdrop-blur-xl"
+          : "border-slate-200/80 bg-white/95 backdrop-blur-xl"
+      )}>
         <CardHeader className="px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-lg font-bold" style={{ fontFamily: 'Calibr', fontSize: '32px' }}>Corporate Approval</CardTitle>
-              <p className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'Calibri' }}>{totalCount} total pricing submissions</p>
+              <CardTitle className={cn(
+                "text-lg font-bold transition-colors",
+                isDarkMode ? "text-slate-50" : "text-slate-900"
+              )} style={{ fontFamily: 'Calibr', fontSize: '32px' }}>Corporate Approval</CardTitle>
+              <p className={cn(
+                "text-sm mt-1 transition-colors",
+                isDarkMode ? "text-slate-400" : "text-slate-600"
+              )} style={{ fontFamily: 'Calibri' }}>{totalCount} total pricing submissions</p>
             </div>
             <div className="flex items-center space-x-3">
-              <Button variant="outline" size="sm" onClick={() => fetchPricingData()} className="rounded-full px-4">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => fetchPricingData()} 
+                className={cn(
+                  "rounded-full px-4 transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+                  isDarkMode
+                    ? "border-slate-700 bg-slate-900/80 text-slate-200 hover:bg-slate-800/70"
+                    : "border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-100"
+                )}
+              >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
@@ -689,24 +861,41 @@ const CorporateApproval = () => {
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4 mb-6 items-center">
             <div className="flex-1 relative max-w-[720px] w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-4 w-4 z-10" />
+              <Search className={cn(
+                "absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 z-10 transition-colors",
+                isDarkMode ? "text-slate-400" : "text-gray-400"
+              )} />
               <div className="relative">
                 <Input
                   placeholder=""
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-12 rounded-full border-2 border-gray-300 focus:border-blue-500 focus:outline-none focus:ring-0 focus:ring-offset-0"
+                  className={cn(
+                    "pl-12 rounded-full border-2 focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all",
+                    isDarkMode
+                      ? searchTerm
+                        ? "border-blue-500 bg-slate-800/50 text-slate-50"
+                        : "border-slate-700 bg-slate-800/50 text-slate-50"
+                      : searchTerm
+                        ? "border-blue-500 bg-white"
+                        : "border-gray-300 bg-white"
+                  )}
                   style={{ 
-                    borderColor: searchTerm ? '#3b82f6' : '#d1d5db',
+                    borderColor: searchTerm ? '#3b82f6' : (isDarkMode ? '#475569' : '#d1d5db'),
                     boxShadow: 'none'
                   }}
                 />
                 <label 
-                  className={`absolute left-12 transition-all duration-200 pointer-events-none bg-white px-1 ${
+                  className={cn(
+                    "absolute left-12 transition-all duration-200 pointer-events-none px-1",
+                    isDarkMode ? "bg-slate-900" : "bg-white",
                     searchTerm 
-                      ? '-top-2 text-sm text-blue-600 font-medium' 
-                      : 'top-1/2 -translate-y-1/2 text-sm text-gray-500'
-                  }`}
+                      ? '-top-2 text-sm font-medium text-blue-500' 
+                      : cn(
+                          "top-1/2 -translate-y-1/2 text-sm",
+                          isDarkMode ? "text-slate-400" : "text-gray-500"
+                        )
+                  )}
                 >
                   Search by Pricing Name / Company
                 </label>
@@ -716,14 +905,22 @@ const CorporateApproval = () => {
             <Button 
               onClick={() => { setSearchTerm(''); setStatusFilter(''); setCurrentPage(1); }} 
               variant="outline"
-              className="rounded-full px-4"
+              className={cn(
+                "rounded-full px-4 transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+                isDarkMode
+                  ? "border-slate-700 bg-slate-900/80 text-slate-200 hover:bg-slate-800/70"
+                  : "border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-100"
+              )}
             >
               Reset Filters
             </Button>
           </div>
 
           {/* Table */}
-          <div className="rounded-lg overflow-hidden border border-gray-200">
+          <div className={cn(
+            "rounded-lg overflow-hidden border transition-colors",
+            isDarkMode ? "border-slate-700/60" : "border-slate-200"
+          )}>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead style={{ fontFamily: 'Calibr', backgroundColor: '#406AB9' }} className="">
@@ -738,17 +935,26 @@ const CorporateApproval = () => {
                     <th className="px-4 py-3 text-center text-sm font-semibold border-r border-gray-300 last:border-r-0" style={{ fontFamily: 'Calibr', color: '#4ec0f7' }}>Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className={cn(
+                  "divide-y transition-colors",
+                  isDarkMode ? "bg-slate-800/40 divide-slate-700" : "bg-white divide-gray-200"
+                )}>
                   {loading ? (
                     <tr>
-                      <td colSpan={8} className="text-center py-12 text-gray-500">
+                      <td colSpan={8} className={cn(
+                        "text-center py-12 transition-colors",
+                        isDarkMode ? "text-slate-400" : "text-gray-500"
+                      )}>
                         <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2" />
                         Loading pricing submissions...
                       </td>
                     </tr>
                   ) : pricingList.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="text-center py-12 text-gray-500">No pricing submissions found</td>
+                      <td colSpan={8} className={cn(
+                        "text-center py-12 transition-colors",
+                        isDarkMode ? "text-slate-400" : "text-gray-500"
+                      )}>No pricing submissions found</td>
                     </tr>
                   ) : (
                     pricingList.map((pricing) => {
@@ -756,26 +962,55 @@ const CorporateApproval = () => {
                       const StatusIcon = statusConfig.icon;
                       
                       return (
-                        <tr key={pricing._id} className="hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
-                          <td className="px-4 text-sm border-r border-gray-100 last:border-r-0" style={{ fontFamily: 'Calibri', lineHeight: '1' }}>{pricing.name}</td>
-                          <td className="px-4 text-sm border-r border-gray-100 last:border-r-0" style={{ fontFamily: 'Calibri', lineHeight: '1' }}>
+                        <tr key={pricing._id} className={cn(
+                          "border-b transition-colors last:border-b-0",
+                          isDarkMode
+                            ? "hover:bg-slate-700/50 border-slate-700"
+                            : "hover:bg-gray-50 border-gray-100"
+                        )}>
+                          <td className={cn(
+                            "px-4 text-sm border-r last:border-r-0 transition-colors",
+                            isDarkMode ? "text-slate-200 border-slate-700" : "text-slate-900 border-gray-100"
+                          )} style={{ fontFamily: 'Calibri', lineHeight: '1' }}>{pricing.name}</td>
+                          <td className={cn(
+                            "px-4 text-sm border-r last:border-r-0 transition-colors",
+                            isDarkMode ? "border-slate-700" : "border-gray-100"
+                          )} style={{ fontFamily: 'Calibri', lineHeight: '1' }}>
                             <Badge variant={getStatusBadgeVariant(pricing.status)} className="flex items-center gap-1">
                               <StatusIcon className="h-3 w-3" />
                               {statusConfig.text}
                             </Badge>
                           </td>
-                          <td className="px-4 text-sm border-r border-gray-100 last:border-r-0" style={{ fontFamily: 'Calibri', lineHeight: '1' }}>{pricing.createdBy?.email || 'N/A'}</td>
-                          <td className="px-4 text-sm border-r border-gray-100 last:border-r-0" style={{ fontFamily: 'Calibri', lineHeight: '1' }}>
+                          <td className={cn(
+                            "px-4 text-sm border-r last:border-r-0 transition-colors",
+                            isDarkMode ? "text-slate-300 border-slate-700" : "text-slate-700 border-gray-100"
+                          )} style={{ fontFamily: 'Calibri', lineHeight: '1' }}>{pricing.createdBy?.email || 'N/A'}</td>
+                          <td className={cn(
+                            "px-4 text-sm border-r last:border-r-0 transition-colors",
+                            isDarkMode ? "border-slate-700" : "border-gray-100"
+                          )} style={{ fontFamily: 'Calibri', lineHeight: '1' }}>
                             {pricing.corporateClient ? (
-                              <span className="text-gray-800 font-medium">{pricing.corporateClient.companyName} ({pricing.corporateClient.corporateId})</span>
+                              <span className={cn(
+                                "font-medium transition-colors",
+                                isDarkMode ? "text-slate-200" : "text-gray-800"
+                              )}>{pricing.corporateClient.companyName} ({pricing.corporateClient.corporateId})</span>
                             ) : (
-                              <span className="text-gray-500 text-sm">Not Connected</span>
+                              <span className={cn(
+                                "text-sm transition-colors",
+                                isDarkMode ? "text-slate-400" : "text-gray-500"
+                              )}>Not Connected</span>
                             )}
                           </td>
-                          <td className="px-4 text-sm border-r border-gray-100 last:border-r-0" style={{ fontFamily: 'Calibri', lineHeight: '1' }}>
+                          <td className={cn(
+                            "px-4 text-sm border-r last:border-r-0 transition-colors",
+                            isDarkMode ? "text-slate-300 border-slate-700" : "text-slate-700 border-gray-100"
+                          )} style={{ fontFamily: 'Calibri', lineHeight: '1' }}>
                             {pricing.clientEmail || 'N/A'}
                           </td>
-                          <td className="px-4 text-sm border-r border-gray-100 last:border-r-0" style={{ fontFamily: 'Calibri', lineHeight: '1' }}>
+                          <td className={cn(
+                            "px-4 text-sm border-r last:border-r-0 transition-colors",
+                            isDarkMode ? "text-slate-300 border-slate-700" : "text-slate-700 border-gray-100"
+                          )} style={{ fontFamily: 'Calibri', lineHeight: '1' }}>
                             {pricing.status === 'approved' ? (
                               pricing.emailApprovedBy ? 
                                 pricing.emailApprovedBy : 
@@ -788,14 +1023,23 @@ const CorporateApproval = () => {
                               'Pending'
                             )}
                           </td>
-                          <td className="px-4 text-sm border-r border-gray-100 last:border-r-0" style={{ fontFamily: 'Calibri', lineHeight: '1' }}>{new Date(pricing.createdAt).toLocaleDateString()}</td>
-                          <td className="px-4 text-sm border-r border-gray-100 last:border-r-0" style={{ fontFamily: 'Calibri', lineHeight: '1' }}>
+                          <td className={cn(
+                            "px-4 text-sm border-r last:border-r-0 transition-colors",
+                            isDarkMode ? "text-slate-300 border-slate-700" : "text-slate-700 border-gray-100"
+                          )} style={{ fontFamily: 'Calibri', lineHeight: '1' }}>{new Date(pricing.createdAt).toLocaleDateString()}</td>
+                          <td className={cn(
+                            "px-4 text-sm border-r last:border-r-0 transition-colors",
+                            isDarkMode ? "border-slate-700" : "border-gray-100"
+                          )} style={{ fontFamily: 'Calibri', lineHeight: '1' }}>
                             <div className="flex items-center gap-2">
                               <Button 
                                 variant="ghost" 
                                 size="sm" 
                                 onClick={() => { setSelectedPricing(pricing); setShowDetailsDialog(true); }} 
-                                className="h-8 w-8 p-0"
+                                className={cn(
+                                  "h-8 w-8 p-0 transition-all",
+                                  isDarkMode ? "hover:bg-slate-700" : "hover:bg-gray-100"
+                                )}
                                 title="View details"
                               >
                                 <Eye className="h-4 w-4" style={{color:'#1e66f5'}} />
@@ -805,7 +1049,10 @@ const CorporateApproval = () => {
                                 variant="ghost" 
                                 size="sm" 
                                 onClick={() => handleEdit(pricing)} 
-                                className="h-8 w-8 p-0"
+                                className={cn(
+                                  "h-8 w-8 p-0 transition-all",
+                                  isDarkMode ? "hover:bg-slate-700" : "hover:bg-gray-100"
+                                )}
                                 title="Edit pricing"
                               >
                                 <Edit className="h-4 w-4" style={{color:'#16a34a'}} />
@@ -818,7 +1065,10 @@ const CorporateApproval = () => {
                                     size="sm"
                                     onClick={() => handleApprove(pricing._id)}
                                     disabled={actionLoading === pricing._id}
-                                    className="h-8 w-8 p-0"
+                                    className={cn(
+                                      "h-8 w-8 p-0 transition-all",
+                                      isDarkMode ? "hover:bg-slate-700" : "hover:bg-gray-100"
+                                    )}
                                     title="Approve pricing"
                                   >
                                     <Check className="h-4 w-4" style={{color:'#16a34a'}} />
@@ -828,7 +1078,10 @@ const CorporateApproval = () => {
                                     size="sm"
                                     onClick={() => { setSelectedPricing(pricing); setShowRejectDialog(true); }}
                                     disabled={actionLoading === pricing._id}
-                                    className="h-8 w-8 p-0"
+                                    className={cn(
+                                      "h-8 w-8 p-0 transition-all",
+                                      isDarkMode ? "hover:bg-slate-700" : "hover:bg-gray-100"
+                                    )}
                                     title="Reject pricing"
                                   >
                                     <X className="h-4 w-4" style={{color:'#dc2626'}} />
@@ -841,7 +1094,10 @@ const CorporateApproval = () => {
                                 size="sm"
                                 onClick={() => { setSelectedPricing(pricing); setShowDeleteDialog(true); }}
                                 disabled={actionLoading === pricing._id}
-                                className="h-8 w-8 p-0"
+                                className={cn(
+                                  "h-8 w-8 p-0 transition-all",
+                                  isDarkMode ? "hover:bg-slate-700" : "hover:bg-gray-100"
+                                )}
                                 title="Delete pricing"
                               >
                                 <Trash2 className="h-4 w-4" style={{color:'#dc2626'}} />
@@ -859,9 +1115,26 @@ const CorporateApproval = () => {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-8 p-4 bg-muted/30 rounded-lg">
-              <div className="text-sm text-muted-foreground">
-                Showing <span className="font-semibold text-primary">{((currentPage - 1) * 10) + 1}</span> to <span className="font-semibold text-primary">{Math.min(currentPage * 10, totalCount)}</span> of <span className="font-semibold text-primary">{totalCount}</span> results
+            <div className={cn(
+              "flex items-center justify-between mt-8 p-4 rounded-lg transition-colors",
+              isDarkMode
+                ? "bg-slate-800/40 border border-slate-700"
+                : "bg-slate-50/50 border border-slate-200"
+            )}>
+              <div className={cn(
+                "text-sm transition-colors",
+                isDarkMode ? "text-slate-300" : "text-slate-600"
+              )}>
+                Showing <span className={cn(
+                  "font-semibold transition-colors",
+                  isDarkMode ? "text-blue-400" : "text-blue-600"
+                )}>{((currentPage - 1) * 10) + 1}</span> to <span className={cn(
+                  "font-semibold transition-colors",
+                  isDarkMode ? "text-blue-400" : "text-blue-600"
+                )}>{Math.min(currentPage * 10, totalCount)}</span> of <span className={cn(
+                  "font-semibold transition-colors",
+                  isDarkMode ? "text-blue-400" : "text-blue-600"
+                )}>{totalCount}</span> results
               </div>
               <div className="flex gap-2">
                 <Button
@@ -869,7 +1142,12 @@ const CorporateApproval = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                   disabled={currentPage === 1}
-                  className="ocl-btn-outline"
+                  className={cn(
+                    "rounded-full transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+                    isDarkMode
+                      ? "border-slate-700 bg-slate-900/80 text-slate-200 hover:bg-slate-800/70"
+                      : "border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-100"
+                  )}
                 >
                   Previous
                 </Button>
@@ -878,7 +1156,12 @@ const CorporateApproval = () => {
                   size="sm"
                   onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
                   disabled={currentPage === totalPages}
-                  className="ocl-btn-outline"
+                  className={cn(
+                    "rounded-full transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+                    isDarkMode
+                      ? "border-slate-700 bg-slate-900/80 text-slate-200 hover:bg-slate-800/70"
+                      : "border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-100"
+                  )}
                 >
                   Next
                 </Button>
@@ -890,9 +1173,17 @@ const CorporateApproval = () => {
 
       {/* Details Dialog */}
       <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
-        <DialogContent className="sm:max-w-[1200px] max-h-[85vh] overflow-y-auto">
+        <DialogContent className={cn(
+          "sm:max-w-[1200px] max-h-[85vh] overflow-y-auto transition-colors",
+          isDarkMode
+            ? "bg-slate-900 border-slate-700"
+            : "bg-white border-slate-200"
+        )}>
           <DialogHeader className="pb-4">
-            <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center gap-3" style={{ fontFamily: 'Calibri' }}>
+            <DialogTitle className={cn(
+              "text-2xl font-bold flex items-center gap-3 transition-colors",
+              isDarkMode ? "text-slate-50" : "text-gray-800"
+            )} style={{ fontFamily: 'Calibri' }}>
               <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
                 <DollarSign className="h-5 w-5 text-white" />
               </div>
@@ -903,13 +1194,27 @@ const CorporateApproval = () => {
           {selectedPricing && (
             <div className="space-y-6">
               {/* Basic Information Card */}
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+              <div className={cn(
+                "rounded-xl p-4 border transition-colors",
+                isDarkMode
+                  ? "bg-gradient-to-r from-blue-900/20 to-indigo-900/20 border-blue-800/30"
+                  : "bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100"
+              )}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                   <div className="flex items-center gap-2">
-                    <Building className="h-4 w-4 text-blue-600" />
+                    <Building className={cn(
+                      "h-4 w-4 transition-colors",
+                      isDarkMode ? "text-blue-400" : "text-blue-600"
+                    )} />
                     <div>
-                      <p className="text-xs font-medium text-gray-600" style={{ fontFamily: 'Calibri' }}>Name</p>
-                      <p className="text-sm font-semibold text-gray-800" style={{ fontFamily: 'Calibri' }}>{selectedPricing.name}</p>
+                      <p className={cn(
+                        "text-xs font-medium transition-colors",
+                        isDarkMode ? "text-slate-400" : "text-gray-600"
+                      )} style={{ fontFamily: 'Calibri' }}>Name</p>
+                      <p className={cn(
+                        "text-sm font-semibold transition-colors",
+                        isDarkMode ? "text-slate-50" : "text-gray-800"
+                      )} style={{ fontFamily: 'Calibri' }}>{selectedPricing.name}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -927,26 +1232,53 @@ const CorporateApproval = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-blue-600" />
+                    <TrendingUp className={cn(
+                      "h-4 w-4 transition-colors",
+                      isDarkMode ? "text-blue-400" : "text-blue-600"
+                    )} />
                     <div>
-                      <p className="text-xs font-medium text-gray-600" style={{ fontFamily: 'Calibri' }}>Fuel Charge</p>
-                      <p className="text-sm font-semibold text-gray-800" style={{ fontFamily: 'Calibri' }}>
+                      <p className={cn(
+                        "text-xs font-medium transition-colors",
+                        isDarkMode ? "text-slate-400" : "text-gray-600"
+                      )} style={{ fontFamily: 'Calibri' }}>Fuel Charge</p>
+                      <p className={cn(
+                        "text-sm font-semibold transition-colors",
+                        isDarkMode ? "text-slate-50" : "text-gray-800"
+                      )} style={{ fontFamily: 'Calibri' }}>
                         {(selectedPricing as any).fuelChargePercentage || 15}%
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <User className="h-4 w-4 text-blue-600" />
+                    <User className={cn(
+                      "h-4 w-4 transition-colors",
+                      isDarkMode ? "text-blue-400" : "text-blue-600"
+                    )} />
                     <div>
-                      <p className="text-xs font-medium text-gray-600" style={{ fontFamily: 'Calibri' }}>Created By</p>
-                      <p className="text-sm font-semibold text-gray-800" style={{ fontFamily: 'Calibri' }}>{selectedPricing.createdBy?.email || 'N/A'}</p>
+                      <p className={cn(
+                        "text-xs font-medium transition-colors",
+                        isDarkMode ? "text-slate-400" : "text-gray-600"
+                      )} style={{ fontFamily: 'Calibri' }}>Created By</p>
+                      <p className={cn(
+                        "text-sm font-semibold transition-colors",
+                        isDarkMode ? "text-slate-50" : "text-gray-800"
+                      )} style={{ fontFamily: 'Calibri' }}>{selectedPricing.createdBy?.email || 'N/A'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-blue-600" />
+                    <Calendar className={cn(
+                      "h-4 w-4 transition-colors",
+                      isDarkMode ? "text-blue-400" : "text-blue-600"
+                    )} />
                     <div>
-                      <p className="text-xs font-medium text-gray-600" style={{ fontFamily: 'Calibri' }}>Created At</p>
-                      <p className="text-sm font-semibold text-gray-800" style={{ fontFamily: 'Calibri' }}>{new Date(selectedPricing.createdAt).toLocaleDateString()}</p>
+                      <p className={cn(
+                        "text-xs font-medium transition-colors",
+                        isDarkMode ? "text-slate-400" : "text-gray-600"
+                      )} style={{ fontFamily: 'Calibri' }}>Created At</p>
+                      <p className={cn(
+                        "text-sm font-semibold transition-colors",
+                        isDarkMode ? "text-slate-50" : "text-gray-800"
+                      )} style={{ fontFamily: 'Calibri' }}>{new Date(selectedPricing.createdAt).toLocaleDateString()}</p>
                     </div>
                   </div>
                   {selectedPricing.status === 'approved' && (
@@ -1137,8 +1469,20 @@ const CorporateApproval = () => {
             </div>
           )}
           
-          <DialogFooter className="pt-6 border-t border-gray-100">
-            <Button variant="outline" onClick={() => setShowDetailsDialog(false)} className="rounded-full px-6">
+          <DialogFooter className={cn(
+            "pt-6 border-t transition-colors",
+            isDarkMode ? "border-slate-700" : "border-gray-100"
+          )}>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDetailsDialog(false)} 
+              className={cn(
+                "rounded-full px-6 transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+                isDarkMode
+                  ? "border-slate-700 bg-slate-900/80 text-slate-200 hover:bg-slate-800/70"
+                  : "border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-100"
+              )}
+            >
               Close
             </Button>
           </DialogFooter>
@@ -1147,33 +1491,63 @@ const CorporateApproval = () => {
 
       {/* Reject Dialog */}
       <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-        <DialogContent>
+        <DialogContent className={cn(
+          "transition-colors",
+          isDarkMode
+            ? "bg-slate-900 border-slate-700"
+            : "bg-white border-slate-200"
+        )}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Calibri' }}>Reject Pricing: {selectedPricing?.name}</DialogTitle>
-            <DialogDescription className="text-gray-600" style={{ fontFamily: 'Calibri' }}>
+            <DialogTitle className={cn(
+              "text-xl font-bold transition-colors",
+              isDarkMode ? "text-slate-50" : "text-gray-800"
+            )} style={{ fontFamily: 'Calibri' }}>Reject Pricing: {selectedPricing?.name}</DialogTitle>
+            <DialogDescription className={cn(
+              "transition-colors",
+              isDarkMode ? "text-slate-400" : "text-gray-600"
+            )} style={{ fontFamily: 'Calibri' }}>
               Please provide a reason for rejecting this corporate pricing submission.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="rejectionReason" className="text-sm font-medium text-gray-600" style={{ fontFamily: 'Calibri' }}>Reason for Rejection</Label>
+              <Label htmlFor="rejectionReason" className={cn(
+                "text-sm font-medium transition-colors",
+                isDarkMode ? "text-slate-300" : "text-gray-600"
+              )} style={{ fontFamily: 'Calibri' }}>Reason for Rejection</Label>
               <Textarea
                 id="rejectionReason"
                 placeholder="Enter rejection reason..."
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                className="rounded-xl border-2 border-gray-200 focus:border-blue-500 focus:outline-none focus:ring-0 focus:ring-offset-0"
+                className={cn(
+                  "rounded-xl border-2 focus:outline-none focus:ring-0 focus:ring-offset-0 transition-all",
+                  isDarkMode
+                    ? "border-slate-700 bg-slate-800/50 text-slate-50 focus:border-blue-500"
+                    : "border-gray-200 focus:border-blue-500"
+                )}
                 style={{ fontFamily: 'Calibri' }}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowRejectDialog(false)} className="rounded-full px-4">Cancel</Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowRejectDialog(false)} 
+              className={cn(
+                "rounded-full px-4 transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+                isDarkMode
+                  ? "border-slate-700 bg-slate-900/80 text-slate-200 hover:bg-slate-800/70"
+                  : "border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-100"
+              )}
+            >
+              Cancel
+            </Button>
             <Button
               variant="destructive"
               onClick={() => handleReject(selectedPricing?._id || '')}
               disabled={actionLoading === selectedPricing?._id || !rejectionReason.trim()}
-              className="rounded-full px-4"
+              className="rounded-full px-4 transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]"
             >
               <X className="h-4 w-4 mr-2" />
               Confirm Reject
@@ -1184,22 +1558,44 @@ const CorporateApproval = () => {
 
       {/* Delete Dialog */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <DialogContent>
+        <DialogContent className={cn(
+          "transition-colors",
+          isDarkMode
+            ? "bg-slate-900 border-slate-700"
+            : "bg-white border-slate-200"
+        )}>
           <DialogHeader>
-            <DialogTitle className="text-xl font-bold text-gray-800" style={{ fontFamily: 'Calibri' }}>Delete Pricing: {selectedPricing?.name}</DialogTitle>
-            <DialogDescription className="text-gray-600" style={{ fontFamily: 'Calibri' }}>
+            <DialogTitle className={cn(
+              "text-xl font-bold transition-colors",
+              isDarkMode ? "text-slate-50" : "text-gray-800"
+            )} style={{ fontFamily: 'Calibri' }}>Delete Pricing: {selectedPricing?.name}</DialogTitle>
+            <DialogDescription className={cn(
+              "transition-colors",
+              isDarkMode ? "text-slate-400" : "text-gray-600"
+            )} style={{ fontFamily: 'Calibri' }}>
               Are you sure you want to delete this corporate pricing submission? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className={cn(
+              "border rounded-lg p-4 transition-colors",
+              isDarkMode
+                ? "bg-red-900/20 border-red-800/30"
+                : "bg-red-50 border-red-200"
+            )}>
               <div className="flex items-start gap-3">
                 <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-red-800" style={{ fontFamily: 'Calibri' }}>
+                  <p className={cn(
+                    "text-sm font-medium transition-colors",
+                    isDarkMode ? "text-red-300" : "text-red-800"
+                  )} style={{ fontFamily: 'Calibri' }}>
                     Warning: This will permanently delete the pricing data
                   </p>
-                  <p className="text-xs text-red-600 mt-1" style={{ fontFamily: 'Calibri' }}>
+                  <p className={cn(
+                    "text-xs mt-1 transition-colors",
+                    isDarkMode ? "text-red-400" : "text-red-600"
+                  )} style={{ fontFamily: 'Calibri' }}>
                     All associated pricing information will be lost and cannot be recovered.
                   </p>
                 </div>
@@ -1207,12 +1603,23 @@ const CorporateApproval = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowDeleteDialog(false)} className="rounded-full px-4">Cancel</Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowDeleteDialog(false)} 
+              className={cn(
+                "rounded-full px-4 transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+                isDarkMode
+                  ? "border-slate-700 bg-slate-900/80 text-slate-200 hover:bg-slate-800/70"
+                  : "border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-100"
+              )}
+            >
+              Cancel
+            </Button>
             <Button
               variant="destructive"
               onClick={() => handleDelete(selectedPricing?._id || '')}
               disabled={actionLoading === selectedPricing?._id}
-              className="rounded-full px-4"
+              className="rounded-full px-4 transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]"
             >
               {actionLoading === selectedPricing?._id ? (
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -1227,13 +1634,27 @@ const CorporateApproval = () => {
 
       {/* Edit Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
-        <DialogContent className="sm:max-w-5xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className={cn(
+          "sm:max-w-5xl max-h-[85vh] overflow-y-auto transition-colors",
+          isDarkMode
+            ? "bg-slate-900 border-slate-700"
+            : "bg-white border-slate-200"
+        )}>
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-gray-800 flex items-center gap-2" style={{ fontFamily: 'Calibri' }}>
-              <Edit className="h-6 w-6 text-blue-600" />
+            <DialogTitle className={cn(
+              "text-2xl font-bold flex items-center gap-2 transition-colors",
+              isDarkMode ? "text-slate-50" : "text-gray-800"
+            )} style={{ fontFamily: 'Calibri' }}>
+              <Edit className={cn(
+                "h-6 w-6 transition-colors",
+                isDarkMode ? "text-blue-400" : "text-blue-600"
+              )} />
               Edit Pricing: {selectedPricing?.name}
             </DialogTitle>
-            <DialogDescription className="text-gray-600" style={{ fontFamily: 'Calibri' }}>
+            <DialogDescription className={cn(
+              "transition-colors",
+              isDarkMode ? "text-slate-400" : "text-gray-600"
+            )} style={{ fontFamily: 'Calibri' }}>
               Update the corporate pricing details below. All fields are editable.
             </DialogDescription>
           </DialogHeader>
@@ -1241,15 +1662,26 @@ const CorporateApproval = () => {
           <div className="grid gap-4 py-2">
             {/* Basic Information */}
             <div className="space-y-3">
-              <h3 className="text-sm font-semibold text-gray-800" style={{ fontFamily: 'Calibri' }}>Basic Information</h3>
+              <h3 className={cn(
+                "text-sm font-semibold transition-colors",
+                isDarkMode ? "text-slate-50" : "text-gray-800"
+              )} style={{ fontFamily: 'Calibri' }}>Basic Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div className="space-y-1">
-                  <Label htmlFor="editName" className="text-xs font-medium text-gray-600" style={{ fontFamily: 'Calibri' }}>Pricing Name</Label>
+                  <Label htmlFor="editName" className={cn(
+                    "text-xs font-medium transition-colors",
+                    isDarkMode ? "text-slate-300" : "text-gray-600"
+                  )} style={{ fontFamily: 'Calibri' }}>Pricing Name</Label>
                   <Input
                     id="editName"
                     value={editFormData.name}
                     onChange={(e) => setEditFormData(prev => ({ ...prev, name: e.target.value }))}
-                    className="rounded-lg shadow-sm focus:shadow-md transition-shadow"
+                    className={cn(
+                      "rounded-lg shadow-sm focus:shadow-md transition-all",
+                      isDarkMode
+                        ? "bg-slate-800/50 border-slate-700 text-slate-50"
+                        : "bg-white border-slate-200"
+                    )}
                     placeholder="Enter pricing name"
                   />
                 </div>
@@ -1506,11 +1938,22 @@ const CorporateApproval = () => {
           </div>
           
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowEditDialog(false)} className="rounded-full px-4">Cancel</Button>
+            <Button 
+              variant="outline" 
+              onClick={() => setShowEditDialog(false)} 
+              className={cn(
+                "rounded-full px-4 transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]",
+                isDarkMode
+                  ? "border-slate-700 bg-slate-900/80 text-slate-200 hover:bg-slate-800/70"
+                  : "border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-100"
+              )}
+            >
+              Cancel
+            </Button>
             <Button
               onClick={handleUpdatePricing}
               disabled={actionLoading === selectedPricing?._id || !editFormData.name.trim()}
-              className="rounded-full px-4"
+              className="rounded-full px-4 transition-all shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]"
             >
               {actionLoading === selectedPricing?._id ? (
                 <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
@@ -1522,6 +1965,7 @@ const CorporateApproval = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 };

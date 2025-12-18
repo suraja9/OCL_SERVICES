@@ -260,7 +260,7 @@ const MyShipments = () => {
           transition={{ duration: 0.7, ease: "easeOut" }}
         >
           <h1 className="mt-8 text-4xl md:text-5xl font-bold mb-3 tracking-wide bg-gradient-to-r from-[#002E33] to-[#034A53] bg-clip-text text-transparent">
-          SHIPMENT TRACKING
+          
           </h1>
           
         </motion.div>
@@ -321,7 +321,7 @@ const MyShipments = () => {
           {progressOnly && (
           <div className="mb-8" style={{ background: '#FFF9F3', borderRadius: 12, boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px', padding: '14px 25px', fontFamily: 'Inter, system-ui, sans-serif' }}>
             <div className="mb-2">
-              <div className="text-[14px] font-semibold" style={{ color: '#1B1B1B' }}>Order Status</div>
+              <div className="text-[14px] font-semibold" style={{ color: '#1B1B1B' }}>Consignment Delivery Status :</div>
               <div className="text-[11px]" style={{ color: '#333333' }}>
                 Consignment No. : {trackingData?.trackingSummary?.metadata?.consignmentNumber || trackingNumber || 'N/A'}
               </div>

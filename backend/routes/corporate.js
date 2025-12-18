@@ -839,25 +839,83 @@ router.post('/upload-logo', authenticateCorporate, uploadCorporateLogo, handleCo
   }
 });
 
+// Optional corporate authentication middleware - tries to authenticate but doesn't fail
+const optionalAuthenticateCorporate = async (req, res, next) => {
+  const token = req.header('Authorization')?.replace('Bearer ', '');
+  if (token) {
+    try {
+      const jwt = (await import('jsonwebtoken')).default;
+      const CorporateData = (await import('../models/CorporateData.js')).default;
+      
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'ocl-admin-secret-key-2024');
+      
+      if (decoded.type === 'corporate') {
+        const corporate = await CorporateData.findById(decoded.userId).select('-password -generatedPassword');
+        if (corporate && corporate.isActive) {
+          req.corporate = corporate;
+        }
+      }
+    } catch (error) {
+      // Silently fail - will check for corporateId query parameter instead
+    }
+  }
+  next();
+};
+
 // Get corporate pricing assigned to this corporate client
-router.get('/pricing', authenticateCorporate, async (req, res) => {
+// Supports both:
+// 1. Corporate authentication (web): Uses req.corporate from optionalAuthenticateCorporate middleware
+// 2. CorporateId query parameter (mobile couriers): Uses corporateId from query string
+router.get('/pricing', optionalAuthenticateCorporate, async (req, res) => {
   try {
     const CorporatePricing = (await import('../models/CorporatePricing.js')).default;
+    const CorporateData = (await import('../models/CorporateData.js')).default;
+    
+    let corporateClientId = null;
+    let corporateName = '';
+    let corporateId = '';
+    
+    // Check if corporate is authenticated (web requests)
+    if (req.corporate && req.corporate._id) {
+      corporateClientId = req.corporate._id;
+      corporateName = req.corporate.companyName || '';
+      corporateId = req.corporate.corporateId || '';
+    } 
+    // Check for corporateId query parameter (mobile courier requests)
+    else if (req.query.corporateId) {
+      const corporate = await CorporateData.findById(req.query.corporateId);
+      if (!corporate) {
+        return res.status(404).json({
+          success: false,
+          error: 'Corporate account not found.'
+        });
+      }
+      corporateClientId = corporate._id;
+      corporateName = corporate.companyName || '';
+      corporateId = corporate.corporateId || '';
+    } 
+    // No authentication and no corporateId - return error
+    else {
+      return res.status(401).json({
+        success: false,
+        error: 'Access denied. Authentication required or corporateId parameter must be provided.'
+      });
+    }
     
     // Find the pricing plan assigned to this corporate client
     const pricing = await CorporatePricing.findOne({ 
-      corporateClient: req.corporate._id,
+      corporateClient: corporateClientId,
       status: 'approved' // Only return approved pricing
     }).select('-__v -createdBy -approvedBy -rejectionReason -clientEmail -clientName -clientCompany -approvalToken -emailSentAt -emailApprovedAt -emailApprovedBy -emailRejectedAt -emailRejectionReason -notes');
     
     if (!pricing) {
       return res.status(404).json({
         success: false,
-        error: 'No pricing plan has been assigned to your corporate account yet.'
+        error: 'No pricing plan has been assigned to this corporate account yet.'
       });
     }
     
-    console.log(`✅ Corporate pricing retrieved for: ${req.corporate.companyName} (${req.corporate.corporateId})`);
+    console.log(`✅ Corporate pricing retrieved for: ${corporateName} (${corporateId})`);
     
     res.json({
       success: true,
@@ -1341,10 +1399,11 @@ router.post('/bookings', authenticateCorporate, async (req, res) => {
         chargeableWeight: shipmentData.chargeableWeight || 0,
         totalPackages: shipmentData.totalPackages || shipmentData.packagesCount,
         materials: shipmentData.materials || '',
-        packageImages: shipmentData.packageImages || [],
+        packageImages: [], // Will be populated from uploadedFiles below
         uploadedFiles: shipmentData.uploadedFiles || [],
         description: shipmentData.description || '',
-        specialInstructions: shipmentData.specialInstructions || ''
+        specialInstructions: shipmentData.specialInstructions || '',
+        declarationDocumentUrl: shipmentData.declarationDocumentUrl || '' // Declaration document S3 URL
       },
       invoiceData: {
         billingAddress: invoiceData.billingAddress || '',
@@ -1367,6 +1426,32 @@ router.post('/bookings', authenticateCorporate, async (req, res) => {
       status: 'booked',
       paymentStatus: 'unpaid'
     };
+    
+    // Extract package image URLs from uploadedFiles and store in packageImages
+    // uploadedFiles contains S3 URLs with metadata, packageImages from frontend are File objects (won't serialize)
+    const uploadedFiles = Array.isArray(shipmentData?.uploadedFiles) ? shipmentData.uploadedFiles : [];
+    const packageImageUrls = uploadedFiles
+      .filter(file => file?.url) // Filter files that have URLs
+      .map(file => file.url) // Extract just the URLs
+      .filter((url, index, self) => self.indexOf(url) === index); // Remove duplicates
+    
+    // Store URLs in packageImages for consistent access (as objects with url property)
+    if (packageImageUrls.length > 0) {
+      bookingPayload.shipmentData.packageImages = packageImageUrls.map(url => ({ url }));
+    } else {
+      // If no uploadedFiles, try to extract from existing packageImages (if they're already URLs)
+      const existingUrls = Array.isArray(shipmentData?.packageImages) 
+        ? shipmentData.packageImages
+            .filter(img => img && (typeof img === 'string' || (typeof img === 'object' && img.url)))
+            .map(img => typeof img === 'string' ? img : img.url)
+            .filter((url, index, self) => url && self.indexOf(url) === index) // Remove duplicates and nulls
+        : [];
+      if (existingUrls.length > 0) {
+        bookingPayload.shipmentData.packageImages = existingUrls.map(url => ({ url }));
+      } else {
+        bookingPayload.shipmentData.packageImages = [];
+      }
+    }
     
     // Record consignment usage
     const usage = new ConsignmentUsage({
@@ -1422,9 +1507,11 @@ router.post('/bookings', authenticateCorporate, async (req, res) => {
     (async () => {
       try {
         const uploadedFiles = Array.isArray(shipmentData?.uploadedFiles) ? shipmentData.uploadedFiles : [];
+        // Extract unique image URLs from uploadedFiles (deduplicate)
         const packageImageUrls = uploadedFiles
           .filter(file => file?.url && (!file.mimetype || file.mimetype.startsWith('image/')))
-          .map(file => file.url);
+          .map(file => file.url)
+          .filter((url, index, self) => self.indexOf(url) === index); // Remove duplicates
 
         await emailService.sendCorporateBookingConfirmationEmail({
           bookingReference: bookingPayload.bookingReference,
@@ -1493,24 +1580,29 @@ router.get('/bookings', authenticateCorporate, async (req, res) => {
       corporateId: req.corporate._id
     });
     
-    // Fetch currentStatus from Tracking table for each booking
+    // Fetch tracking data from Tracking table for each booking
     const consignmentNumbers = bookings.map(b => b.consignmentNumber).filter(Boolean);
     const trackingRecords = await Tracking.find({
       consignmentNumber: { $in: consignmentNumbers }
     })
-    .select('consignmentNumber currentStatus')
+    .select('consignmentNumber currentStatus booked')
     .lean();
     
-    // Create a map of consignmentNumber -> currentStatus
+    // Create a map of consignmentNumber -> tracking data
     const statusMap = new Map();
+    const trackingMap = new Map();
     trackingRecords.forEach(tracking => {
       statusMap.set(tracking.consignmentNumber, tracking.currentStatus);
+      trackingMap.set(tracking.consignmentNumber, {
+        booked: tracking.booked || []
+      });
     });
     
-    // Enrich bookings with currentStatus from Tracking table
+    // Enrich bookings with currentStatus and tracking data from Tracking table
     const enrichedBookings = bookings.map(booking => ({
       ...booking,
-      currentStatus: statusMap.get(booking.consignmentNumber) || booking.status || 'booked'
+      currentStatus: statusMap.get(booking.consignmentNumber) || booking.status || 'booked',
+      tracking: trackingMap.get(booking.consignmentNumber) || null
     }));
     
     console.log(`✅ Found ${bookings.length} bookings (total: ${totalCount}) for corporate ${req.corporate.companyName}`);

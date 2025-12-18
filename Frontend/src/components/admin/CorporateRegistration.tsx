@@ -171,6 +171,9 @@ const CorporateRegistration = () => {
 
   const { toast } = useToast();
 
+  // API Base URL
+  const API_BASE: string = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
+
   // Fetch approved pricing lists on component mount
   useEffect(() => {
     fetchApprovedPricing();
@@ -405,7 +408,7 @@ const CorporateRegistration = () => {
   };
 
   // Handle send OTP
-  const handleSendOtp = () => {
+  const handleSendOtp = async () => {
     const phoneNumber = formData.contactNo?.replace(/\D/g, '') || '';
     
     if (!phoneNumber || phoneNumber.length !== 10) {
@@ -417,20 +420,45 @@ const CorporateRegistration = () => {
       return;
     }
     
-    setOtpSent(true);
-    setShowOtpSection(true);
-    setOtpTimer(60); // 60 seconds timer
-    setOtpVerified(false);
-    setFormData(prev => ({ ...prev, otp: '' })); // Clear previous OTP
-    setShowOtpSuccess(true); // Show success message
-    toast({
-      title: "OTP Sent",
-      description: "OTP has been sent to your phone number. Use 1234 for testing.",
-    });
+    try {
+      const response = await fetch(`${API_BASE}/api/otp/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phoneNumber })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setOtpSent(true);
+        setShowOtpSection(true);
+        setOtpTimer(60); // 60 seconds timer
+        setOtpVerified(false);
+        setFormData(prev => ({ ...prev, otp: '' })); // Clear previous OTP
+        setShowOtpSuccess(true); // Show success message
+        toast({
+          title: "OTP Sent",
+          description: result.testMode 
+            ? "OTP has been sent to your phone number. Use 1234 for testing."
+            : "OTP has been sent to your phone number.",
+        });
+      } else {
+        throw new Error(result.error || 'Failed to send OTP');
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      toast({
+        title: "Failed to Send OTP",
+        description: error instanceof Error ? error.message : "Failed to send OTP. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Handle resend OTP
-  const handleResendOtp = () => {
+  const handleResendOtp = async () => {
     if (otpTimer > 0) {
       toast({
         title: "Please Wait",
@@ -440,28 +468,115 @@ const CorporateRegistration = () => {
       return;
     }
     
-    setOtpTimer(60);
-    setOtpVerified(false);
-    setFormData(prev => ({ ...prev, otp: '' }));
-    setShowOtpSuccess(true); // Show success message
-    toast({
-      title: "OTP Resent",
-      description: "New OTP has been sent to your phone number.",
-    });
+    const phoneNumber = formData.contactNo?.replace(/\D/g, '') || '';
+    
+    if (!phoneNumber || phoneNumber.length !== 10) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Please enter a valid 10-digit phone number",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/otp/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phoneNumber })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setOtpTimer(60);
+        setOtpVerified(false);
+        setFormData(prev => ({ ...prev, otp: '' }));
+        setShowOtpSuccess(true); // Show success message
+        toast({
+          title: "OTP Resent",
+          description: result.testMode 
+            ? "New OTP has been sent to your phone number. Use 1234 for testing."
+            : "New OTP has been sent to your phone number.",
+        });
+      } else {
+        throw new Error(result.error || 'Failed to resend OTP');
+      }
+    } catch (error) {
+      console.error('Error resending OTP:', error);
+      toast({
+        title: "Failed to Resend OTP",
+        description: error instanceof Error ? error.message : "Failed to resend OTP. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Handle OTP verification
-  const handleVerifyOtp = (otpToVerify?: string) => {
+  const handleVerifyOtp = async (otpToVerify?: string) => {
     const otp = otpToVerify || formData.otp;
-    if (otp === '1234') {
-      setOtpVerified(true);
-      setShowOtpSection(false); // Close the popup
-      setShowOtpSuccess(true); // Show success message
+    const phoneNumber = formData.contactNo?.replace(/\D/g, '') || '';
+    
+    // Accept both 4-digit (test mode) and 6-digit (production) OTPs
+    if (!otp || (otp.length !== 4 && otp.length !== 6)) {
       toast({
-        title: "OTP Verified",
-        description: "Phone number verified successfully!",
+        title: "Invalid OTP",
+        description: "Please enter a valid OTP (4 or 6 digits)",
+        variant: "destructive"
       });
-    } else {
+      return;
+    }
+    
+    if (!phoneNumber || phoneNumber.length !== 10) {
+      toast({
+        title: "Invalid Phone Number",
+        description: "Phone number is required for verification",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      const response = await fetch(`${API_BASE}/api/otp/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          phoneNumber,
+          otp 
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setOtpVerified(true);
+        setShowOtpSection(false); // Close the popup
+        setShowOtpSuccess(true); // Show success message
+        toast({
+          title: "OTP Verified",
+          description: result.testMode 
+            ? "Phone number verified successfully! (Test Mode)"
+            : "Phone number verified successfully!",
+        });
+      } else {
+        // Clear all OTP inputs and focus on first input
+        setFormData(prev => ({ ...prev, otp: '' }));
+        setTimeout(() => {
+          const firstInput = document.getElementById('otp-0');
+          firstInput?.focus();
+        }, 100);
+        toast({
+          title: "Invalid OTP",
+          description: result.error || "Please enter the correct OTP",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
       // Clear all OTP inputs and focus on first input
       setFormData(prev => ({ ...prev, otp: '' }));
       setTimeout(() => {
@@ -469,8 +584,8 @@ const CorporateRegistration = () => {
         firstInput?.focus();
       }, 100);
       toast({
-        title: "Invalid OTP",
-        description: "Please enter the correct OTP",
+        title: "Verification Failed",
+        description: error instanceof Error ? error.message : "Failed to verify OTP. Please try again.",
         variant: "destructive"
       });
     }
@@ -928,22 +1043,49 @@ const CorporateRegistration = () => {
                                         description: "Please enter the OTP to verify your phone number.",
                                       });
                                     } else if (!otpSent) {
-                                      // First time - send OTP with delay
-                                      setOtpSent(true);
-                                      setOtpTimer(60);
-                                      setOtpVerified(false);
-                                      setFormData(prev => ({ ...prev, otp: '' }));
-                                      setShowOtpSuccess(true);
-                                      
-                                      // Add delay before opening popup
-                                      setTimeout(() => {
-                                        setShowOtpSection(true);
-                                      }, 1200);
-                                      
-                                      toast({
-                                        title: "OTP Sent",
-                                        description: "OTP has been sent to your phone number. Use 1234 for testing.",
-                                      });
+                                      // First time - send OTP via API
+                                      (async () => {
+                                        try {
+                                          const response = await fetch(`${API_BASE}/api/otp/send`, {
+                                            method: 'POST',
+                                            headers: {
+                                              'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ phoneNumber: updatedPhone })
+                                          });
+
+                                          const result = await response.json();
+
+                                          if (result.success) {
+                                            setOtpSent(true);
+                                            setOtpTimer(60);
+                                            setOtpVerified(false);
+                                            setFormData(prev => ({ ...prev, otp: '' }));
+                                            setShowOtpSuccess(true);
+                                            
+                                            // Add delay before opening popup
+                                            setTimeout(() => {
+                                              setShowOtpSection(true);
+                                            }, 1200);
+                                            
+                                            toast({
+                                              title: "OTP Sent",
+                                              description: result.testMode 
+                                                ? "OTP has been sent to your phone number. Use 1234 for testing."
+                                                : "OTP has been sent to your phone number.",
+                                            });
+                                          } else {
+                                            throw new Error(result.error || 'Failed to send OTP');
+                                          }
+                                        } catch (error) {
+                                          console.error('Error sending OTP:', error);
+                                          toast({
+                                            title: "Failed to Send OTP",
+                                            description: error instanceof Error ? error.message : "Failed to send OTP. Please try again.",
+                                            variant: "destructive"
+                                          });
+                                        }
+                                      })();
                                     }
                                   }
                                 }
@@ -1044,7 +1186,7 @@ const CorporateRegistration = () => {
               </div>
               
               <div className="flex gap-3 justify-center mb-6">
-                {[0, 1, 2, 3].map((index) => (
+                {[0, 1, 2, 3, 4, 5].map((index) => (
                   <div key={index} className="relative group">
                     <input
                       type="text"
@@ -1054,21 +1196,24 @@ const CorporateRegistration = () => {
                         const value = e.target.value.replace(/\D/g, '');
                         if (value.length <= 1) {
                           const newOtp = formData.otp.split('');
+                          while (newOtp.length < 6) {
+                            newOtp.push('');
+                          }
                           newOtp[index] = value;
-                          const updatedOtp = newOtp.join('').slice(0, 4);
+                          const updatedOtp = newOtp.join('').slice(0, 6);
                           setFormData(prev => ({ 
                             ...prev, 
                             otp: updatedOtp
                           }));
                           
                           // Auto-focus next input
-                          if (value && index < 3) {
+                          if (value && index < 5) {
                             const nextInput = document.getElementById(`otp-${index + 1}`);
                             nextInput?.focus();
                           }
 
-                          // Auto-verify when 4 digits are entered
-                          if (updatedOtp.length === 4) {
+                          // Auto-verify when 6 digits are entered (or 4 digits for test mode)
+                          if (updatedOtp.length === 6 || (updatedOtp.length === 4 && updatedOtp === '1234')) {
                             setTimeout(() => {
                               handleVerifyOtp(updatedOtp);
                             }, 100); // Small delay to ensure state is updated
@@ -1413,22 +1558,49 @@ const CorporateRegistration = () => {
                                           description: "Please enter the OTP to verify your phone number.",
                                         });
                                       } else if (!otpSent) {
-                                        // First time - send OTP with delay
-                                        setOtpSent(true);
-                                        setOtpTimer(60);
-                                        setOtpVerified(false);
-                                        setFormData(prev => ({ ...prev, otp: '' }));
-                                        setShowOtpSuccess(true);
-                                        
-                                        // Add delay before opening popup
-                                        setTimeout(() => {
-                                          setShowOtpSection(true);
-                                        }, 1200);
-                                        
-                                        toast({
-                                          title: "OTP Sent",
-                                          description: "OTP has been sent to your phone number. Use 1234 for testing.",
-                                        });
+                                        // First time - send OTP via API
+                                        (async () => {
+                                          try {
+                                            const response = await fetch(`${API_BASE}/api/otp/send`, {
+                                              method: 'POST',
+                                              headers: {
+                                                'Content-Type': 'application/json',
+                                              },
+                                              body: JSON.stringify({ phoneNumber: updatedPhone })
+                                            });
+
+                                            const result = await response.json();
+
+                                            if (result.success) {
+                                              setOtpSent(true);
+                                              setOtpTimer(60);
+                                              setOtpVerified(false);
+                                              setFormData(prev => ({ ...prev, otp: '' }));
+                                              setShowOtpSuccess(true);
+                                              
+                                              // Add delay before opening popup
+                                              setTimeout(() => {
+                                                setShowOtpSection(true);
+                                              }, 1200);
+                                              
+                                              toast({
+                                                title: "OTP Sent",
+                                                description: result.testMode 
+                                                  ? "OTP has been sent to your phone number. Use 1234 for testing."
+                                                  : "OTP has been sent to your phone number.",
+                                              });
+                                            } else {
+                                              throw new Error(result.error || 'Failed to send OTP');
+                                            }
+                                          } catch (error) {
+                                            console.error('Error sending OTP:', error);
+                                            toast({
+                                              title: "Failed to Send OTP",
+                                              description: error instanceof Error ? error.message : "Failed to send OTP. Please try again.",
+                                              variant: "destructive"
+                                            });
+                                          }
+                                        })();
                                       }
                                     }
                                   }
@@ -1792,7 +1964,7 @@ const CorporateRegistration = () => {
             </div>
             
             <div className="flex gap-3 justify-center mb-6">
-              {[0, 1, 2, 3].map((index) => (
+              {[0, 1, 2, 3, 4, 5].map((index) => (
                 <div key={index} className="relative group">
                   <input
                     type="text"
@@ -1802,21 +1974,24 @@ const CorporateRegistration = () => {
                       const value = e.target.value.replace(/\D/g, '');
                       if (value.length <= 1) {
                         const newOtp = formData.otp.split('');
+                        while (newOtp.length < 6) {
+                          newOtp.push('');
+                        }
                         newOtp[index] = value;
-                        const updatedOtp = newOtp.join('').slice(0, 4);
+                        const updatedOtp = newOtp.join('').slice(0, 6);
                         setFormData(prev => ({ 
                           ...prev, 
                           otp: updatedOtp
                         }));
                         
                         // Auto-focus next input
-                        if (value && index < 3) {
+                        if (value && index < 5) {
                           const nextInput = document.getElementById(`otp-${index + 1}`);
                           nextInput?.focus();
                         }
 
-                        // Auto-verify when 4 digits are entered
-                        if (updatedOtp.length === 4) {
+                        // Auto-verify when 6 digits are entered (or 4 digits for test mode)
+                        if (updatedOtp.length === 6 || (updatedOtp.length === 4 && updatedOtp === '1234')) {
                           setTimeout(() => {
                             handleVerifyOtp(updatedOtp);
                           }, 100); // Small delay to ensure state is updated
