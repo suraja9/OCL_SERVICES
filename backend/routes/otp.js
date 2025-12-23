@@ -1,9 +1,23 @@
 import express from 'express';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 
 dotenv.config();
 const router = express.Router();
+
+// In-memory store for email OTPs (in production, use Redis or database)
+const emailOtpStore = new Map(); // email -> { otp, expiresAt }
+
+// Clean expired OTPs every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [email, data] of emailOtpStore.entries()) {
+    if (data.expiresAt < now) {
+      emailOtpStore.delete(email);
+    }
+  }
+}, 5 * 60 * 1000);
 
 // Test MSG91 configuration endpoint
 router.get('/test-config', async (req, res) => {
@@ -402,6 +416,189 @@ router.post('/verify-access-token', async (req, res) => {
         error: 'Internal server error during OTP verification'
       });
     }
+  }
+});
+
+// Email OTP send endpoint
+router.post('/send-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email is required'
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email format'
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    console.log('📧 Sending OTP to email:', normalizedEmail);
+
+    // Generate 6-digit OTP
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes expiry
+
+    // Store OTP
+    emailOtpStore.set(normalizedEmail, {
+      otp,
+      expiresAt,
+      attempts: 0
+    });
+
+    // Import email service
+    const emailService = (await import('../services/emailService.js')).default;
+
+    // Send OTP email
+    try {
+      // Ensure email service is initialized
+      if (!emailService.isInitialized) {
+        await emailService.initializeEmailService();
+      }
+
+      const mailOptions = {
+        from: `"OCL Services" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
+        to: normalizedEmail,
+        subject: 'Your OTP for OCL Services Invoice Access',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <h2 style="color: #FDA11E;">OCL Services - OTP Verification</h2>
+            <p>Hello,</p>
+            <p>Your OTP for accessing your invoices is:</p>
+            <div style="background-color: #f5f5f5; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+              <h1 style="color: #FDA11E; font-size: 32px; margin: 0; letter-spacing: 5px;">${otp}</h1>
+            </div>
+            <p>This OTP is valid for 10 minutes. Do not share it with anyone.</p>
+            <p>If you did not request this OTP, please ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+            <p style="color: #666; font-size: 12px;">This is an automated email from OCL Services. Please do not reply to this email.</p>
+          </div>
+        `,
+        text: `Your OTP for OCL Services Invoice Access is: ${otp}. This OTP is valid for 10 minutes. Do not share it with anyone.`
+      };
+
+      await emailService.transporter.sendMail(mailOptions);
+      console.log(`✅ OTP email sent successfully to ${normalizedEmail}`);
+
+      return res.json({
+        success: true,
+        message: 'OTP sent successfully to your email'
+      });
+    } catch (emailError) {
+      console.error('❌ Failed to send OTP email:', emailError);
+      
+      // Remove OTP from store if email failed
+      emailOtpStore.delete(normalizedEmail);
+
+      // In development, return test OTP
+      if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV !== 'production') {
+        console.log('Using test OTP mode for development');
+        emailOtpStore.set(normalizedEmail, {
+          otp: '123456',
+          expiresAt: Date.now() + 10 * 60 * 1000,
+          attempts: 0
+        });
+        return res.json({
+          success: true,
+          message: 'Test OTP mode - Use 123456 as OTP',
+          testMode: true
+        });
+      }
+
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to send OTP email. Please try again later.'
+      });
+    }
+
+  } catch (error) {
+    console.error('Error sending email OTP:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error during OTP sending'
+    });
+  }
+});
+
+// Email OTP verify endpoint
+router.post('/verify-email', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email and OTP are required'
+      });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    console.log('📧 Verifying OTP for email:', normalizedEmail);
+
+    // Get stored OTP data
+    const storedData = emailOtpStore.get(normalizedEmail);
+
+    if (!storedData) {
+      return res.json({
+        success: false,
+        error: 'OTP not found or expired. Please request a new OTP.'
+      });
+    }
+
+    // Check if OTP expired
+    if (storedData.expiresAt < Date.now()) {
+      emailOtpStore.delete(normalizedEmail);
+      return res.json({
+        success: false,
+        error: 'OTP has expired. Please request a new OTP.'
+      });
+    }
+
+    // Check attempts (max 5 attempts)
+    if (storedData.attempts >= 5) {
+      emailOtpStore.delete(normalizedEmail);
+      return res.json({
+        success: false,
+        error: 'Too many failed attempts. Please request a new OTP.'
+      });
+    }
+
+    // Verify OTP
+    if (storedData.otp === otp) {
+      // OTP verified successfully - remove it from store
+      emailOtpStore.delete(normalizedEmail);
+      console.log('✅ OTP verified successfully for email:', normalizedEmail);
+      return res.json({
+        success: true,
+        verified: true,
+        message: 'OTP verified successfully'
+      });
+    } else {
+      // Increment attempts
+      storedData.attempts += 1;
+      emailOtpStore.set(normalizedEmail, storedData);
+      
+      console.log(`❌ Invalid OTP for email ${normalizedEmail}. Attempts: ${storedData.attempts}/5`);
+      return res.json({
+        success: false,
+        error: 'Invalid OTP. Please try again.'
+      });
+    }
+
+  } catch (error) {
+    console.error('Error verifying email OTP:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Internal server error during OTP verification'
+    });
   }
 });
 

@@ -1,17 +1,25 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Download, Search, FileText, Filter, Eye, Mail, Send, Shield, Smartphone, ArrowLeft } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Calendar, Download, Search, FileText, Filter, Eye, Mail, Send, Shield, Smartphone, ArrowLeft, Printer, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import invoicesData from "@/data/invoices.json";
 import flagIcon from "@/Icon-images/flag.png";
 import verIcon from "@/assets/ver.png";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import { cn } from "@/lib/utils";
 
 interface Invoice {
   id: string;
@@ -22,7 +30,19 @@ interface Invoice {
   recipient: string;
   destination: string;
   dueDate: string;
+  invoiceData?: any; // Full invoice data for detailed view
 }
+
+const COMPANY_DETAILS = {
+  name: "Our Courier & Logistics",
+  location: "Rehabari, Guwahati, Assam 781008",
+  gstin: " 18AJRPG5984B1ZV",
+  state: "Assam",
+  stateCode: "18",
+  phone: "+91 76360 96733",
+  email: "info@oclservices.com",
+  website: "www.oclservices.com",
+};
 
 const ViewBills = () => {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -45,15 +65,141 @@ const ViewBills = () => {
   const [emailError, setEmailError] = useState("");
   const [otpDigits, setOtpDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
+  const [autoDownload, setAutoDownload] = useState(false);
+  const [barcodeDataUrl, setBarcodeDataUrl] = useState<string | null>(null);
+  const invoiceContentRef = useRef<HTMLDivElement | null>(null);
 
+  // Fetch invoices after verification
   useEffect(() => {
-    // Only load invoices after verification
-    if (isVerified) {
-    // TODO: Replace with Supabase call
-    setInvoices(invoicesData.invoices);
-    setFilteredInvoices(invoicesData.invoices);
+    if (isVerified && verificationInput && verificationType === 'mobile') {
+      fetchInvoicesByPhone();
+    } else if (isVerified && verificationInput && verificationType === 'email') {
+      fetchInvoicesByEmail();
     }
-  }, [isVerified]);
+  }, [isVerified, verificationInput, verificationType]);
+
+  const fetchInvoicesByPhone = async () => {
+    try {
+      const phoneNumber = verificationInput.replace(/\D/g, '');
+      
+      if (!phoneNumber || phoneNumber.length !== 10) {
+        return;
+      }
+
+      setLoadingInvoices(true);
+      const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
+      const url = `${API_BASE}/api/customer-booking/invoices-by-phone?phoneNumber=${encodeURIComponent(phoneNumber)}`;
+      console.log('📞 Fetching invoices from:', url);
+      console.log('📞 Phone number being sent:', phoneNumber);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📥 Response status:', response.status);
+      const data = await response.json();
+      console.log('📥 Response data:', data);
+
+      if (data.success && data.data) {
+        console.log('✅ Found invoices:', data.data.length);
+        setInvoices(data.data);
+        setFilteredInvoices(data.data);
+        if (data.data.length === 0) {
+          toast({
+            title: "No Invoices Found",
+            description: "No invoices found for this phone number",
+            variant: "default",
+          });
+        }
+      } else {
+        console.log('❌ No invoices found or error:', data);
+        setInvoices([]);
+        setFilteredInvoices([]);
+        toast({
+          title: "No Invoices Found",
+          description: data.message || data.error || "No invoices found for this phone number",
+          variant: "default",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching invoices:', error);
+      setInvoices([]);
+      setFilteredInvoices([]);
+      toast({
+        title: "Error",
+        description: "Failed to load invoices. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingInvoices(false);
+    }
+  };
+
+  const fetchInvoicesByEmail = async () => {
+    try {
+      const email = verificationInput.trim().toLowerCase();
+      
+      if (!email || !email.includes('@')) {
+        return;
+      }
+
+      setLoadingInvoices(true);
+      const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
+      const url = `${API_BASE}/api/customer-booking/invoices-by-email?email=${encodeURIComponent(email)}`;
+      console.log('📧 Fetching invoices from:', url);
+      console.log('📧 Email being sent:', email);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📥 Response status:', response.status);
+      const data = await response.json();
+      console.log('📥 Response data:', data);
+
+      if (data.success && data.data) {
+        console.log('✅ Found invoices:', data.data.length);
+        setInvoices(data.data);
+        setFilteredInvoices(data.data);
+        if (data.data.length === 0) {
+          toast({
+            title: "No Invoices Found",
+            description: "No invoices found for this email address",
+            variant: "default",
+          });
+        }
+      } else {
+        console.log('❌ No invoices found or error:', data);
+        setInvoices([]);
+        setFilteredInvoices([]);
+        toast({
+          title: "No Invoices Found",
+          description: data.message || data.error || "No invoices found for this email address",
+          variant: "default",
+        });
+      }
+    } catch (error: any) {
+      console.error('Error fetching invoices:', error);
+      setInvoices([]);
+      setFilteredInvoices([]);
+      toast({
+        title: "Error",
+        description: "Failed to load invoices. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingInvoices(false);
+    }
+  };
   
   // Send OTP function
   const handleSendOtp = async () => {
@@ -289,37 +435,11 @@ const ViewBills = () => {
   }, [invoices, searchTerm, statusFilter, dateFilter]);
 
   const handleDownload = async (invoiceId: string) => {
-    try {
-      const response = await fetch(`/api/invoice-pdf/${invoiceId}/pdf`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('corporateToken')}`
-        }
-      });
-      
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `invoice-${invoiceId}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        
-        toast({
-          title: "Download Started",
-          description: `Downloading invoice ${invoiceId}...`,
-        });
-      } else {
-        throw new Error('Failed to generate invoice');
-      }
-    } catch (error) {
-      toast({
-        title: "Download Failed",
-        description: "Failed to download invoice",
-        variant: "destructive"
-      });
+    // Find the invoice and open it in the dialog, then trigger download
+    const invoice = invoices.find(inv => inv.id === invoiceId);
+    if (invoice) {
+      setAutoDownload(true);
+      setSelectedInvoice(invoice);
     }
   };
 
@@ -335,6 +455,371 @@ const ViewBills = () => {
         return "bg-gray-50 text-gray-700 border-gray-200";
     }
   };
+
+  // Helper function to convert number to words (Indian format)
+  const numberToWords = (num: number): string => {
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
+    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    
+    if (num === 0) return 'Zero Rupees Only';
+    
+    const convertHundreds = (n: number): string => {
+      let result = '';
+      if (n > 99) {
+        result += ones[Math.floor(n / 100)] + ' Hundred ';
+        n %= 100;
+      }
+      if (n > 19) {
+        result += tens[Math.floor(n / 10)] + ' ';
+        n %= 10;
+      } else if (n > 9) {
+        result += teens[n - 10] + ' ';
+        return result.trim();
+      }
+      if (n > 0) {
+        result += ones[n] + ' ';
+      }
+      return result.trim();
+    };
+    
+    const integerPart = Math.floor(num);
+    const decimalPart = Math.round((num - integerPart) * 100);
+    
+    let result = '';
+    let remaining = integerPart;
+    
+    // Crore
+    if (remaining >= 10000000) {
+      const crore = Math.floor(remaining / 10000000);
+      result += convertHundreds(crore) + ' Crore ';
+      remaining %= 10000000;
+    }
+    
+    // Lakh
+    if (remaining >= 100000) {
+      const lakh = Math.floor(remaining / 100000);
+      result += convertHundreds(lakh) + ' Lakh ';
+      remaining %= 100000;
+    }
+    
+    // Thousand
+    if (remaining >= 1000) {
+      const thousand = Math.floor(remaining / 1000);
+      result += convertHundreds(thousand) + ' Thousand ';
+      remaining %= 1000;
+    }
+    
+    // Hundreds, Tens, Ones
+    if (remaining > 0) {
+      result += convertHundreds(remaining) + ' ';
+    }
+    
+    result = result.trim() + ' Rupees';
+    
+    // Add paise if exists
+    if (decimalPart > 0) {
+      result += ' and ' + convertHundreds(decimalPart) + ' Paise';
+    }
+    
+    return result + ' Only';
+  };
+
+  const formatShortDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
+
+  const getConsignmentValue = (reference?: string) => {
+    if (!reference) return "";
+    const digitsOnly = reference.replace(/[^0-9]/g, "");
+    return digitsOnly || reference.trim();
+  };
+
+  const getBarcodeUrl = (reference?: string) => {
+    const value = getConsignmentValue(reference) || "OCL";
+    return `https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(value)}&translate-esc=on`;
+  };
+
+  // Function to fetch barcode and convert to data URL (to avoid CORS issues in PDF)
+  const fetchBarcodeAsDataUrl = async (reference?: string, retries = 3): Promise<string | null> => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const barcodeUrl = getBarcodeUrl(reference);
+        console.log(`Fetching barcode (attempt ${attempt}/${retries}):`, barcodeUrl);
+        const response = await fetch(barcodeUrl, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-cache',
+        });
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const blob = await response.blob();
+        if (!blob || blob.size === 0) {
+          throw new Error('Empty blob received');
+        }
+        
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            const dataUrl = reader.result as string;
+            if (dataUrl && dataUrl.startsWith('data:')) {
+              console.log('Barcode fetched successfully as data URL');
+              resolve(dataUrl);
+            } else {
+              reject(new Error('Invalid data URL'));
+            }
+          };
+          reader.onerror = () => reject(new Error('FileReader error'));
+          reader.readAsDataURL(blob);
+        });
+      } catch (error: any) {
+        console.error(`Error fetching barcode (attempt ${attempt}/${retries}):`, error);
+        if (attempt === retries) {
+          console.error('All retry attempts failed for barcode');
+          return null;
+        }
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+    return null;
+  };
+
+  const parsePrice = (value: any): number => {
+    if (!value) return 0;
+    const cleaned = String(value).replace(/[^\d.]/g, '');
+    return parseFloat(cleaned) || 0;
+  };
+
+  const handleDownloadInvoice = useCallback(async () => {
+    if (!selectedInvoice || !invoiceContentRef.current) {
+      return;
+    }
+
+    try {
+      setDownloadingInvoice(true);
+      
+      // Always fetch barcode as data URL to ensure it's available for PDF
+      const reference = selectedInvoice.invoiceData?.consignmentNumber || selectedInvoice.awb;
+      let finalBarcodeDataUrl = barcodeDataUrl;
+      
+      if (!finalBarcodeDataUrl) {
+        console.log('Fetching barcode as data URL...');
+        finalBarcodeDataUrl = await fetchBarcodeAsDataUrl(reference);
+        if (finalBarcodeDataUrl) {
+          setBarcodeDataUrl(finalBarcodeDataUrl);
+          // Wait for state update and DOM to reflect the change
+          await new Promise(resolve => setTimeout(resolve, 300));
+        } else {
+          console.warn('Failed to fetch barcode as data URL, will try direct URL');
+        }
+      }
+      
+      // Find the barcode image element and ensure it's loaded
+      const barcodeImg = invoiceContentRef.current.querySelector('img[alt*="Barcode"]') as HTMLImageElement;
+      if (barcodeImg) {
+        // Update the image src if we have a data URL
+        if (finalBarcodeDataUrl && barcodeImg.src !== finalBarcodeDataUrl) {
+          barcodeImg.src = finalBarcodeDataUrl;
+          console.log('Updated barcode image src to data URL');
+        }
+        
+        // Wait for barcode image to load
+        await new Promise<void>((resolve) => {
+          if (barcodeImg.complete && barcodeImg.naturalHeight !== 0) {
+            console.log('Barcode image already loaded');
+            resolve();
+            return;
+          }
+          
+          const timeout = setTimeout(() => {
+            console.warn('Barcode image loading timeout');
+            resolve(); // Continue even if timeout
+          }, 15000);
+          
+          barcodeImg.onload = () => {
+            clearTimeout(timeout);
+            console.log('Barcode image loaded successfully');
+            resolve();
+          };
+          
+          barcodeImg.onerror = () => {
+            clearTimeout(timeout);
+            console.warn('Barcode image failed to load, will continue anyway');
+            resolve();
+          };
+          
+          // Force reload if image hasn't loaded
+          if (!barcodeImg.complete) {
+            barcodeImg.src = barcodeImg.src; // Trigger reload
+          }
+        });
+      }
+      
+      // Wait for all other images to load
+      const images = invoiceContentRef.current.querySelectorAll('img');
+      const imagePromises = Array.from(images).map((img: HTMLImageElement) => {
+        // Skip barcode as we already handled it
+        if (img === barcodeImg) {
+          return Promise.resolve();
+        }
+        
+        // Check if image is already loaded
+        if (img.complete && img.naturalHeight !== 0) {
+          return Promise.resolve();
+        }
+        
+        return new Promise<void>((resolve) => {
+          const timeout = setTimeout(() => {
+            console.warn('Image loading timeout:', img.src);
+            resolve(); // Continue even if image times out
+          }, 10000);
+          
+          img.onload = () => {
+            clearTimeout(timeout);
+            resolve();
+          };
+          img.onerror = () => {
+            clearTimeout(timeout);
+            console.warn('Image failed to load:', img.src);
+            resolve(); // Continue even if image fails
+          };
+        });
+      });
+      
+      await Promise.all(imagePromises);
+
+      // Additional delay to ensure everything is fully rendered, especially barcode
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const scale =
+        typeof window !== "undefined"
+          ? Math.min(window.devicePixelRatio || 2, 2)
+          : 2;
+
+      const canvas = await html2canvas(invoiceContentRef.current, {
+        scale,
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        allowTaint: false, // Keep false to ensure canvas can be exported
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        imageTimeout: 20000, // Increased timeout for barcode image
+        removeContainer: false,
+        foreignObjectRendering: false,
+        proxy: undefined, // Let html2canvas handle CORS
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+      
+      // Add date and time at the top
+      const now = new Date();
+      const dateTimeStr = now.toLocaleString('en-IN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true
+      });
+      
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text(`Generated on: ${dateTimeStr}`, 10, 10, { align: 'left' });
+      
+      const imgWidth = pageWidth;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      const startY = 15; // Y position to start the image (below date/time)
+      const availableHeightFirstPage = pageHeight - startY; // Available height on first page
+      
+      // Add image to first page
+      pdf.addImage(imgData, "PNG", 0, startY, imgWidth, imgHeight);
+      
+      // Handle pagination if image is taller than available space on first page
+      let heightLeft = imgHeight - availableHeightFirstPage;
+      let position = startY - heightLeft;
+      
+      while (heightLeft > 0) {
+        pdf.addPage();
+        // Add date/time to each new page
+        pdf.text(`Generated on: ${dateTimeStr}`, 10, 10, { align: 'left' });
+        // Continue the image on the new page
+        pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+        heightLeft -= pageHeight;
+        position -= pageHeight;
+      }
+
+      pdf.save(`invoice-${selectedInvoice.id}.pdf`);
+      toast({
+        title: "Invoice downloaded",
+        description: `${selectedInvoice.id} saved as PDF.`,
+      });
+    } catch (err) {
+      console.error("Error downloading invoice:", err);
+      toast({
+        title: "Download failed",
+        description: "We could not generate the invoice PDF. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDownloadingInvoice(false);
+    }
+  }, [selectedInvoice, barcodeDataUrl, toast]);
+
+  // Fetch barcode as data URL when invoice is selected
+  useEffect(() => {
+    if (selectedInvoice) {
+      const reference = selectedInvoice.invoiceData?.consignmentNumber || selectedInvoice.awb;
+      fetchBarcodeAsDataUrl(reference).then(dataUrl => {
+        setBarcodeDataUrl(dataUrl);
+      });
+    } else {
+      setBarcodeDataUrl(null);
+    }
+  }, [selectedInvoice]);
+
+  // Auto-download effect: triggers download when dialog opens with autoDownload flag
+  useEffect(() => {
+    if (autoDownload && selectedInvoice) {
+      // Wait for content to render, with retry mechanism
+      let retries = 0;
+      const maxRetries = 10;
+      
+      const tryDownload = async () => {
+        if (invoiceContentRef.current) {
+          try {
+            await handleDownloadInvoice();
+            setAutoDownload(false);
+          } catch (error) {
+            console.error('Auto-download failed:', error);
+            setAutoDownload(false);
+          }
+        } else if (retries < maxRetries) {
+          retries++;
+          setTimeout(tryDownload, 200);
+        } else {
+          console.error('Invoice content not found after retries');
+          setAutoDownload(false);
+        }
+      };
+      
+      const timer = setTimeout(tryDownload, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [autoDownload, selectedInvoice, handleDownloadInvoice]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-background-soft flex flex-col relative">
@@ -389,9 +874,6 @@ const ViewBills = () => {
                   <h2 className="text-2xl font-bold text-foreground mb-2">
                     Verify Your Identity
                   </h2>
-                  <p className="text-muted-foreground text-sm mb-4">
-                    Enter your {verificationType === "mobile" ? "mobile number" : "email"} to view your Bills
-                  </p>
                 </div>
 
                 {/* Form Section */}
@@ -833,7 +1315,24 @@ const ViewBills = () => {
                   transition={{ delay: 0.4, duration: 0.4, ease: "easeInOut" }}
               className="space-y-4"
             >
-              {filteredInvoices.length > 0 ? (
+              {loadingInvoices ? (
+                <Card 
+                  className="border border-gray-200/50"
+                  style={{
+                    background: "linear-gradient(to bottom, #FFFFFF, #F9FAFB)",
+                    borderRadius: "16px",
+                    boxShadow: "rgba(0, 0, 0, 0.09) 0px 2px 1px, rgba(0, 0, 0, 0.09) 0px 4px 2px, rgba(0, 0, 0, 0.09) 0px 8px 4px, rgba(0, 0, 0, 0.09) 0px 16px 8px, rgba(0, 0, 0, 0.09) 0px 32px 16px",
+                  }}
+                >
+                  <CardContent className="p-12 text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
+                    <h3 className="text-lg font-semibold mb-2">Loading Invoices...</h3>
+                    <p className="text-muted-foreground">
+                      Please wait while we fetch your invoices
+                    </p>
+                  </CardContent>
+                </Card>
+              ) : filteredInvoices.length > 0 ? (
                 filteredInvoices.map((invoice, index) => (
                   <motion.div
                     key={invoice.id}
@@ -940,6 +1439,7 @@ const ViewBills = () => {
                                       transitionDuration: "0.4s",
                                       borderRadius: "8px",
                                     }}
+                                onClick={() => setSelectedInvoice(invoice)}
                               >
                                 <Eye className="w-4 h-4 mr-1" />
                                 View
@@ -1046,7 +1546,7 @@ const ViewBills = () => {
                         className="transition-all duration-150"
                       >
                         <p className="text-3xl font-bold transition-colors duration-300" style={{ color: "#FDA11E" }}>
-                          {filteredInvoices.filter(inv => inv.status === "Paid").length}
+                          {filteredInvoices.filter(inv => inv.status.toLowerCase() === "paid").length}
                         </p>
                         <p className="text-sm mt-1" style={{ color: "#111827" }}>Paid Invoices</p>
                       </motion.div>
@@ -1056,7 +1556,7 @@ const ViewBills = () => {
                         className="transition-all duration-150"
                       >
                         <p className="text-3xl font-bold transition-colors duration-300" style={{ color: "#FDA11E" }}>
-                          {filteredInvoices.filter(inv => inv.status === "Pending").length}
+                          {filteredInvoices.filter(inv => inv.status.toLowerCase() === "pending").length}
                         </p>
                         <p className="text-sm mt-1" style={{ color: "#111827" }}>Pending Invoices</p>
                       </motion.div>
@@ -1222,6 +1722,470 @@ const ViewBills = () => {
           )}
         </AnimatePresence>
       </main>
+
+      {/* Invoice Dialog */}
+      <Dialog open={!!selectedInvoice} onOpenChange={(open) => !open && setSelectedInvoice(null)}>
+        <DialogContent className="max-w-[95vw] sm:max-w-2xl lg:max-w-4xl w-full max-h-[90vh] overflow-y-auto p-0 border-0 shadow-none bg-white print:bg-white print:max-h-full print:overflow-visible [&>button]:hidden mx-2 sm:mx-auto">
+          <DialogHeader className="sticky top-0 z-10 bg-white dark:bg-slate-900 p-3 sm:p-4 print:hidden border-slate-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <DialogTitle className="text-base sm:text-lg font-semibold break-words text-slate-900">
+                Invoice - {selectedInvoice?.id}
+              </DialogTitle>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    if (selectedInvoice) {
+                      window.print();
+                    }
+                  }}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Print
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadInvoice}
+                  disabled={!selectedInvoice || downloadingInvoice}
+                  className="flex-1 sm:flex-initial h-9 sm:h-8 border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                >
+                  {downloadingInvoice ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Preparing
+                    </>
+                  ) : (
+                    <>
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </DialogHeader>
+          {selectedInvoice && selectedInvoice.invoiceData && (
+            <div
+              id="invoice-content"
+              ref={invoiceContentRef}
+              className="p-3 sm:p-6 print:p-3 bg-white"
+            >
+              {/* Invoice Section */}
+              <div className="max-w-3xl mx-auto print:max-w-full">
+                <div className="bg-white p-3 sm:p-4 print:p-3">
+                  {/* Header Section */}
+                  <div className="mb-3 pb-2">
+                    <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 items-start">
+                      <div className="flex items-start">
+                        <img
+                          src="/assets/ocl-logo.png"
+                          alt="OCL Logo"
+                          className="h-24 w-auto object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = '/ocl-logo.png';
+                          }}
+                        />
+                      </div>
+                      <div className="text-xs sm:text-[10px] space-y-1.5 text-slate-700">
+                        <div className="space-y-0.5 sm:text-right">
+                          <p className="text-sm sm:text-xs font-semibold text-slate-900">
+                            Invoice Details
+                          </p>
+                          <p>Invoice No.: {selectedInvoice.invoiceData.invoiceNumber || selectedInvoice.id}</p>
+                          <p>Created: {formatShortDate(selectedInvoice.date)}</p>
+                        </div>
+                        <div className="space-y-0.5 sm:text-right">
+                          <p>
+                            Consignment No.: {selectedInvoice.invoiceData.consignmentNumber || selectedInvoice.awb || "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 mb-3 pb-2 grid-cols-1 sm:grid-cols-2 text-xs sm:text-[10px] text-slate-700">
+                    <div className="space-y-0.5">
+                      <p className="text-xs font-semibold text-slate-900">
+                        {COMPANY_DETAILS.name}
+                      </p>
+                      <p>{COMPANY_DETAILS.location}</p>
+                      <p>GSTIN: {COMPANY_DETAILS.gstin}</p>
+                      <p>State: {COMPANY_DETAILS.state} (Code: {COMPANY_DETAILS.stateCode})</p>
+                    </div>
+                    <div className="space-y-0.5 sm:text-right">
+                      <p>Email: {COMPANY_DETAILS.email}</p>
+                      <p>Phone: {COMPANY_DETAILS.phone}</p>
+                      <p>Website: {COMPANY_DETAILS.website}</p>
+                      <p>Contact: 03612637373, 8453994809</p>
+                    </div>
+                  </div>
+
+                  {/* Sender and Recipient Section */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-3">
+                    {/* From Section */}
+                    <div>
+                      <div className="text-xs sm:text-[10px] font-semibold text-slate-700 mb-1">From - Sender Information</div>
+                      <div className="text-xs sm:text-[10px] text-slate-600 leading-tight">
+                        <div className="font-medium">{selectedInvoice.invoiceData.origin?.name || 'N/A'}</div>
+                        <div>{selectedInvoice.invoiceData.origin?.flatBuilding || ''} {selectedInvoice.invoiceData.origin?.locality || ''}</div>
+                        <div>{selectedInvoice.invoiceData.origin?.area || ''}, {selectedInvoice.invoiceData.origin?.city || ''}, {selectedInvoice.invoiceData.origin?.state || ''}</div>
+                        <div>PIN: {selectedInvoice.invoiceData.origin?.pincode || 'N/A'}</div>
+                        {selectedInvoice.invoiceData.origin?.mobileNumber && (
+                          <div>Phone: {selectedInvoice.invoiceData.origin.mobileNumber}</div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* To Section */}
+                    <div className="sm:text-right">
+                      <div className="text-xs sm:text-[10px] font-semibold text-slate-700 mb-1">To - Recipient Information</div>
+                      <div className="text-xs sm:text-[10px] text-slate-600 leading-tight">
+                        <div className="font-medium">{selectedInvoice.invoiceData.destination?.name || selectedInvoice.recipient || 'N/A'}</div>
+                        <div>{selectedInvoice.invoiceData.destination?.flatBuilding || ''} {selectedInvoice.invoiceData.destination?.locality || ''}</div>
+                        <div>{selectedInvoice.invoiceData.destination?.area || ''}, {selectedInvoice.invoiceData.destination?.city || ''}, {selectedInvoice.invoiceData.destination?.state || ''}</div>
+                        <div>PIN: {selectedInvoice.invoiceData.destination?.pincode || 'N/A'}</div>
+                        {selectedInvoice.invoiceData.destination?.mobileNumber && (
+                          <div>Phone: {selectedInvoice.invoiceData.destination.mobileNumber}</div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Shipment Details Section */}
+                  <div className="mb-3 pb-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <div className="text-xs sm:text-[10px] text-slate-500 mb-0.5">Shipping mode</div>
+                        <div className="text-xs sm:text-[10px] font-semibold text-slate-700">
+                          {selectedInvoice.invoiceData.shipmentDetails?.shippingMode === 'byAir' || selectedInvoice.invoiceData.shipmentDetails?.shippingMode === 'air'
+                            ? 'Air'
+                            : selectedInvoice.invoiceData.shipmentDetails?.shippingMode === 'byTrain' || selectedInvoice.invoiceData.shipmentDetails?.shippingMode === 'train'
+                            ? 'Train'
+                            : 'Road'}
+                          {selectedInvoice.invoiceData.shipmentDetails?.serviceType &&
+                            ` - ${selectedInvoice.invoiceData.shipmentDetails.serviceType === 'priority' ? 'Priority' : 'Standard'}`}
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-center">
+                        <div className="text-xs sm:text-[10px] text-slate-500 mb-0.5">Weight</div>
+                        <div className="text-xs sm:text-[10px] font-semibold text-slate-700">
+                          {selectedInvoice.invoiceData.shipmentDetails?.weight || '0'} kg
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <div className="text-xs sm:text-[10px] text-slate-500 mb-0.5">Declared Value</div>
+                        <div className="text-xs sm:text-[10px] font-semibold text-slate-700">
+                          ₹
+                          {selectedInvoice.invoiceData.shipmentDetails?.declaredValue
+                            ? parsePrice(selectedInvoice.invoiceData.shipmentDetails.declaredValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                            : '0.00'}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Barcode Section */}
+                  <div className="mb-3 pb-2">
+                    <div className="grid gap-4 sm:grid-cols-[1fr] items-center">
+                      <div className="bg-slate-100 p-3 rounded flex items-center justify-center w-full" style={{ minHeight: '80px' }}>
+                        <div className="text-center space-y-1.5 w-full">
+                          <div className="text-[9px] text-slate-500">Barcode</div>
+                          <img
+                            src={barcodeDataUrl || getBarcodeUrl(selectedInvoice.invoiceData.consignmentNumber || selectedInvoice.awb)}
+                            alt={`Barcode for ${getConsignmentValue(selectedInvoice.invoiceData.consignmentNumber || selectedInvoice.awb)}`}
+                            className="mx-auto h-16 w-full object-contain mix-blend-multiply"
+                            style={{ maxWidth: '100%', display: 'block' }}
+                            key={barcodeDataUrl ? 'barcode-dataurl' : 'barcode-url'} // Force re-render when data URL is available
+                            onLoad={(e) => {
+                              console.log('Barcode image loaded successfully');
+                              const img = e.currentTarget;
+                              if (img.naturalHeight === 0) {
+                                console.warn('Barcode image has zero height');
+                              }
+                            }}
+                            onError={(e) => {
+                              console.error('Barcode image failed to load, trying fallback');
+                              const img = e.currentTarget;
+                              // Try fallback URL if data URL fails
+                              if (barcodeDataUrl && img.src === barcodeDataUrl) {
+                                const reference = selectedInvoice.invoiceData?.consignmentNumber || selectedInvoice.awb;
+                                img.src = getBarcodeUrl(reference);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Bill To and Payment Details */}
+                  <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Left Column - Bill To */}
+                    <div>
+                      <div className="text-xs sm:text-[10px] font-semibold text-slate-700 mb-1">Bill To</div>
+                      <div className="text-xs sm:text-[10px] text-slate-600 leading-tight">
+                        <div className="font-medium">{selectedInvoice.invoiceData.billTo?.name || selectedInvoice.invoiceData.destination?.name || selectedInvoice.recipient || 'N/A'}</div>
+                        <div>Phone: {selectedInvoice.invoiceData.billTo?.phone || selectedInvoice.invoiceData.destination?.mobileNumber || 'N/A'}</div>
+                        <div>{selectedInvoice.invoiceData.billTo?.address || `${selectedInvoice.invoiceData.destination?.flatBuilding || ''} ${selectedInvoice.invoiceData.destination?.locality || ''}`}</div>
+                        {selectedInvoice.invoiceData.destination?.city && (
+                          <>
+                            <div>{selectedInvoice.invoiceData.destination.area || ''}, {selectedInvoice.invoiceData.destination.city}, {selectedInvoice.invoiceData.destination.state || ''}</div>
+                            <div>PIN: {selectedInvoice.invoiceData.destination.pincode || 'N/A'}</div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Right Column - Payment Details */}
+                    <div className="text-left sm:text-right">
+                      <div className="text-xs sm:text-[10px] font-bold text-black">
+                        <div>{selectedInvoice.invoiceData.payment?.status === 'paid' ? 'Paid' : 'Unpaid'}</div>
+                      </div>
+                      <div className="text-base sm:text-[18px] font-bold text-black mt-1">
+                        <div>₹{selectedInvoice.amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payment Details - Price Breakdown */}
+                  <div className="mb-3">
+                    {selectedInvoice.invoiceData.pricing && (
+                      <div className="mt-2 pt-2">
+                        <div className="text-xs sm:text-[9px] text-slate-600 space-y-0.5">
+                          {selectedInvoice.invoiceData.pricing.detailsData ? (
+                            // Use detailsData if available (office booking invoice)
+                            (() => {
+                              const detailsData = selectedInvoice.invoiceData.pricing.detailsData;
+                              const freightCharge = parsePrice(detailsData.freightCharge);
+                              const awbCharge = parsePrice(detailsData.awbCharge);
+                              const pickupCharge = parsePrice(detailsData.pickupCharge);
+                              const localCollection = parsePrice(detailsData.localCollection);
+                              const doorDelivery = parsePrice(detailsData.doorDelivery);
+                              const loadingUnloading = parsePrice(detailsData.loadingUnloading);
+                              const demurrageCharge = parsePrice(detailsData.demurrageCharge);
+                              const ddaCharge = parsePrice(detailsData.ddaCharge);
+                              const hamaliCharge = parsePrice(detailsData.hamaliCharge);
+                              const packingCharge = parsePrice(detailsData.packingCharge);
+                              const otherCharge = parsePrice(detailsData.otherCharge);
+                              const totalBeforeFuel = freightCharge + awbCharge + pickupCharge + localCollection + doorDelivery + loadingUnloading + demurrageCharge + ddaCharge + hamaliCharge + packingCharge + otherCharge;
+                              
+                              let fuelAmount = 0;
+                              if (detailsData.fuelCharge && detailsData.fuelChargeType === 'percentage') {
+                                const fuelPercentage = parseFloat(detailsData.fuelCharge);
+                                if (!isNaN(fuelPercentage) && fuelPercentage > 0) {
+                                  fuelAmount = (totalBeforeFuel * fuelPercentage) / 100;
+                                }
+                              } else if (detailsData.fuelCharge && detailsData.fuelChargeType === 'custom') {
+                                fuelAmount = parsePrice(detailsData.fuelCharge);
+                              }
+                              
+                              const totalWithFuel = totalBeforeFuel + fuelAmount;
+                              const sgstAmount = parsePrice(detailsData.sgstAmount);
+                              const cgstAmount = parsePrice(detailsData.cgstAmount);
+                              const igstAmount = parsePrice(detailsData.igstAmount);
+                              const grandTotal = parsePrice(detailsData.grandTotal) || selectedInvoice.amount;
+                              
+                              return (
+                                <>
+                                  {freightCharge > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Freight Charge:</span>
+                                      <span>₹{freightCharge.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {awbCharge > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>AWB Charge:</span>
+                                      <span>₹{awbCharge.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {pickupCharge > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Pickup Charge:</span>
+                                      <span>₹{pickupCharge.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {localCollection > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Local Collection:</span>
+                                      <span>₹{localCollection.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {doorDelivery > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Door Delivery:</span>
+                                      <span>₹{doorDelivery.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {loadingUnloading > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Loading/Unloading:</span>
+                                      <span>₹{loadingUnloading.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {demurrageCharge > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Demurrage:</span>
+                                      <span>₹{demurrageCharge.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {ddaCharge > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>DDA:</span>
+                                      <span>₹{ddaCharge.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {hamaliCharge > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Hamali:</span>
+                                      <span>₹{hamaliCharge.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {packingCharge > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Packing:</span>
+                                      <span>₹{packingCharge.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {otherCharge > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Other:</span>
+                                      <span>₹{otherCharge.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {fuelAmount > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Fuel Charge:</span>
+                                      <span>₹{fuelAmount.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {(sgstAmount > 0 || cgstAmount > 0 || igstAmount > 0) && (
+                                    <>
+                                      {sgstAmount > 0 && (
+                                        <div className="flex justify-between">
+                                          <span>SGST:</span>
+                                          <span>₹{sgstAmount.toFixed(2)}</span>
+                                        </div>
+                                      )}
+                                      {cgstAmount > 0 && (
+                                        <div className="flex justify-between">
+                                          <span>CGST:</span>
+                                          <span>₹{cgstAmount.toFixed(2)}</span>
+                                        </div>
+                                      )}
+                                      {igstAmount > 0 && (
+                                        <div className="flex justify-between">
+                                          <span>IGST:</span>
+                                          <span>₹{igstAmount.toFixed(2)}</span>
+                                        </div>
+                                      )}
+                                    </>
+                                  )}
+                                  <div className="flex justify-between font-bold text-black pt-0.5">
+                                    <span>Total Amount:</span>
+                                    <span>₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                  <div className="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-[9px] text-slate-600 italic pt-1 gap-1">
+                                    <span>Amount in Words:</span>
+                                    <span className="text-left sm:text-right break-words">
+                                      {selectedInvoice.invoiceData.pricing.amountInWords || numberToWords(grandTotal)}
+                                    </span>
+                                  </div>
+                                </>
+                              );
+                            })()
+                          ) : (
+                            // Simple pricing breakdown (for older invoices)
+                            (() => {
+                              const basePrice = selectedInvoice.invoiceData.pricing.basePrice || 0;
+                              const pickupCharge = selectedInvoice.invoiceData.pricing.pickupCharge || 0;
+                              const subtotal = selectedInvoice.invoiceData.pricing.subtotal || (basePrice + pickupCharge);
+                              const gstAmount = selectedInvoice.invoiceData.pricing.gstAmount || 0;
+                              const totalAmount = selectedInvoice.invoiceData.pricing.totalAmount || selectedInvoice.amount;
+                              
+                              return (
+                                <>
+                                  {basePrice > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Base Price:</span>
+                                      <span>₹{basePrice.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {pickupCharge > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>Pickup Charge:</span>
+                                      <span>₹{pickupCharge.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  {gstAmount > 0 && (
+                                    <div className="flex justify-between">
+                                      <span>GST (18%):</span>
+                                      <span>₹{gstAmount.toFixed(2)}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex justify-between font-bold text-black pt-0.5">
+                                    <span>Total Amount:</span>
+                                    <span>₹{totalAmount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                  </div>
+                                  <div className="flex flex-col sm:flex-row sm:justify-between text-xs sm:text-[9px] text-slate-600 italic pt-1 gap-1">
+                                    <span>Amount in Words:</span>
+                                    <span className="text-left sm:text-right break-words">
+                                      {selectedInvoice.invoiceData.pricing.amountInWords || numberToWords(totalAmount)}
+                                    </span>
+                                  </div>
+                                </>
+                              );
+                            })()
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Item Description */}
+                  <div className="mb-3">
+                    <div className="text-xs sm:text-[10px] font-semibold text-slate-700 mb-1">Item Description:</div>
+                    <div className="text-xs sm:text-[10px] text-slate-600">
+                      {selectedInvoice.invoiceData.itemDescription || 
+                        (selectedInvoice.invoiceData.shipmentDetails?.natureOfConsignment === 'DOX' ? 'Document' : 
+                         selectedInvoice.invoiceData.shipmentDetails?.natureOfConsignment === 'NON-DOX' ? 'Parcel' : 
+                         selectedInvoice.invoiceData.shipmentDetails?.natureOfConsignment || 'Document')}
+                    </div>
+                  </div>
+
+                  {/* Disclaimers */}
+                  <div className="mb-3 space-y-1">
+                    <div className="text-xs sm:text-[9px] text-slate-600 leading-tight">
+                      Personal/Used goods, Not for Sale No Commercial Value.
+                    </div>
+                    <div className="text-xs sm:text-[9px] text-slate-600 leading-tight">
+                      Please note that the final charges may be subject to revision if the actual weight differs from the declared weight, or if any additional charges are applicable for the shipment. For any queries or updates, please contact us at{' '}
+                      <a
+                        href="mailto:info@oclservices.com"
+                        className="underline font-medium hover:opacity-80 transition-opacity text-blue-600 hover:text-blue-700"
+                      >
+                        info@oclservices.com
+                      </a>
+                    </div>
+                    <div className="text-xs sm:text-[9px] text-slate-600 leading-tight">
+                      Movement of content is subject to our list of Dangerous Goods and Prohibited Items.
+                    </div>
+                  </div>
+
+                  {/* Computer Generated Invoice Note */}
+                  <div className="mb-3 p-2 rounded border bg-yellow-50 border-yellow-200">
+                    <div className="text-xs sm:text-[9px] leading-tight text-yellow-800">
+                      <span className="font-bold">*</span> This is computer generated invoice and does not require official signature. Kindly notify us immediately in case you find any discrepancy in the details of transaction.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>

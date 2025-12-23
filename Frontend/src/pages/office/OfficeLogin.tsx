@@ -426,9 +426,6 @@ const OfficeLogin: React.FC = () => {
                     />
                   </div>
                 </div>
-                <button className="flex items-center justify-center gap-2 border border-gray-300/60 bg-white/30 backdrop-blur-sm px-3 py-2.5 rounded-full hover:bg-white/40 hover:shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)] transition-all duration-300 text-sm w-full min-h-[40px] hover:scale-[1.02]">
-                  <img src="https://i.pinimg.com/736x/b1/c7/c5/b1c7c5cfca2d45f915fd7b3d6113b391.jpg" alt="Apple" className="w-4 h-4" /> Sign in with Apple
-                </button>
               </div>
 
             </motion.div>

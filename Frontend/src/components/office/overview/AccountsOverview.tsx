@@ -381,505 +381,537 @@ const AccountsOverview = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[calc(100vh-4rem)]">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-6 w-6 animate-spin text-blue-600" />
-          <span className="text-xs text-gray-600">Loading dashboard...</span>
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center h-[calc(100vh-8rem)]">
+            <div className="flex flex-col items-center gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <span className="text-sm text-gray-600">Loading dashboard...</span>
+            </div>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-[calc(100vh-4rem)] overflow-y-auto bg-gradient-to-br from-gray-50 via-blue-50/20 to-purple-50/20 p-3 space-y-2">
-      {/* Compact Header */}
-      <div className="flex items-center justify-between mb-1">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-blue-600" />
-            Accounts Overview
-          </h1>
-          <p className="text-xs text-gray-600">Financial summary across all sources</p>
+    <div className="min-h-screen bg-gray-50 p-4">
+      <div className="max-w-7xl mx-auto space-y-4">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-100 rounded-md">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Accounts Overview</h1>
+                <p className="text-sm text-gray-600">Financial summary across all sources</p>
+              </div>
+            </div>
+            <Button
+              onClick={fetchAllData}
+              disabled={loading}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+            >
+              <RefreshCw className={cn('h-4 w-4 mr-2', loading && 'animate-spin')} />
+              Refresh
+            </Button>
+          </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={fetchAllData}
-          disabled={loading}
-          className="h-8 px-3 text-xs"
-        >
-          <RefreshCw className={cn('h-3 w-3 mr-1', loading && 'animate-spin')} />
-          Refresh
-        </Button>
-      </div>
 
-      {/* Compact Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-        <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-md">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-blue-100 mb-0.5">Total Amount</p>
-                <p className="text-lg font-bold leading-tight">{formatCurrency(summary.totalAmount)}</p>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white border-0 shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-100 mb-1">Total Amount</p>
+                  <p className="text-2xl font-bold">{formatCurrency(summary.totalAmount)}</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <DollarSign className="h-6 w-6" />
+                </div>
               </div>
-              <DollarSign className="h-5 w-5 opacity-80" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-md">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-green-100 mb-0.5">Total Paid</p>
-                <p className="text-lg font-bold leading-tight">{formatCurrency(summary.totalPaid)}</p>
+          <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white border-0 shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-100 mb-1">Total Paid</p>
+                  <p className="text-2xl font-bold">{formatCurrency(summary.totalPaid)}</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <TrendingUp className="h-6 w-6" />
+                </div>
               </div>
-              <TrendingUp className="h-5 w-5 opacity-80" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0 shadow-md">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-red-100 mb-0.5">Total Unpaid</p>
-                <p className="text-lg font-bold leading-tight">{formatCurrency(summary.totalUnpaid)}</p>
+          <Card className="bg-gradient-to-br from-red-500 to-red-600 text-white border-0 shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-red-100 mb-1">Total Unpaid</p>
+                  <p className="text-2xl font-bold">{formatCurrency(summary.totalUnpaid)}</p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <TrendingDown className="h-6 w-6" />
+                </div>
               </div>
-              <TrendingDown className="h-5 w-5 opacity-80" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-md">
-          <CardContent className="p-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[10px] text-purple-100 mb-0.5">Collection Rate</p>
-                <p className="text-lg font-bold leading-tight">
-                  {summary.totalAmount > 0
-                    ? ((summary.totalPaid / summary.totalAmount) * 100).toFixed(1)
-                    : 0}%
-                </p>
+          <Card className="bg-gradient-to-br from-purple-500 to-purple-600 text-white border-0 shadow-md hover:shadow-lg transition-shadow">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-100 mb-1">Collection Rate</p>
+                  <p className="text-2xl font-bold">
+                    {summary.totalAmount > 0
+                      ? ((summary.totalPaid / summary.totalAmount) * 100).toFixed(1)
+                      : 0}%
+                  </p>
+                </div>
+                <div className="p-3 bg-white/20 rounded-lg">
+                  <CheckCircle className="h-6 w-6" />
+                </div>
               </div>
-              <CheckCircle className="h-5 w-5 opacity-80" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Compact Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-        {/* Payment Distribution Pie Chart */}
-        <Card className="shadow-md">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <Package className="h-4 w-4 text-purple-600" />
-              Revenue by Source
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3">
-            {paymentDistributionData.length > 0 ? (
-              <ChartContainer
-                config={paymentDistributionData.reduce((acc, item) => {
-                  acc[item.name] = { label: item.name, color: item.color };
-                  return acc;
-                }, {} as Record<string, { label: string; color: string }>)}
-                className="h-[160px]"
-              >
-                <PieChart>
-                  <Pie
-                    data={paymentDistributionData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                    outerRadius={60}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {paymentDistributionData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="rounded border bg-background p-1.5 shadow-sm text-xs">
-                            <div className="font-medium">{payload[0].name}</div>
-                            <div className="font-bold">{formatCurrency(payload[0].value as number)}</div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                </PieChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[160px] flex items-center justify-center text-xs text-gray-500">
-                No data
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Payment Distribution Pie Chart */}
+          <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <CardHeader className="pb-3 px-4 pt-4 border-b border-gray-200">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900">
+                <div className="p-1.5 bg-purple-100 rounded-md">
+                  <Package className="h-4 w-4 text-purple-600" />
+                </div>
+                Revenue by Source
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 pt-4">
+              {paymentDistributionData.length > 0 ? (
+                <ChartContainer
+                  config={paymentDistributionData.reduce((acc, item) => {
+                    acc[item.name] = { label: item.name, color: item.color };
+                    return acc;
+                  }, {} as Record<string, { label: string; color: string }>)}
+                  className="h-[240px]"
+                >
+                  <PieChart>
+                    <Pie
+                      data={paymentDistributionData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {paymentDistributionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="rounded border bg-background p-2 shadow-sm text-sm">
+                              <div className="font-medium">{payload[0].name}</div>
+                              <div className="font-bold">{formatCurrency(payload[0].value as number)}</div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </PieChart>
+                </ChartContainer>
+              ) : (
+                <div className="h-[240px] flex items-center justify-center text-sm text-gray-500">
+                  No data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Paid vs Unpaid Pie Chart */}
-        <Card className="shadow-md">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <Receipt className="h-4 w-4 text-green-600" />
-              Payment Status
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3">
-            {paidUnpaidData.length > 0 ? (
-              <ChartContainer
-                config={paidUnpaidData.reduce((acc, item) => {
-                  acc[item.name] = { label: item.name, color: item.color };
-                  return acc;
-                }, {} as Record<string, { label: string; color: string }>)}
-                className="h-[160px]"
-              >
-                <PieChart>
-                  <Pie
-                    data={paidUnpaidData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
-                    outerRadius={60}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {paidUnpaidData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <ChartTooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="rounded border bg-background p-1.5 shadow-sm text-xs">
-                            <div className="font-medium">{payload[0].name}</div>
-                            <div className="font-bold">{formatCurrency(payload[0].value as number)}</div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                </PieChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[160px] flex items-center justify-center text-xs text-gray-500">
-                No data
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          {/* Paid vs Unpaid Pie Chart */}
+          <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <CardHeader className="pb-3 px-4 pt-4 border-b border-gray-200">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900">
+                <div className="p-1.5 bg-green-100 rounded-md">
+                  <Receipt className="h-4 w-4 text-green-600" />
+                </div>
+                Payment Status
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 pt-4">
+              {paidUnpaidData.length > 0 ? (
+                <ChartContainer
+                  config={paidUnpaidData.reduce((acc, item) => {
+                    acc[item.name] = { label: item.name, color: item.color };
+                    return acc;
+                  }, {} as Record<string, { label: string; color: string }>)}
+                  className="h-[240px]"
+                >
+                  <PieChart>
+                    <Pie
+                      data={paidUnpaidData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ percent }) => `${(percent * 100).toFixed(0)}%`}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {paidUnpaidData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <ChartTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="rounded border bg-background p-2 shadow-sm text-sm">
+                              <div className="font-medium">{payload[0].name}</div>
+                              <div className="font-bold">{formatCurrency(payload[0].value as number)}</div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                  </PieChart>
+                </ChartContainer>
+              ) : (
+                <div className="h-[240px] flex items-center justify-center text-sm text-gray-500">
+                  No data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Compact Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
-        {/* Source Breakdown Bar Chart */}
-        <Card className="shadow-md">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <BarChart3 className="h-4 w-4 text-blue-600" />
-              Source Breakdown
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3">
-            {sourceBreakdownData.length > 0 ? (
-              <ChartContainer
-                config={{
-                  paid: { label: 'Paid', color: COLORS.paid },
-                  unpaid: { label: 'Unpaid', color: COLORS.unpaid },
-                }}
-                className="h-[160px]"
-              >
-                <BarChart data={sourceBreakdownData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="source" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
-                  <ChartTooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="rounded border bg-background p-1.5 shadow-sm text-xs">
-                            {payload.map((item, index) => (
-                              <div key={index} className="flex justify-between gap-2">
-                                <span>{item.name}</span>
-                                <span className="font-bold">{formatCurrency(item.value as number)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />
-                  <Bar dataKey="paid" fill={COLORS.paid} name="Paid" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="unpaid" fill={COLORS.unpaid} name="Unpaid" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[160px] flex items-center justify-center text-xs text-gray-500">
-                No data
-              </div>
-            )}
-          </CardContent>
-        </Card>
+        {/* Charts Row 2 */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Source Breakdown Bar Chart */}
+          <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <CardHeader className="pb-3 px-4 pt-4 border-b border-gray-200">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900">
+                <div className="p-1.5 bg-blue-100 rounded-md">
+                  <BarChart3 className="h-4 w-4 text-blue-600" />
+                </div>
+                Source Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 pt-4">
+              {sourceBreakdownData.length > 0 ? (
+                <ChartContainer
+                  config={{
+                    paid: { label: 'Paid', color: COLORS.paid },
+                    unpaid: { label: 'Unpaid', color: COLORS.unpaid },
+                  }}
+                  className="h-[240px]"
+                >
+                  <BarChart data={sourceBreakdownData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="source" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
+                    <ChartTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="rounded border bg-background p-2 shadow-sm text-sm">
+                              {payload.map((item, index) => (
+                                <div key={index} className="flex justify-between gap-2">
+                                  <span>{item.name}</span>
+                                  <span className="font-bold">{formatCurrency(item.value as number)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Bar dataKey="paid" fill={COLORS.paid} name="Paid" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="unpaid" fill={COLORS.unpaid} name="Unpaid" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartContainer>
+              ) : (
+                <div className="h-[240px] flex items-center justify-center text-sm text-gray-500">
+                  No data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Monthly Trends */}
-        <Card className="shadow-md">
-          <CardHeader className="pb-2 px-3 pt-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-1.5">
-              <Calendar className="h-4 w-4 text-orange-600" />
-              Monthly Trends
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="px-3 pb-3">
-            {summary.monthlyData.length > 0 ? (
-              <ChartContainer
-                config={{
-                  paid: { label: 'Paid', color: COLORS.paid },
-                  unpaid: { label: 'Unpaid', color: COLORS.unpaid },
-                  total: { label: 'Total', color: COLORS.corporate },
-                }}
-                className="h-[160px]"
-              >
-                <AreaChart data={summary.monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="month" tick={{ fontSize: 10 }} />
-                  <YAxis tick={{ fontSize: 10 }} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
-                  <ChartTooltip
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="rounded border bg-background p-1.5 shadow-sm text-xs">
-                            {payload.map((item, index) => (
-                              <div key={index} className="flex justify-between gap-2">
-                                <span>{item.name}</span>
-                                <span className="font-bold">{formatCurrency(item.value as number)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: '10px', paddingTop: '5px' }} />
-                  <Area type="monotone" dataKey="paid" stackId="1" stroke={COLORS.paid} fill={COLORS.paid} fillOpacity={0.6} />
-                  <Area type="monotone" dataKey="unpaid" stackId="1" stroke={COLORS.unpaid} fill={COLORS.unpaid} fillOpacity={0.6} />
-                </AreaChart>
-              </ChartContainer>
-            ) : (
-              <div className="h-[160px] flex items-center justify-center text-xs text-gray-500">
-                No data
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+          {/* Monthly Trends */}
+          <Card className="bg-white rounded-lg shadow-sm border border-gray-200">
+            <CardHeader className="pb-3 px-4 pt-4 border-b border-gray-200">
+              <CardTitle className="text-lg font-semibold flex items-center gap-2 text-gray-900">
+                <div className="p-1.5 bg-orange-100 rounded-md">
+                  <Calendar className="h-4 w-4 text-orange-600" />
+                </div>
+                Monthly Trends
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 pt-4">
+              {summary.monthlyData.length > 0 ? (
+                <ChartContainer
+                  config={{
+                    paid: { label: 'Paid', color: COLORS.paid },
+                    unpaid: { label: 'Unpaid', color: COLORS.unpaid },
+                    total: { label: 'Total', color: COLORS.corporate },
+                  }}
+                  className="h-[240px]"
+                >
+                  <AreaChart data={summary.monthlyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
+                    <ChartTooltip
+                      content={({ active, payload }) => {
+                        if (active && payload && payload.length) {
+                          return (
+                            <div className="rounded border bg-background p-2 shadow-sm text-sm">
+                              {payload.map((item, index) => (
+                                <div key={index} className="flex justify-between gap-2">
+                                  <span>{item.name}</span>
+                                  <span className="font-bold">{formatCurrency(item.value as number)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }} />
+                    <Area type="monotone" dataKey="paid" stackId="1" stroke={COLORS.paid} fill={COLORS.paid} fillOpacity={0.6} />
+                    <Area type="monotone" dataKey="unpaid" stackId="1" stroke={COLORS.unpaid} fill={COLORS.unpaid} fillOpacity={0.6} />
+                  </AreaChart>
+                </ChartContainer>
+              ) : (
+                <div className="h-[240px] flex items-center justify-center text-sm text-gray-500">
+                  No data available
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Compact Source Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-        <Card className="bg-white border border-purple-200 shadow-sm">
-          <CardContent className="p-2.5">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1 bg-purple-100 rounded">
-                <Pill className="h-3.5 w-3.5 text-purple-600" />
+        {/* Source Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-white border border-purple-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-purple-100 rounded-lg">
+                  <Pill className="h-5 w-5 text-purple-600" />
+                </div>
+                <p className="text-base font-bold text-gray-900">Medicine</p>
               </div>
-              <p className="text-xs font-bold text-gray-900">Medicine</p>
-            </div>
-            <div className="space-y-1 text-[10px]">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total:</span>
-                <span className="font-medium">{formatCurrency(summary.medicine.total)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">OCL:</span>
-                <span className="font-medium text-orange-600">{formatCurrency(summary.medicine.oclCharge)}</span>
-              </div>
-              <div className="flex justify-between pt-0.5 border-t">
-                <span className="font-medium">Grand:</span>
-                <span className="font-bold text-purple-700">{formatCurrency(summary.medicine.grandTotal)}</span>
-              </div>
-              <div className="flex justify-between mt-0.5">
-                <span className="text-gray-500">Count:</span>
-                <Badge variant="secondary" className="h-3 px-1 text-[9px]">
-                  {summary.medicine.count}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border border-teal-200 shadow-sm">
-          <CardContent className="p-2.5">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1 bg-teal-100 rounded">
-                <Building2 className="h-3.5 w-3.5 text-teal-600" />
-              </div>
-              <p className="text-xs font-bold text-gray-900">Corporate</p>
-            </div>
-            <div className="space-y-1 text-[10px]">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Paid:</span>
-                <span className="font-medium text-green-700">{formatCurrency(summary.corporate.paid)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Unpaid:</span>
-                <span className="font-medium text-red-700">{formatCurrency(summary.corporate.unpaid)}</span>
-              </div>
-              <div className="flex justify-between pt-0.5 border-t">
-                <span className="font-medium">Total:</span>
-                <span className="font-bold text-teal-700">{formatCurrency(summary.corporate.total)}</span>
-              </div>
-              <div className="flex justify-between mt-0.5">
-                <span className="text-gray-500">P/U:</span>
-                <div className="flex gap-0.5">
-                  <Badge className="h-3 px-1 text-[9px] bg-green-100 text-green-800">
-                    {summary.corporate.paidCount}
-                  </Badge>
-                  <Badge className="h-3 px-1 text-[9px] bg-red-100 text-red-800">
-                    {summary.corporate.unpaidCount}
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Total:</span>
+                  <span className="font-medium text-gray-900">{formatCurrency(summary.medicine.total)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">OCL:</span>
+                  <span className="font-medium text-orange-600">{formatCurrency(summary.medicine.oclCharge)}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                  <span className="font-semibold text-gray-900">Grand:</span>
+                  <span className="font-bold text-purple-700">{formatCurrency(summary.medicine.grandTotal)}</span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-gray-500 text-xs">Count:</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {summary.medicine.count}
                   </Badge>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-white border border-blue-200 shadow-sm">
-          <CardContent className="p-2.5">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1 bg-blue-100 rounded">
-                <Users className="h-3.5 w-3.5 text-blue-600" />
+          <Card className="bg-white border border-teal-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-teal-100 rounded-lg">
+                  <Building2 className="h-5 w-5 text-teal-600" />
+                </div>
+                <p className="text-base font-bold text-gray-900">Corporate</p>
               </div>
-              <p className="text-xs font-bold text-gray-900">Customer</p>
-            </div>
-            <div className="space-y-1 text-[10px]">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Paid:</span>
-                <span className="font-medium text-green-700">{formatCurrency(summary.customer.paid)}</span>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Paid:</span>
+                  <span className="font-medium text-green-700">{formatCurrency(summary.corporate.paid)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Unpaid:</span>
+                  <span className="font-medium text-red-700">{formatCurrency(summary.corporate.unpaid)}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                  <span className="font-semibold text-gray-900">Total:</span>
+                  <span className="font-bold text-teal-700">{formatCurrency(summary.corporate.total)}</span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-gray-500 text-xs">P/U:</span>
+                  <div className="flex gap-1">
+                    <Badge className="text-xs bg-green-100 text-green-800">
+                      {summary.corporate.paidCount}
+                    </Badge>
+                    <Badge className="text-xs bg-red-100 text-red-800">
+                      {summary.corporate.unpaidCount}
+                    </Badge>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Unpaid:</span>
-                <span className="font-medium text-red-700">{formatCurrency(summary.customer.unpaid)}</span>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border border-blue-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users className="h-5 w-5 text-blue-600" />
+                </div>
+                <p className="text-base font-bold text-gray-900">Customer</p>
               </div>
-              <div className="flex justify-between pt-0.5 border-t">
-                <span className="font-medium">Total:</span>
-                <span className="font-bold text-blue-700">{formatCurrency(summary.customer.total)}</span>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Paid:</span>
+                  <span className="font-medium text-green-700">{formatCurrency(summary.customer.paid)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-600">Unpaid:</span>
+                  <span className="font-medium text-red-700">{formatCurrency(summary.customer.unpaid)}</span>
+                </div>
+                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
+                  <span className="font-semibold text-gray-900">Total:</span>
+                  <span className="font-bold text-blue-700">{formatCurrency(summary.customer.total)}</span>
+                </div>
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-gray-500 text-xs">P/U:</span>
+                  <div className="flex gap-1">
+                    <Badge className="text-xs bg-green-100 text-green-800">
+                      {summary.customer.paidCount}
+                    </Badge>
+                    <Badge className="text-xs bg-red-100 text-red-800">
+                      {summary.customer.unpaidCount}
+                    </Badge>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between mt-0.5">
-                <span className="text-gray-500">P/U:</span>
-                <div className="flex gap-0.5">
-                  <Badge className="h-3 px-1 text-[9px] bg-green-100 text-green-800">
-                    {summary.customer.paidCount}
+            </CardContent>
+          </Card>
+
+          <Card className="bg-white border border-orange-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <Bike className="h-5 w-5 text-orange-600" />
+                </div>
+                <p className="text-base font-bold text-gray-900">Courier Boy</p>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center pt-1">
+                  <span className="font-semibold text-gray-900">Total:</span>
+                  <span className="font-bold text-orange-700">{formatCurrency(summary.courierBoy.total)}</span>
+                </div>
+                <div className="flex justify-between items-center mt-3">
+                  <span className="text-gray-500 text-xs">CBs:</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {summary.courierBoy.count}
                   </Badge>
-                  <Badge className="h-3 px-1 text-[9px] bg-red-100 text-red-800">
-                    {summary.customer.unpaidCount}
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-500 text-xs">Orders:</span>
+                  <Badge variant="secondary" className="text-xs">
+                    {summary.courierBoy.orderCount}
                   </Badge>
                 </div>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card className="bg-white border border-orange-200 shadow-sm">
-          <CardContent className="p-2.5">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="p-1 bg-orange-100 rounded">
-                <Bike className="h-3.5 w-3.5 text-orange-600" />
+        {/* Quick Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-indigo-700 mb-1">Total Bookings</p>
+                  <p className="text-xl font-bold text-indigo-900">
+                    {summary.corporate.paidCount +
+                      summary.corporate.unpaidCount +
+                      summary.customer.paidCount +
+                      summary.customer.unpaidCount}
+                  </p>
+                </div>
+                <div className="p-2 bg-indigo-200 rounded-lg">
+                  <Package className="h-5 w-5 text-indigo-600" />
+                </div>
               </div>
-              <p className="text-xs font-bold text-gray-900">Courier Boy</p>
-            </div>
-            <div className="space-y-1 text-[10px]">
-              <div className="flex justify-between pt-0.5">
-                <span className="font-medium">Total:</span>
-                <span className="font-bold text-orange-700">{formatCurrency(summary.courierBoy.total)}</span>
-              </div>
-              <div className="flex justify-between mt-1.5">
-                <span className="text-gray-500">CBs:</span>
-                <Badge variant="secondary" className="h-3 px-1 text-[9px]">
-                  {summary.courierBoy.count}
-                </Badge>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-500">Orders:</span>
-                <Badge variant="secondary" className="h-3 px-1 text-[9px]">
-                  {summary.courierBoy.orderCount}
-                </Badge>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
 
-      {/* Compact Quick Stats */}
-      <div className="grid grid-cols-4 gap-2">
-        <Card className="bg-gradient-to-br from-indigo-50 to-indigo-100 border-indigo-200 shadow-sm">
-          <CardContent className="p-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[9px] text-indigo-700 mb-0.5">Total Bookings</p>
-                <p className="text-base font-bold text-indigo-900">
-                  {summary.corporate.paidCount +
-                    summary.corporate.unpaidCount +
-                    summary.customer.paidCount +
-                    summary.customer.unpaidCount}
-                </p>
+          <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-cyan-700 mb-1">Paid Bookings</p>
+                  <p className="text-xl font-bold text-cyan-900">
+                    {summary.corporate.paidCount + summary.customer.paidCount}
+                  </p>
+                </div>
+                <div className="p-2 bg-cyan-200 rounded-lg">
+                  <CheckCircle className="h-5 w-5 text-cyan-600" />
+                </div>
               </div>
-              <Package className="h-4 w-4 text-indigo-600" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-cyan-50 to-cyan-100 border-cyan-200 shadow-sm">
-          <CardContent className="p-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[9px] text-cyan-700 mb-0.5">Paid Bookings</p>
-                <p className="text-base font-bold text-cyan-900">
-                  {summary.corporate.paidCount + summary.customer.paidCount}
-                </p>
+          <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-amber-700 mb-1">Unpaid Bookings</p>
+                  <p className="text-xl font-bold text-amber-900">
+                    {summary.corporate.unpaidCount + summary.customer.unpaidCount}
+                  </p>
+                </div>
+                <div className="p-2 bg-amber-200 rounded-lg">
+                  <AlertCircle className="h-5 w-5 text-amber-600" />
+                </div>
               </div>
-              <CheckCircle className="h-4 w-4 text-cyan-600" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="bg-gradient-to-br from-amber-50 to-amber-100 border-amber-200 shadow-sm">
-          <CardContent className="p-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[9px] text-amber-700 mb-0.5">Unpaid Bookings</p>
-                <p className="text-base font-bold text-amber-900">
-                  {summary.corporate.unpaidCount + summary.customer.unpaidCount}
-                </p>
+          <Card className="bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-rose-700 mb-1">Pending</p>
+                  <p className="text-xl font-bold text-rose-900">{formatCurrency(summary.totalUnpaid)}</p>
+                </div>
+                <div className="p-2 bg-rose-200 rounded-lg">
+                  <Receipt className="h-5 w-5 text-rose-600" />
+                </div>
               </div>
-              <AlertCircle className="h-4 w-4 text-amber-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-rose-50 to-rose-100 border-rose-200 shadow-sm">
-          <CardContent className="p-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-[9px] text-rose-700 mb-0.5">Pending</p>
-                <p className="text-base font-bold text-rose-900">{formatCurrency(summary.totalUnpaid)}</p>
-              </div>
-              <Receipt className="h-4 w-4 text-rose-600" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

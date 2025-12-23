@@ -1,5 +1,6 @@
 import express from 'express';
 import CustomerBooking from '../models/CustomerBooking.js';
+import BookingInvoice from '../models/BookingInvoice.js';
 import { ConsignmentUsage } from '../models/ConsignmentAssignment.js';
 import { getNextGlobalConsignmentNumber } from '../services/consignmentSequenceService.js';
 import emailService from '../services/emailService.js';
@@ -380,6 +381,270 @@ router.get('/search-by-phone', async (req, res) => {
       success: false,
       error: 'Failed to search by phone number',
       message: error.message || 'An error occurred while searching'
+    });
+  }
+});
+
+// GET /api/customer-booking/invoices-by-phone
+// Fetch invoices by phone number (for ViewBills page)
+// NOTE: This route MUST come before /:bookingReference to avoid route conflicts
+router.get('/invoices-by-phone', async (req, res) => {
+  console.log('🚀🚀🚀 invoices-by-phone route called 🚀🚀🚀');
+  console.log('📥 Query params:', JSON.stringify(req.query));
+  console.log('📥 Full request:', {
+    method: req.method,
+    url: req.url,
+    query: req.query
+  });
+  
+  try {
+    const { phoneNumber } = req.query;
+    console.log('📞 Received phoneNumber from query:', phoneNumber);
+    console.log('📞 phoneNumber type:', typeof phoneNumber);
+
+    if (!phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        error: 'Phone number is required',
+        message: 'Please provide a phone number'
+      });
+    }
+
+    // Clean phone number (remove non-digits)
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+
+    if (cleanPhone.length !== 10) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid phone number',
+        message: 'Please provide a valid 10-digit phone number'
+      });
+    }
+
+    console.log('🔍 Searching invoices for phone:', cleanPhone);
+    console.log('📞 Original phoneNumber from query:', phoneNumber);
+    console.log('📞 Clean phone type:', typeof cleanPhone, 'value:', cleanPhone);
+    
+    // First, let's check if we can find ANY invoices
+    const totalInvoices = await BookingInvoice.countDocuments({});
+    console.log(`📊 Total invoices in collection: ${totalInvoices}`);
+    
+    // Get a sample invoice to see the structure
+    const sampleInvoice = await BookingInvoice.findOne({}).lean();
+    if (sampleInvoice) {
+      console.log('📄 Sample invoice structure:');
+      console.log('  - billTo:', JSON.stringify(sampleInvoice.billTo));
+      console.log('  - destination.mobileNumber:', JSON.stringify(sampleInvoice.destination?.mobileNumber));
+      console.log('  - invoiceType:', sampleInvoice.invoiceType);
+    }
+    
+    // Simple query - find invoices where billTo.phone or destination.mobileNumber matches
+    const query = {
+      $or: [
+        { 'billTo.phone': cleanPhone },
+        { 'destination.mobileNumber': cleanPhone }
+      ]
+    };
+    
+    console.log('🔎 Executing query:', JSON.stringify(query, null, 2));
+    
+    let invoices = [];
+    try {
+      invoices = await BookingInvoice.find(query)
+        .sort({ invoiceDate: -1 })
+        .lean();
+      console.log(`📋 Query returned ${invoices.length} invoices`);
+    } catch (queryError) {
+      console.error('❌ Query error:', queryError);
+      throw queryError;
+    }
+    
+    // Debug: Log first invoice if found
+    if (invoices.length > 0) {
+      console.log('📄 First invoice found:');
+      console.log('  - Invoice Number:', invoices[0].invoiceNumber);
+      console.log('  - billTo.phone:', JSON.stringify(invoices[0].billTo?.phone), '(type:', typeof invoices[0].billTo?.phone, ')');
+      console.log('  - destination.mobileNumber:', JSON.stringify(invoices[0].destination?.mobileNumber), '(type:', typeof invoices[0].destination?.mobileNumber, ')');
+      console.log('  - invoiceType:', invoices[0].invoiceType);
+    } else {
+      // Debug: Check what invoices exist
+      const allInvoices = await BookingInvoice.find({}).limit(3).lean();
+      console.log('🔍 Sample invoices in database (first 3):');
+      allInvoices.forEach((inv, idx) => {
+        console.log(`  Invoice ${idx + 1}:`);
+        console.log(`    - invoiceNumber: ${inv.invoiceNumber}`);
+        console.log(`    - billTo.phone: "${inv.billTo?.phone}" (type: ${typeof inv.billTo?.phone})`);
+        console.log(`    - destination.mobileNumber: "${inv.destination?.mobileNumber}" (type: ${typeof inv.destination?.mobileNumber})`);
+        console.log(`    - Searching for: "${cleanPhone}" (type: ${typeof cleanPhone})`);
+        console.log(`    - Match billTo: ${inv.billTo?.phone === cleanPhone}`);
+        console.log(`    - Match destination: ${inv.destination?.mobileNumber === cleanPhone}`);
+      });
+    }
+
+    console.log(`📋 Found ${invoices.length} invoices for phone ${cleanPhone}`);
+    
+    // Don't filter by invoiceType - just return all matching invoices
+    // The invoiceType field is just for categorization, not filtering
+
+    // Transform invoices to match the ViewBills interface
+    const transformedInvoices = invoices.map(invoice => {
+      const invoiceDate = invoice.invoiceDate || invoice.createdAt;
+      const dateStr = invoiceDate instanceof Date 
+        ? invoiceDate.toISOString() 
+        : new Date(invoiceDate).toISOString();
+      
+      return {
+        id: invoice.invoiceNumber,
+        awb: invoice.consignmentNumber || invoice.bookingReference,
+        date: dateStr,
+        amount: invoice.pricing?.grandTotal || 0,
+        status: invoice.payment?.status === 'paid' ? 'Paid' : 
+                invoice.payment?.status === 'unpaid' ? 'Pending' : 
+                invoice.payment?.status === 'pending' ? 'Pending' : 'Pending',
+        recipient: invoice.billTo?.name || invoice.destination?.name || 'N/A',
+        destination: invoice.destination?.city 
+          ? `${invoice.destination.city}, ${invoice.destination.state}`
+          : invoice.destination?.state || 'N/A',
+        dueDate: dateStr,
+        // Store full invoice data for detailed view
+        invoiceData: invoice
+      };
+    });
+
+    console.log(`✅ Returning ${transformedInvoices.length} transformed invoices`);
+
+    res.json({
+      success: true,
+      data: transformedInvoices
+    });
+
+  } catch (error) {
+    console.error('Error fetching invoices by phone:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch invoices',
+      message: error.message || 'An error occurred while fetching invoices'
+    });
+  }
+});
+
+// GET /api/customer-booking/invoices-by-email
+router.get('/invoices-by-email', async (req, res) => {
+  console.log('📧📧📧 invoices-by-email route called 📧📧📧');
+  console.log('📥 Query params:', JSON.stringify(req.query));
+  
+  try {
+    const { email } = req.query;
+    console.log('📧 Received email from query:', email);
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email is required',
+        message: 'Please provide an email address'
+      });
+    }
+
+    // Normalize email (lowercase, trim)
+    const normalizedEmail = email.toLowerCase().trim();
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid email format',
+        message: 'Please provide a valid email address'
+      });
+    }
+
+    console.log('🔍 Searching invoices for email:', normalizedEmail);
+    
+    // Fetch all invoices (or a reasonable subset - last 1000 invoices)
+    // We'll filter them based on the email matching logic
+    let allInvoices = [];
+    try {
+      allInvoices = await BookingInvoice.find({})
+        .sort({ invoiceDate: -1 })
+        .limit(1000) // Limit to prevent performance issues
+        .lean();
+      console.log(`📊 Fetched ${allInvoices.length} invoices to filter`);
+    } catch (queryError) {
+      console.error('❌ Query error:', queryError);
+      throw queryError;
+    }
+
+    // Filter invoices based on the matching logic:
+    // 1. Compare billTo.name with origin.name and destination.name
+    // 2. If billTo.name matches origin.name, use origin.email
+    // 3. If billTo.name matches destination.name, use destination.email
+    // 4. Match that email with the input email
+    const matchingInvoices = allInvoices.filter(invoice => {
+      const billToName = invoice.billTo?.name?.toLowerCase().trim();
+      const originName = invoice.origin?.name?.toLowerCase().trim();
+      const destinationName = invoice.destination?.name?.toLowerCase().trim();
+      
+      if (!billToName) {
+        return false; // Skip invoices without billTo.name
+      }
+
+      let invoiceEmail = null;
+
+      // Check if billTo.name matches origin.name
+      if (originName && billToName === originName) {
+        invoiceEmail = invoice.origin?.email?.toLowerCase().trim();
+      }
+      // Check if billTo.name matches destination.name
+      else if (destinationName && billToName === destinationName) {
+        invoiceEmail = invoice.destination?.email?.toLowerCase().trim();
+      }
+
+      // If we found an email, check if it matches the input email
+      if (invoiceEmail && invoiceEmail === normalizedEmail) {
+        return true;
+      }
+
+      return false;
+    });
+
+    console.log(`📋 Found ${matchingInvoices.length} invoices matching email ${normalizedEmail}`);
+
+    // Transform invoices to match the ViewBills interface
+    const transformedInvoices = matchingInvoices.map(invoice => {
+      const invoiceDate = invoice.invoiceDate || invoice.createdAt;
+      const dateStr = invoiceDate instanceof Date 
+        ? invoiceDate.toISOString() 
+        : new Date(invoiceDate).toISOString();
+      
+      return {
+        id: invoice.invoiceNumber,
+        awb: invoice.consignmentNumber || invoice.bookingReference,
+        date: dateStr,
+        amount: invoice.pricing?.grandTotal || 0,
+        status: invoice.payment?.status === 'paid' ? 'Paid' : 
+                invoice.payment?.status === 'unpaid' ? 'Pending' : 
+                invoice.payment?.status === 'pending' ? 'Pending' : 'Pending',
+        recipient: invoice.billTo?.name || invoice.destination?.name || 'N/A',
+        destination: invoice.destination?.city 
+          ? `${invoice.destination.city}, ${invoice.destination.state}`
+          : invoice.destination?.state || 'N/A',
+        dueDate: dateStr,
+        // Store full invoice data for detailed view
+        invoiceData: invoice
+      };
+    });
+
+    console.log(`✅ Returning ${transformedInvoices.length} transformed invoices`);
+
+    res.json({
+      success: true,
+      data: transformedInvoices
+    });
+
+  } catch (error) {
+    console.error('Error fetching invoices by email:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch invoices',
+      message: error.message || 'An error occurred while fetching invoices'
     });
   }
 });

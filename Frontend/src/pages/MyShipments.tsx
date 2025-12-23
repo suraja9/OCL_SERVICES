@@ -320,7 +320,7 @@ const MyShipments = () => {
           {/* Shipment Tracker - Only show for progress-only view (AWB/Ref) */}
           {progressOnly && (
           <div className="mb-8" style={{ background: '#FFF9F3', borderRadius: 12, boxShadow: 'rgba(17, 17, 26, 0.1) 0px 4px 16px, rgba(17, 17, 26, 0.05) 0px 8px 32px', padding: '14px 25px', fontFamily: 'Inter, system-ui, sans-serif' }}>
-            <div className="mb-2">
+            <div className="mb-2 md:mb-2 mb-6">
               <div className="text-[14px] font-semibold" style={{ color: '#1B1B1B' }}>Consignment Delivery Status :</div>
               <div className="text-[11px]" style={{ color: '#333333' }}>
                 Consignment No. : {trackingData?.trackingSummary?.metadata?.consignmentNumber || trackingNumber || 'N/A'}
@@ -342,7 +342,7 @@ const MyShipments = () => {
             )}
             
             {!isLoadingTracking && !trackingError && trackingData?.trackingSummary && (
-            <div className="flex items-start justify-between relative" style={{ gap: 32, paddingTop: 14, paddingBottom: 14 }}>
+            <div className="flex items-start justify-between relative md:mt-0 mt-8 md:pt-[14px] pt-8" style={{ gap: 32, paddingBottom: 14 }}>
               {(() => {
                 const summary = trackingData.trackingSummary;
                 const currentStepKey = summary.metadata?.currentStepKey || 'booked';
@@ -357,13 +357,13 @@ const MyShipments = () => {
                 return (
                   <>
                     {/* Single continuous progress bar from center of first to center of last icon */}
-                    <div className="absolute" style={{ left: barLeft, width: barWidth, top: 88 }}>
+                    <div className="absolute md:top-[88px] top-[136px]" style={{ left: barLeft, width: barWidth }}>
                       <div className="h-2 w-full rounded-md" style={{ background: '#E0E0E0', boxShadow: 'inset 0 1px 1px rgba(0,0,0,0.06)' }} />
                       <div className="h-2 rounded-md transition-all duration-300" style={{ background: '#FDA11E', position: 'relative', top: -8, width: progressFill, maxWidth: '100%' }} />
                     </div>
 
                     {/* Overlay: ticks aligned on the same baseline as the progress bar */}
-                    <div className="absolute" style={{ left: barLeft, width: barWidth, top: 92, height: 0, pointerEvents: 'none' }}>
+                    <div className="absolute md:top-[92px] top-[140px]" style={{ left: barLeft, width: barWidth, height: 0, pointerEvents: 'none' }}>
                       {trackerSteps.map((step, index) => {
                         const stepDetail = summary.steps?.find((s: any) => s.key === step.key);
                         const isDone = stepDetail?.completed || index <= currentStepIndex;
@@ -450,7 +450,7 @@ const MyShipments = () => {
                           </div>
                           
                           {/* Clean gap between title and progress bar */}
-                          <div className="h-6" />
+                          <div className="md:h-6 h-10" />
                           {/* gap where the bar and ticks layer sits */}
                           <div className="h-0" />
                           {/* Clean gap between bar and date */}
@@ -615,22 +615,28 @@ const MyShipments = () => {
 
                 {/* Shipment Details Section */}
                 <div className="text-sm font-semibold mb-3" style={{ color: '#1B1B1B' }}>Shipment Details</div>
-                {/* Route, Service Type, Package Count in 3 columns */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                {/* Route, Service Type, Package Count in 3 columns on desktop, Route full width + 2 columns on mobile */}
+                {trackingData.trackingSummary.metadata.routeSummary && (
+                  <div className="text-left mb-3 md:hidden">
+                    <div className="text-xs text-gray-600 mb-0.5">Route</div>
+                    <div className="text-sm font-medium" style={{ color: '#1B1B1B' }}>{trackingData.trackingSummary.metadata.routeSummary}</div>
+                  </div>
+                )}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-3">
                   {trackingData.trackingSummary.metadata.routeSummary && (
-                    <div className="text-left">
+                    <div className="text-left hidden md:block">
                       <div className="text-xs text-gray-600 mb-0.5">Route</div>
                       <div className="text-sm font-medium" style={{ color: '#1B1B1B' }}>{trackingData.trackingSummary.metadata.routeSummary}</div>
                     </div>
                   )}
                   {trackingData.trackingSummary.metadata.serviceType && (
-                    <div className="text-center">
+                    <div className="text-left">
                       <div className="text-xs text-gray-600 mb-0.5">Service Type</div>
                       <div className="text-sm font-medium" style={{ color: '#1B1B1B' }}>{trackingData.trackingSummary.metadata.serviceType}</div>
                     </div>
                   )}
                   {trackingData.trackingSummary.metadata.packageCount && (
-                    <div className="text-center">
+                    <div className="text-left">
                       <div className="text-xs text-gray-600 mb-0.5">Package Count</div>
                       <div className="text-sm font-medium" style={{ color: '#1B1B1B' }}>{trackingData.trackingSummary.metadata.packageCount}</div>
                     </div>

@@ -28,8 +28,12 @@ SMTP_PORT=587
 SMTP_USER=your_email@gmail.com
 SMTP_PASS=your_app_password_here
 
-# MSG91 Authentication Key (for SMS)
+# MSG91 Authentication Key (for SMS and WhatsApp)
 MSG91_AUTH_KEY=your_msg91_auth_key_here
+
+# MSG91 WhatsApp Configuration (optional - defaults provided)
+MSG91_WHATSAPP_NUMBER=917896375599
+MSG91_WHATSAPP_NAMESPACE=c4c9ddbe_1791_4518_9b6c_d0dd2b5a628f
 
 # AWS S3 Configuration
 AWS_ACCESS_KEY=your_aws_access_key_here

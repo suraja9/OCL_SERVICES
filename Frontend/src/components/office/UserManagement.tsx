@@ -32,7 +32,8 @@ import {
   Edit, 
   RefreshCw,
   Plus,
-  Package
+  Package,
+  ShieldCheck
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -316,6 +317,25 @@ const UserManagement = () => {
     } finally {
       setIsUpdating(false);
     }
+  };
+
+  // Check if all permissions are selected
+  const areAllPermissionsSelected = () => {
+    const permissionKeys = Object.keys(permissions) as Array<keyof typeof permissions>;
+    return permissionKeys.every(key => permissions[key] === true);
+  };
+
+  // Handle select all / deselect all
+  const handleSelectAllPermissions = () => {
+    const allSelected = areAllPermissionsSelected();
+    const permissionKeys = Object.keys(permissions) as Array<keyof typeof permissions>;
+    const newPermissions = { ...permissions };
+    
+    permissionKeys.forEach(key => {
+      newPermissions[key] = !allSelected;
+    });
+    
+    setPermissions(newPermissions);
   };
 
   // Handle assignment button click
@@ -621,10 +641,24 @@ const UserManagement = () => {
       <Dialog open={isPermissionsModalOpen} onOpenChange={setIsPermissionsModalOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>Edit Permissions</DialogTitle>
-            <DialogDescription>
-              Manage permissions for {selectedUser?.name}
-            </DialogDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle>Edit Permissions</DialogTitle>
+                <DialogDescription>
+                  Manage permissions for {selectedUser?.name}
+                </DialogDescription>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSelectAllPermissions}
+                className="flex items-center gap-1.5 border-blue-300 hover:bg-blue-50 hover:border-blue-400 text-blue-700 text-xs px-2.5 py-1 h-7"
+              >
+                <ShieldCheck className="h-3 w-3" />
+                {areAllPermissionsSelected() ? 'Deselect All' : 'Select All'}
+              </Button>
+            </div>
           </DialogHeader>
           
           <div className="space-y-4 max-h-96 overflow-y-auto">

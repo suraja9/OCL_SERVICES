@@ -71,18 +71,25 @@ const Navbar = () => {
                 <a
                   key={item.label}
                   href={item.href}
-                  className="lg:hidden rounded-full text-white font-semibold text-sm transition-all duration-200 ship-now-btn"
+                  className="lg:hidden rounded-full text-white font-semibold text-sm transition-all duration-200 ship-now-btn flex items-center justify-center"
                   style={{
                     background: "linear-gradient(90deg, #ff8c00, #ffbb33, #0078ff)",
                     backgroundSize: "200% auto",
                     fontWeight: 600,
                     border: "none",
                     borderRadius: "30px",
-                    padding: "5px",
+                    padding: "8px 16px",
+                    marginTop: "4px",
+                    marginBottom: "4px",
                     cursor: "pointer",
                     boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
                     transition: "all 0.3s ease",
                     animation: "gradientShift 4s ease infinite",
+                    minHeight: "32px",
+                    textAlign: "center",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.transform = "scale(1.05)";

@@ -360,6 +360,25 @@ const UserManagement = () => {
     }
   };
 
+  // Check if all permissions are selected
+  const areAllPermissionsSelected = () => {
+    const permissionKeys = Object.keys(permissions) as Array<keyof typeof permissions>;
+    return permissionKeys.every(key => permissions[key] === true);
+  };
+
+  // Handle select all / deselect all
+  const handleSelectAllPermissions = () => {
+    const allSelected = areAllPermissionsSelected();
+    const permissionKeys = Object.keys(permissions) as Array<keyof typeof permissions>;
+    const newPermissions = { ...permissions };
+    
+    permissionKeys.forEach(key => {
+      newPermissions[key] = !allSelected;
+    });
+    
+    setPermissions(newPermissions);
+  };
+
   const handleToggleStatus = async (user: OfficeUser) => {
     try {
       const token = localStorage.getItem('adminToken');
@@ -832,16 +851,28 @@ const UserManagement = () => {
         <Dialog open={isPermissionsModalOpen} onOpenChange={setIsPermissionsModalOpen}>
           <DialogContent className="max-w-5xl max-h-[85vh] bg-gray-50">
             <DialogHeader className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-md">
-                  <Shield className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-blue-100 rounded-md">
+                    <Shield className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <DialogTitle className="text-xl font-bold text-gray-900">Edit Permissions</DialogTitle>
+                    <DialogDescription className="text-sm text-gray-600 mt-1">
+                      Manage permissions for <span className="font-semibold text-blue-600">{selectedUser?.name}</span>
+                    </DialogDescription>
+                  </div>
                 </div>
-                <div>
-                  <DialogTitle className="text-xl font-bold text-gray-900">Edit Permissions</DialogTitle>
-                  <DialogDescription className="text-sm text-gray-600 mt-1">
-                    Manage permissions for <span className="font-semibold text-blue-600">{selectedUser?.name}</span>
-                  </DialogDescription>
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAllPermissions}
+                  className="flex items-center gap-1.5 border-blue-300 hover:bg-blue-50 hover:border-blue-400 text-blue-700 text-xs px-2.5 py-1 h-7"
+                >
+                  <ShieldCheck className="h-3 w-3" />
+                  {areAllPermissionsSelected() ? 'Deselect All' : 'Select All'}
+                </Button>
               </div>
             </DialogHeader>
 

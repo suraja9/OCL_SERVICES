@@ -78,6 +78,7 @@ import MedicineBookingOverview from '@/components/admin/medicineBookingOverview'
 import CustomerBookingOverview from '@/components/admin/CustomerBookingOverview';
 import AllBookings from '@/components/admin/AllBookings';
 import Undelivered from '@/components/admin/Undelivered';
+import { OfficeBookingPanel } from '@/components/officeBooking';
 
 interface AdminInfo {
   id: string;
@@ -520,6 +521,18 @@ const AdminDashboard = () => {
             >
               <Package className="h-5 w-5" />
               {!isSidebarCollapsed && <span className="font-medium text-sm">All Bookings</span>}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('officeBooking')}
+              className={`w-full ${isSidebarCollapsed ? 'flex justify-center p-2' : 'text-left flex items-center gap-3 px-3 py-2'} rounded-xl transition ${activeTab === 'officeBooking'
+                ? 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white shadow-md'
+                : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              title={isSidebarCollapsed ? "Office Booking" : ""}
+            >
+              <ClipboardList className="h-5 w-5" />
+              {!isSidebarCollapsed && <span className="font-medium text-sm">Office Booking</span>}
             </button>
 
             <button
@@ -1438,6 +1451,7 @@ const AdminDashboard = () => {
           {activeTab === 'medicineBooking' && <MedicineBookingOverview />}
           {activeTab === 'customerBooking' && <CustomerBookingOverview />}
           {activeTab === 'allBookings' && <AllBookings />}
+          {activeTab === 'officeBooking' && <OfficeBookingPanel />}
           {activeTab === 'addressforms' && <AddressFormsTable />}
           {activeTab === 'pincodes' && <PincodeManagement />}
           {activeTab === 'users' && <UserManagement />}
