@@ -3299,6 +3299,577 @@ Thank you for shipping with OCL Services.
     };
   }
 
+  // Generate HTML email for online delivery confirmation
+  async generateOnlineDeliveryConfirmationEmail(deliveryData, packageImageAttachments = []) {
+    const {
+      consignmentNumber,
+      bookingDate,
+      deliveredAt,
+      paymentStatus,
+      paymentMethod,
+      shippingMode,
+      serviceType,
+      calculatedPrice,
+      basePrice,
+      gstAmount,
+      pickupCharge,
+      totalAmount,
+      origin = {},
+      destination = {},
+      shipment = {},
+      forceDelivery = {}
+    } = deliveryData;
+
+    const invoiceNumberForEmail = this.getInvoiceNumberFromBooking(deliveryData);
+
+    const formatCurrency = (amount) => {
+      if (amount === null || amount === undefined || Number.isNaN(Number(amount))) {
+        return '—';
+      }
+      return `₹${Number(amount).toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`;
+    };
+
+    const formatDateTime = (value) => {
+      if (!value) return '—';
+      return new Date(value).toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      });
+    };
+
+    const formatAddress = (data) => {
+      if (!data) return 'Address not provided';
+      const parts = [
+        data.companyName,
+        data.name,
+        data.flatBuilding,
+        data.locality,
+        data.landmark,
+        data.area,
+        [data.city, data.state].filter(Boolean).join(', '),
+        data.pincode ? `PIN: ${data.pincode}` : null
+      ].filter((part) => part && String(part).trim() !== '');
+      return parts.join('<br>');
+    };
+
+    const safe = (value, fallback = '—') =>
+      value && String(value).trim() !== '' ? value : fallback;
+
+    const deliveredDateDisplay = formatDateTime(deliveredAt || new Date());
+    const [deliveredOn, deliveredTime] = deliveredDateDisplay && deliveredDateDisplay.includes(',')
+      ? deliveredDateDisplay.split(',').map((part) => part.trim())
+      : [deliveredDateDisplay, '—'];
+
+    const paymentState =
+      paymentStatus && String(paymentStatus).toLowerCase() === 'paid' ? 'Paid' : 'Unpaid';
+
+    const trackingLink = consignmentNumber
+      ? `${process.env.FRONTEND_URL || 'http://localhost:3000'}/track?awb=${encodeURIComponent(consignmentNumber)}`
+      : process.env.FRONTEND_URL || 'http://localhost:3000';
+
+    const packagesCount = shipment.packagesCount ?? shipment.packageCount ?? shipment.quantity ?? shipment.totalPackages;
+    const totalWeight = shipment.weight ?? shipment.totalWeight ?? shipment.volumetricWeight;
+    const insuranceText = safe(
+      shipment.insurance ||
+      shipment.insuranceStatus ||
+      (shipment.isInsured ? 'Insured' : '') ||
+      (shipment.insurancePolicyNumber ? `Policy #${shipment.insurancePolicyNumber}` : ''),
+      'Not provided'
+    );
+
+    const supportEmail = process.env.SUPPORT_EMAIL || 'info@oclservices.com';
+    const supportPhone = process.env.SUPPORT_PHONE || '+91 8453 994 809';
+    const companyWebsite = process.env.COMPANY_WEBSITE || 'https://oclservices.com';
+    const companyGstin = process.env.COMPANY_GSTIN || '18AJRPG5984B1ZV';
+    const companyAddressShort = process.env.COMPANY_ADDRESS_SHORT || 'Rehabari, Guwahati, Assam';
+    const companyPhone = process.env.COMPANY_PHONE || supportPhone;
+
+    const gstPercent = gstAmount && basePrice
+      ? (Number(basePrice) !== 0 ? ((Number(gstAmount) / Number(basePrice)) * 100).toFixed(0) : '18')
+      : '18';
+
+    const currencyWithoutSymbol = (value) => formatCurrency(value).replace(/^₹/, '');
+    const totalAmountValue = totalAmount ?? calculatedPrice ?? null;
+    const basePriceValue = basePrice ?? (calculatedPrice ? calculatedPrice / 1.18 : null);
+    const gstAmountValue = gstAmount ?? (calculatedPrice && basePriceValue ? calculatedPrice - basePriceValue : null);
+    const pickupChargeValue = pickupCharge ?? 0;
+
+    const logoUrl = 'cid:ocl-brand-logo';
+    const consignmentNumberValue =
+      consignmentNumber && String(consignmentNumber).trim() !== '' ? consignmentNumber : '';
+
+    const hasPackageImages = Array.isArray(packageImageAttachments) && packageImageAttachments.length > 0;
+    const packageImagesHtml = hasPackageImages
+      ? `
+        <table role="presentation" cellpadding="0" cellspacing="0" class="package-gallery-table" style="margin:0 auto; width:100%;">
+          <tr>
+            ${packageImageAttachments
+        .slice(0, 4)
+        .map(
+          (attachment, index) => `
+                  <td style="padding:6px; text-align:center;">
+                    <img class="package-img" src="cid:${attachment.cid}" alt="Package Image ${index + 1}" width="140" height="140" style="width:140px; height:140px; object-fit:cover; border-radius:0; border:1px solid #E2E8F0; box-shadow:0 2px 6px rgba(15,23,42,0.12); display:block; margin:0 auto;">
+                  </td>`
+        )
+        .join('')}
+          </tr>
+        </table>`
+      : '<div style="text-align:center; color:#94A3B8; font-size:13px; font-style:italic;">No package images available</div>';
+
+    const deliveryPersonInfo = forceDelivery?.personName 
+      ? `<div style="font-size:12px; color:#4A5568; margin-top:8px;">
+           <strong>Delivered by:</strong> ${safe(forceDelivery.personName)}<br>
+           ${forceDelivery.vehicleType ? `<strong>Vehicle:</strong> ${safe(forceDelivery.vehicleType)} - ${safe(forceDelivery.vehicleNumber)}` : ''}
+         </div>`
+      : '';
+
+    return `
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="x-apple-disable-message-reformatting">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shipment Delivered</title>
+
+  <style>
+    html,body { margin:0; padding:0; background:#F2F5FF; }
+    table { border-collapse:collapse; }
+    img { border:0; display:block; outline:none; }
+    a { color:inherit; text-decoration:none; }
+    .container { width:100%; max-width:640px; }
+    .two-col { vertical-align:top; }
+    .mobile-center { text-align:center; }
+    .package-gallery-table { width:100%; }
+
+    @media only screen and (max-width:600px) {
+      body { padding:8px !important; }
+      .container { width:100% !important; max-width:100% !important; padding:0 !important; }
+      .two-col,
+      .mobile-stack { display:block !important; width:100% !important; }
+      .mobile-center,
+      .center-mobile { text-align:center !important; }
+      .mobile-space { margin-top:12px !important; }
+      .invoice-table td { display:flex !important; justify-content:space-between; width:100% !important; padding:4px 0 !important; }
+      .cta { display:block !important; width:100% !important; text-align:center !important; }
+      .delivery-title { font-size:20px !important; letter-spacing:1px !important; }
+      .delivery-meta { font-size:12px !important; line-height:20px !important; }
+      .header-logo img { max-width:150px !important; margin:12px auto 0 !important; }
+      .package-gallery-table td { display:inline-block !important; width:48% !important; padding:4px !important; }
+      .package-gallery-table td:only-child { width:100% !important; text-align:center !important; }
+      .package-gallery-table td:nth-child(n+3) { margin-top:8px !important; }
+      .package-img { width:100% !important; height:auto !important; max-width:160px !important; }
+      .delivery-summary { background:transparent !important; border:none !important; }
+      .price-summary { background:transparent !important; border:none !important; }
+      .delivered-section { padding-left:35% !important; }
+      .tracking-section { padding-left:20% !important; }
+      .barcode-cell { padding-left:5% !important; }
+      .email-header { background:linear-gradient(135deg,#1a4a7a,#2d6ba8) !important; border-bottom:1px solid #3d7bb8 !important; }
+    }
+
+    .font-sans { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial; }
+  </style>
+
+</head>
+
+<body class="font-sans" style="background:#F2F5FF; margin:0; padding:16px;">
+<table width="100%">
+<tr><td align="center">
+
+<!-- MAIN CONTAINER -->
+<table width="640" class="container"
+style="background:#ffffff; border-radius:0; overflow:hidden; box-shadow:0 10px 24px rgba(9,16,31,0.1); border-radius:10px; width:100%; max-width:640px;">
+
+  <!-- HEADER -->
+  <tr>
+    <td class="email-header" style="padding:22px 28px; border-bottom:1px solid #0D3170; background:linear-gradient(135deg,#062858,#0F4C92);">
+      <table width="100%">
+        <tr>
+          <td class="two-col mobile-stack mobile-center" style="width:33%; font-size:12px; color:#D9E3FF; font-weight:600; padding-bottom:8px;">
+            <a href="${companyWebsite}" style="color:#FFEE9D; text-decoration:none;"><br>https://oclservices.com</a>
+          </td>
+          <td class="two-col center-mobile mobile-stack" style="width:34%; text-align:center; padding-bottom:8px;">
+            <div class="delivery-title" style="font-size:18px; font-weight:800; color:#FFFFFF; text-transform:uppercase; letter-spacing:0.5px;">Shipment Delivered</div>
+          </td>
+          <td class="two-col mobile-stack mobile-center header-logo" style="width:33%; text-align:right;">
+            <!--[if gte mso 9]><table><tr><td style="padding-top:0;padding-bottom:0;"><![endif]-->
+            <img src="${logoUrl}" width="190" style="display:block; margin-left:auto; filter:drop-shadow(0 6px 14px rgba(0,0,0,0.35));">
+            <!--[if gte mso 9]></td></tr></table><![endif]-->
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- DELIVERED TEXT -->
+  <tr>
+    <td class="delivered-section" style="padding:20px 28px; background:linear-gradient(135deg,#F7F3FF,#EEF4FF);">
+      <table width="100%" style="border-collapse:collapse;">
+        <tr>
+          <td class="two-col mobile-stack mobile-center" style="width:33%; text-align:left; padding:0px 0;">
+            <div style="font-size:14px; font-weight:600; color:#0B1F4A;">${deliveredOn}</div>
+            <div style="font-size:13px; color:#4B5563; margin-top:4px;">${deliveredTime}</div>
+          </td>
+          <td class="two-col mobile-stack mobile-center" style="width:34%; text-align:center; padding:6px 0;">
+            <div class="delivery-title" style="font-size:24px; font-weight:800; color:#0B1F4A; text-transform:uppercase; letter-spacing:2px;">Delivered</div>
+          </td>
+          <td class="two-col mobile-stack mobile-center" style="width:33%; text-align:right; padding:6px 0;">
+            <div style="font-size:20px; font-weight:700; color:${paymentState === 'Paid' ? '#0F8A45' : '#B02800'}; text-transform:uppercase;">
+              ${paymentState === 'Paid' ? 'Paid' : 'Not paid'}
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ACTION / BARCODE / TRACKING -->
+  <tr>
+    <td class="tracking-section" style="padding:18px 24px; background:#0B1433;">
+      <table width="100%" style="border-collapse:collapse;">
+        <tr>
+          <td class="two-col mobile-stack mobile-space" style="width:33%; padding:0; vertical-align:middle;">
+            <a href="${trackingLink}" class="cta"
+              style="display:inline-block; padding:10px 18px; background:linear-gradient(120deg,#FF512F,#DD2476); border-radius:0; color:white; font-weight:600; letter-spacing:0.3px;">
+              View Details
+            </a>
+          </td>
+          <td class="two-col mobile-stack mobile-center mobile-space barcode-cell" style="width:34%; padding:0; text-align:center; vertical-align:middle;">
+            <div style="font-size:10px; color:#8FA0C2; text-transform:uppercase; letter-spacing:1px;">Scan to Track</div>
+            <img src="https://barcode.tec-it.com/barcode.ashx?data=${encodeURIComponent(consignmentNumber)}" style="max-width:180px; margin:6px auto 0; display:block;">
+            <div style="font-size:10px; color:#c7cede; margin-top:4px;">AWB: ${safe(consignmentNumber)}</div>
+          </td>
+          <td class="two-col mobile-stack mobile-center estimated-date-cell" style="width:33%; padding:0; text-align:right; vertical-align:middle;">
+            <div style="font-size:10px; color:#d9b59e; text-transform:uppercase; letter-spacing:1px;">Delivered On</div>
+            <div style="font-size:15px; font-weight:600; color:#FFEBDD; margin-top:4px;">${deliveredOn}</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- DELIVERY DETAILS -->
+  <tr><td style="padding-top:0;">
+    <div style="
+      padding:18px;
+      border-radius:0;
+      background:linear-gradient(135deg,#FDF3F3,#FFF7E5);
+      border:1px solid #FFD9C1;
+      box-shadow:0 8px 20px rgba(255,146,76,0.15);
+    ">
+      <p style="font-size:13px; color:#333; margin:0 0 6px;">
+        Hello <strong>${safe(origin.name || origin.companyName || 'Customer')}</strong>,
+      </p>
+
+      <p style="font-size:13px; color:#333; margin:0 0 6px;">
+        Great news! Your shipment has been <strong style="color:#0F8A45;">successfully delivered</strong> to <strong>${safe(destination.name || destination.companyName)}</strong>, ${safe(destination.city)}.
+      </p>
+
+      <p style="font-size:13px; margin:0 0 6px;">
+        Pin - ${safe(destination.pincode)}, Mob - ${safe(destination.mobileNumber)}.
+      </p>
+
+      <p style="font-size:13px; margin:0 0 6px;">
+        Invoice No: <strong>${safe(invoiceNumberForEmail)}</strong>
+      </p>
+
+      <p style="font-size:13px; margin:0 0 6px;">
+        Delivered on <strong>${deliveredOn}</strong> at <strong>${deliveredTime}</strong>
+      </p>
+
+      <p style="font-size:13px; margin:0;">
+        Delivery Address:
+        <strong>${safe(destination.companyName || destination.name)}, ${destination.city}, ${destination.state}</strong>
+      </p>
+      ${deliveryPersonInfo}
+    </div>
+  </td></tr>
+
+  
+
+        <!-- PACKAGE GALLERY -->
+        <tr><td style="padding-top:0;">
+          <div style="padding:16px; background:#FFF3F5; border:1px solid #FFD0D7; border-radius:0; text-decoration:underline;">
+            <div style="font-size:13px; font-weight:700; color:#333; margin-bottom:8px;">Package Gallery :</div>
+            ${packageImagesHtml}
+          </div>
+        </td></tr>
+
+        <!-- THANK YOU MESSAGE -->
+        <tr><td style="padding-top:0;">
+          <div style="padding:14px; border-radius:0; background:#ffffff; border:1px solid #DEE5FF;">
+            <div style="font-size:12px; font-weight:700; margin-bottom:6px;text-decoration:underline;">Thank You :</div>
+            <p style="font-size:12px; color:#4A5568; margin:0;">
+              Thank you for choosing OCL Services. We hope you had a great experience with us. 
+              If you have any feedback or need assistance, please don't hesitate to contact us.
+            </p>
+          </div>
+        </td></tr>
+
+        <!-- SUPPORT -->
+        <tr><td style="padding-top:0;">
+          <div style="padding:12px 5px; background:#F5F9FF; border:1px solid #DCE6FF; border-radius:0;">
+            <table width="100%">
+              <tr>
+                <td class="mobile-stack mobile-center" align="center" style="font-size:12px; font-weight:700;">
+                  Need Assistance? Write to us :
+                  <a href="mailto:${supportEmail}" style="color:#0A3A7D">${supportEmail}</a>
+                   or Call Us @
+                  <a href="tel:${supportPhone}" style="color:#0A3A7D">${supportPhone}</a>
+                </td>
+                
+              </tr>
+            </table>
+          </div>
+        </td></tr>
+
+        <!-- FOOTER -->
+
+        <tr>
+      <td style="background:#0A3A7D; color:white; padding:12px 16px; text-align:center; font-size:12px;">
+        <div style="margin-top:4px; font-size:11px;">
+            This is an automated email from <strong>OCL.</strong>.
+            GSTIN: ${companyGstin} - <a href="${companyWebsite}" style="color:white;">${companyWebsite}</a>
+          </div>
+      </td>
+    </tr>
+
+
+      </table>
+    </td>
+  </tr>
+
+  </table>
+
+
+<!-- SPACER -->
+<table width="100%" style="margin-top:4px; border-collapse:collapse;"><tr><td align="center">
+  <table width="640" align="center" style="border-collapse:collapse;">
+    <tr>
+      <td style="text-align:center; font-size:12px; color:#6B7280;">
+        If you have any questions about this delivery, please contact our support team.
+      </td>
+    </tr>
+  </table>
+</td></tr></table>
+
+</td></tr></table>
+</body>
+</html>
+    `;
+  }
+
+  // Generate text email for online delivery confirmation
+  generateOnlineDeliveryConfirmationTextVersion(deliveryData) {
+    const {
+      consignmentNumber,
+      bookingDate,
+      deliveredAt,
+      paymentStatus,
+      paymentMethod,
+      shippingMode,
+      serviceType,
+      calculatedPrice,
+      basePrice,
+      gstAmount,
+      pickupCharge,
+      totalAmount,
+      origin = {},
+      destination = {},
+      shipment = {},
+      forceDelivery = {}
+    } = deliveryData;
+
+    const formatCurrency = (amount) => {
+      if (amount === null || amount === undefined || Number.isNaN(Number(amount))) {
+        return 'NA';
+      }
+      return `₹${Number(amount).toLocaleString('en-IN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      })}`;
+    };
+
+    const formatDateTime = (value) => {
+      if (!value) return 'NA';
+      return new Date(value).toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      });
+    };
+
+    const invoiceNumberForEmail = this.getInvoiceNumberFromBooking(deliveryData);
+
+    return `
+Shipment Delivered - ${consignmentNumber}
+
+DELIVERY SUMMARY
+- Consignment Number: ${consignmentNumber || 'NA'}
+- Invoice Number: ${invoiceNumberForEmail || 'NA'}
+- Service: ${serviceType || 'NA'} (${shippingMode || 'Standard'})
+- Payment: ${(paymentStatus === 'paid' ? 'Paid' : 'Pending')} ${paymentMethod ? `(${paymentMethod})` : ''}
+- Total Amount: ${formatCurrency(totalAmount ?? (calculatedPrice ? calculatedPrice + (pickupCharge || 100) : null))}
+- Delivered On: ${formatDateTime(deliveredAt || new Date())}
+${forceDelivery?.personName ? `- Delivered by: ${forceDelivery.personName}` : ''}
+${forceDelivery?.vehicleType ? `- Vehicle: ${forceDelivery.vehicleType} - ${forceDelivery.vehicleNumber}` : ''}
+
+PICKUP DETAILS
+- Contact: ${origin.name || 'NA'} (${origin.mobileNumber || 'NA'})
+- Address: ${origin.flatBuilding || ''} ${origin.locality || ''}, ${origin.city || ''}, ${origin.state || ''} ${origin.pincode || ''}
+
+DELIVERY DETAILS
+- Contact: ${destination.name || 'NA'} (${destination.mobileNumber || 'NA'})
+- Address: ${destination.flatBuilding || ''} ${destination.locality || ''}, ${destination.city || ''}, ${destination.state || ''} ${destination.pincode || ''}
+
+SHIPMENT INFORMATION
+- Consignment Type: ${shipment.natureOfConsignment || 'NA'}
+- Packages: ${shipment.packagesCount || 'NA'}
+- Weight: ${shipment.weight || 'NA'} kg
+
+THANK YOU
+Thank you for choosing OCL Services. We hope you had a great experience with us.
+
+SUPPORT
+Email: info@oclservices.com
+Phone: +91 8453 994 809
+Website: https://oclservices.com
+
+Thank you for choosing OCL Services.
+    `;
+  }
+
+  // Send online delivery confirmation email
+  async sendOnlineDeliveryConfirmationEmail(deliveryData) {
+    const senderEmail = deliveryData?.origin?.email;
+    if (!senderEmail || String(senderEmail).trim() === '') {
+      throw new Error('Sender email is required to send delivery confirmation');
+    }
+
+    const consignmentDisplay =
+      deliveryData?.consignmentNumber ||
+      deliveryData?.bookingReference ||
+      'Shipment';
+
+    const originCity =
+      deliveryData?.origin?.city ||
+      deliveryData?.origin?.state ||
+      'Origin';
+
+    const destinationCity =
+      deliveryData?.destination?.city ||
+      deliveryData?.destination?.state ||
+      'Destination';
+
+    const deliverySubject = `${consignmentDisplay} ${originCity} → ${destinationCity}`;
+
+    // Ensure email service is initialized
+    if (!this.isInitialized) {
+      await this.initializeEmailService();
+    }
+
+    if (!this.transporter) {
+      throw new Error('Email service not properly initialized');
+    }
+
+    // Refresh OAuth token if needed
+    if (this.oauth2Client && process.env.GOOGLE_REFRESH_TOKEN) {
+      try {
+        const { credentials } = await this.oauth2Client.refreshAccessToken();
+        this.oauth2Client.setCredentials(credentials);
+
+        this.transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            type: 'OAuth2',
+            user: process.env.GOOGLE_EMAIL || 'your-email@gmail.com',
+            clientId: this.oauth2Client._clientId,
+            clientSecret: this.oauth2Client._clientSecret,
+            refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
+            accessToken: credentials.access_token
+          }
+        });
+      } catch (refreshError) {
+        console.warn('⚠️ Failed to refresh OAuth2 token, using existing credentials:', refreshError.message);
+      }
+    }
+
+    // Prepare attachments: package images and logo
+    const packageImages = (deliveryData.packageImages || deliveryData.shipment?.packageImages || []).filter(img => img && String(img).trim() !== '');
+    let packageImageAttachments = [];
+
+    if (packageImages.length > 0) {
+      try {
+        const validatedImages = await this.validateImageUrls(packageImages);
+        if (validatedImages.length > 0) {
+          packageImageAttachments = await S3Service.downloadImagesForEmail(validatedImages);
+          console.log(`📧 Attached ${packageImageAttachments.length} package images for delivery email`);
+        }
+      } catch (error) {
+        console.error('❌ Failed to download package images:', error);
+      }
+    }
+
+    const attachments = [];
+    const logoPath = join(__dirname, '..', '..', 'Frontend', 'src', 'assets', 'ocl-logo.png');
+    if (existsSync(logoPath)) {
+      attachments.push({ filename: 'ocl-logo.png', path: logoPath, cid: 'ocl-brand-logo' });
+    }
+    packageImageAttachments.forEach(att => attachments.push({
+      filename: att.filename, content: att.buffer, cid: att.cid, contentType: att.contentType
+    }));
+
+    const mailOptions = {
+      from: `"OCL Services" <${process.env.GOOGLE_EMAIL || process.env.SMTP_USER || 'noreply@oclcourier.com'}>`,
+      to: senderEmail,
+      subject: deliverySubject,
+      html: await this.generateOnlineDeliveryConfirmationEmail(deliveryData, packageImageAttachments),
+      text: this.generateOnlineDeliveryConfirmationTextVersion(deliveryData),
+      attachments: attachments
+    };
+
+    const result = await this.transporter.sendMail(mailOptions);
+    console.log(`✅ Online delivery confirmation email sent to ${senderEmail}:`, result.messageId);
+    return {
+      success: true,
+      messageId: result.messageId,
+      recipient: senderEmail
+    };
+  }
+
+  // Send corporate delivery confirmation email (similar structure to corporate booking)
+  async sendCorporateDeliveryConfirmationEmail(deliveryData) {
+    const senderEmail =
+      deliveryData?.origin?.email ||
+      deliveryData?.originData?.email ||
+      deliveryData?.corporateInfo?.email;
+
+    if (!senderEmail || String(senderEmail).trim() === '') {
+      throw new Error('Sender email is required to send corporate delivery confirmation');
+    }
+
+    // Use the same structure as online delivery but with corporate branding
+    return await this.sendOnlineDeliveryConfirmationEmail(deliveryData);
+  }
+
+  // Send shipment delivery confirmation email (for form-based bookings)
+  async sendShipmentDeliveryConfirmationEmail(deliveryData) {
+    const senderEmail = deliveryData?.senderEmail || deliveryData?.originData?.email;
+    if (!senderEmail) {
+      throw new Error('Sender email is required to send shipment delivery confirmation');
+    }
+
+    // Use the same structure as online delivery
+    return await this.sendOnlineDeliveryConfirmationEmail({
+      ...deliveryData,
+      origin: deliveryData.originData || deliveryData.origin || {},
+      destination: deliveryData.destinationData || deliveryData.destination || {},
+      shipment: deliveryData.shipmentData || deliveryData.shipment || {}
+    });
+  }
+
   // Test email configuration
   async testConnection() {
     try {

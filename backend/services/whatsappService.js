@@ -156,6 +156,36 @@ class WhatsAppService {
       };
     }
   }
+
+  /**
+   * Send delivered status WhatsApp message
+   * @param {Object} options - Delivery details
+   * @param {string} options.phoneNumber - Sender's phone number (10 digits)
+   * @param {string} options.consignmentNumber - Consignment number
+   * @param {string} options.trackingUrl - Optional tracking URL (defaults to oclservices.com/tracking)
+   * @returns {Promise<Object>} - API response
+   */
+  async sendDeliveredNotification({ phoneNumber, consignmentNumber, trackingUrl }) {
+    try {
+      // Build tracking URL if not provided
+      const defaultTrackingUrl = trackingUrl || `https://oclservices.com/tracking?view=progress&type=awb&number=${consignmentNumber}`;
+
+      return await this.sendTemplateMessage({
+        phoneNumber,
+        templateName: 'delivered',
+        templateParams: {
+          consignmentNumber: consignmentNumber.toString(),
+          trackingUrl: defaultTrackingUrl
+        }
+      });
+    } catch (error) {
+      console.error('❌ Error sending delivered notification WhatsApp:', error);
+      return {
+        success: false,
+        error: error.message
+      };
+    }
+  }
 }
 
 // Export singleton instance

@@ -62,10 +62,9 @@ const MyShipments = () => {
     }
   };
   
-  // Updated tracker steps to match the 5 required steps
+  // Updated tracker steps to match the 4 required steps
   const trackerSteps = [
     { key: 'booked', title: 'Booked', icon: ShoppingCart },
-    { key: 'received_at_ocl', title: 'Received at OCL', icon: Home },
     { key: 'in_transit', title: 'In Transit', icon: Truck },
     { key: 'out_for_delivery', title: 'Out for Delivery', icon: Navigation },
     { key: 'delivered', title: 'Delivered', icon: CheckCircle }
@@ -551,13 +550,6 @@ const MyShipments = () => {
                           labelLower.includes('service type') || 
                           labelLower.includes('package count') || 
                           labelLower.includes('weight')) {
-                        return false;
-                      }
-                    }
-                    
-                    // Received state: Remove courier assigned
-                    if (selectedStepKey === 'received_at_ocl') {
-                      if (labelLower.includes('courier') && labelLower.includes('assign')) {
                         return false;
                       }
                     }

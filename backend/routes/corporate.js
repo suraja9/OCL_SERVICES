@@ -12,7 +12,6 @@ const router = express.Router();
 
 const CUSTOMER_TRACKING_STEPS = [
   { key: 'booked', title: 'Booked' },
-  { key: 'received_at_ocl', title: 'Received at OCL' },
   { key: 'in_transit', title: 'In Transit' },
   { key: 'out_for_delivery', title: 'Out for Delivery' },
   { key: 'delivered', title: 'Delivered' }
@@ -32,10 +31,12 @@ const deriveStepKeyFromStatus = (status = '') => {
   const normalized = status?.toString().toLowerCase() || '';
   if (['delivered'].includes(normalized)) return 'delivered';
   if (['ofp', 'out_for_delivery'].includes(normalized)) return 'out_for_delivery';
-  if (['in_transit', 'intransit', 'assigned', 'courierboy', 'reached-hub', 'reachedhub', 'assigned_completed'].includes(normalized)) {
+  // Only actual in_transit statuses map to in_transit step
+  if (['in_transit', 'intransit', 'reached-hub', 'reachedhub'].includes(normalized)) {
     return 'in_transit';
   }
-  if (['picked', 'pickup', 'picked_up', 'received'].includes(normalized)) return 'received_at_ocl';
+  // assigned, courierboy, assigned_completed, received, picked all map to booked (before transit)
+  if (['assigned', 'courierboy', 'assigned_completed', 'picked', 'pickup', 'picked_up', 'received'].includes(normalized)) return 'booked';
   return 'booked';
 };
 
@@ -147,7 +148,7 @@ const buildCorporateTrackingSummary = (booking, tracking) => {
     || toISO(pickupEvent?.pickedUpAt)
     || getTimestampForStatus('received', 'pickup', 'picked');
 
-  const inTransitTimestamp = getTimestampForStatus('in_transit', 'intransit', 'assigned', 'reached-hub', 'reachedhub', 'assigned_completed');
+  const inTransitTimestamp = getTimestampForStatus('in_transit', 'intransit', 'reached-hub', 'reachedhub');
   const ofdTimestamp = toISO(ofdEvent?.assignedAt) || getTimestampForStatus('ofp', 'out_for_delivery');
   const deliveredTimestamp = toISO(deliveredEvent?.deliveredAt);
 
@@ -317,19 +318,6 @@ const buildCorporateTrackingSummary = (booking, tracking) => {
     shipmentData?.mode ? { label: 'Transit Mode', value: shipmentData.mode } : null
   ].filter(Boolean);
 
-  stepsByKey.received_at_ocl.timestamp = receivedTimestamp;
-  stepsByKey.received_at_ocl.description = receivedTimestamp
-    ? 'Shipment verified at OCL.'
-    : 'Awaiting receipt at OCL.';
-  stepsByKey.received_at_ocl.fields = [
-    receivedTimestamp ? { label: 'Received Time', value: receivedTimestamp, format: 'datetime' } : null,
-    pickupEvent?.courierName ? { label: 'Received / Picked By', value: pickupEvent.courierName } : null,
-    courierAssignment?.courierBoyName ? { label: 'Courier Assigned', value: courierAssignment.courierBoyName } : null,
-    { label: 'Current Location', value: originLabel ? `OCL ${originLabel} Hub` : 'OCL Hub' },
-    { label: 'Scan Status', value: receivedTimestamp ? 'Shipment verified & processed' : 'Pending scan' },
-    shipmentData?.specialInstructions ? { label: 'Special Instructions', value: shipmentData.specialInstructions } : null
-  ].filter(Boolean);
-
   stepsByKey.in_transit.timestamp = inTransitTimestamp;
   stepsByKey.in_transit.description = inTransitTimestamp
     ? 'Shipment is moving between hubs.'
@@ -388,8 +376,6 @@ const buildCorporateTrackingSummary = (booking, tracking) => {
     currentStepKey = 'out_for_delivery';
   } else if (inTransitTimestamp) {
     currentStepKey = 'in_transit';
-  } else if (receivedTimestamp) {
-    currentStepKey = 'received_at_ocl';
   }
 
   const currentStepOrder = TRACKING_STEP_ORDER[currentStepKey] ?? 0;

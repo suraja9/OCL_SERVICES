@@ -8,16 +8,14 @@ const router = express.Router();
 
 const TRACKING_STEPS = [
   { key: 'booked', title: 'Booked' },
-  { key: 'received_at_ocl', title: 'Received at OCL' },
   { key: 'in_transit', title: 'In Transit' },
   { key: 'out_for_delivery', title: 'Out for Delivery' },
   { key: 'delivered', title: 'Delivered' }
 ];
 
-// Medicine tracking steps (different title for received step)
+// Medicine tracking steps
 const MEDICINE_TRACKING_STEPS = [
   { key: 'booked', title: 'Booked' },
-  { key: 'received_at_ocl', title: 'Received' },
   { key: 'in_transit', title: 'In Transit' },
   { key: 'out_for_delivery', title: 'Out for Delivery' },
   { key: 'delivered', title: 'Delivered' }
@@ -40,10 +38,10 @@ const deriveStepKeyFromStatus = (status = '') => {
   if (['in_transit', 'intransit'].includes(normalized)) return 'in_transit';
   // reached-hub status -> stays in in_transit step
   if (['reached-hub', 'reachedhub'].includes(normalized)) return 'in_transit';
-  // assigned and courierboy status -> stays in received_at_ocl step
-  if (['assigned', 'courierboy', 'assigned_completed'].includes(normalized)) return 'received_at_ocl';
-  // received status -> received_at_ocl step
-  if (['received'].includes(normalized)) return 'received_at_ocl';
+  // assigned and courierboy status -> booked step (before transit)
+  if (['assigned', 'courierboy', 'assigned_completed'].includes(normalized)) return 'booked';
+  // received status -> booked step (before transit)
+  if (['received'].includes(normalized)) return 'booked';
   // pickup status -> stays in booked step
   if (['picked', 'pickup', 'picked_up'].includes(normalized)) return 'booked';
   // booked status or default -> booked step
@@ -85,8 +83,8 @@ const deriveMedicineStepKeyFromStatus = (status = '') => {
   if (['delivered'].includes(normalized)) return 'delivered';
   // Out for delivery status -> out for delivery step
   if (['out_for_delivery'].includes(normalized)) return 'out_for_delivery';
-  // Arrived at Hub and Ready to Dispatch -> received_at_ocl step (check before 'arrived')
-  if (['arrived at hub', 'ready to dispatch'].includes(normalized)) return 'received_at_ocl';
+  // Arrived at Hub and Ready to Dispatch -> booked step (before transit)
+  if (['arrived at hub', 'ready to dispatch'].includes(normalized)) return 'booked';
   // intransit and arrived status -> in_transit step
   if (['in_transit', 'intransit', 'arrived'].includes(normalized)) return 'in_transit';
   // Booked status or default -> booked step
@@ -102,8 +100,8 @@ const deriveCustomerBookingStepKeyFromStatus = (status = '') => {
   if (['out_for_delivery', 'ofp'].includes(normalized)) return 'out_for_delivery';
   // intransit and reached-hub status -> in_transit step
   if (['intransit', 'in_transit', 'reached-hub', 'reachedhub'].includes(normalized)) return 'in_transit';
-  // received and courierboy status -> received_at_ocl step
-  if (['received', 'courierboy', 'assigned'].includes(normalized)) return 'received_at_ocl';
+  // received and courierboy status -> booked step (before transit)
+  if (['received', 'courierboy', 'assigned'].includes(normalized)) return 'booked';
   // booked, pickup, picked status -> booked step
   if (['booked', 'pickup', 'picked'].includes(normalized)) return 'booked';
   // Default -> booked step
@@ -207,17 +205,6 @@ const buildMedicineTrackingSummary = async (medicineBooking) => {
           packageData?.totalPackages ? { label: 'Package Count', value: packageData.totalPackages } : null,
           shipmentData?.actualWeight ? { label: 'Weight', value: `${shipmentData.actualWeight} kg` } : null,
           shipmentData?.mode ? { label: 'Transit Mode', value: shipmentData.mode } : null
-        ].filter(Boolean);
-        break;
-      case 'received_at_ocl':
-        // Use receivedTimestamp (arrivedAtHubScanAt) as the main timestamp
-        timestamp = receivedTimestamp ? toISO(receivedTimestamp) : null;
-        completed = stepOrder <= currentStepOrder && !!timestamp;
-        description = timestamp ? 'Shipment verified at OCL.' : 'Awaiting receipt at OCL.';
-        fields = [
-          receivedTimestamp ? { label: 'Received Time', value: toISO(receivedTimestamp), format: 'datetime' } : null,
-          manifestCreatedAt ? { label: 'Dispatched', value: toISO(manifestCreatedAt), format: 'datetime' } : null,
-          { label: 'Scan Status', value: timestamp ? 'Shipment verified & processed' : 'Pending scan' }
         ].filter(Boolean);
         break;
       case 'in_transit':
@@ -358,8 +345,6 @@ const buildCustomerBookingTrackingSummary = async (customerBooking) => {
     inTransitTimestamp = toISO(intransitEvent.assignedAt);
   } else if (reachedHubEvent?.timestamp) {
     inTransitTimestamp = toISO(reachedHubEvent.timestamp);
-  } else if (assignedEvent?.assignedAt) {
-    inTransitTimestamp = toISO(assignedEvent.assignedAt);
   }
   
   // Determine out_for_delivery timestamp
@@ -427,19 +412,6 @@ const buildCustomerBookingTrackingSummary = async (customerBooking) => {
           shipmentData?.packagesCount ? { label: 'Package Count', value: shipmentData.packagesCount } : null,
           shipmentData?.weight || customerBooking.actualWeight ? { label: 'Weight', value: `${shipmentData?.weight || customerBooking.actualWeight} kg` } : null,
           customerBooking.shippingMode ? { label: 'Transit Mode', value: customerBooking.shippingMode } : null
-        ].filter(Boolean);
-        break;
-      case 'received_at_ocl':
-        timestamp = receivedTimestamp ? toISO(receivedTimestamp) : null;
-        completed = stepOrder <= currentStepOrder && !!timestamp;
-        description = timestamp ? 'Shipment verified at OCL.' : 'Awaiting receipt at OCL.';
-        fields = [
-          receivedTimestamp ? { label: 'Received Time', value: toISO(receivedTimestamp), format: 'datetime' } : null,
-          pickedUpTimestamp ? { label: 'Picked Up At', value: toISO(pickedUpTimestamp), format: 'datetime' } : null,
-          customerBooking.assignedCourierBoy?.fullName ? { label: 'Picked By', value: customerBooking.assignedCourierBoy.fullName } : null,
-          courierBoyEvent?.courierBoyName ? { label: 'Courier Assigned', value: courierBoyEvent.courierBoyName } : null,
-          { label: 'Current Location', value: originLabel ? `OCL ${originLabel} Hub` : 'OCL Hub' },
-          { label: 'Scan Status', value: timestamp ? 'Shipment verified & processed' : 'Pending scan' }
         ].filter(Boolean);
         break;
       case 'in_transit':
@@ -736,19 +708,14 @@ router.get('/:consignmentNumber', async (req, res) => {
       inTransitTimestamp = getTimestampForStatus('intransit', 'in_transit');
     }
     
-    // Third priority: Check assigned array (coloader assignment is part of in_transit)
-    if (!inTransitTimestamp) {
-      inTransitTimestamp = assignedEvent?.assignedAt ? toISO(assignedEvent.assignedAt) : null;
-    }
-    
-    // Fourth priority: Check reachedHub (which is part of in_transit flow)
+    // Third priority: Check reachedHub (which is part of in_transit flow)
     if (!inTransitTimestamp) {
       inTransitTimestamp = reachedHubEvent?.timestamp ? toISO(reachedHubEvent.timestamp) : null;
     }
     
-    // Fallback: Check other transit-related statuses from history
+    // Fallback: Check other transit-related statuses from history (only actual in_transit statuses)
     if (!inTransitTimestamp) {
-      inTransitTimestamp = getTimestampForStatus('assigned', 'reached-hub', 'reachedhub', 'assigned_completed');
+      inTransitTimestamp = getTimestampForStatus('reached-hub', 'reachedhub');
     }
     
     const ofdTimestamp = ofdEvent?.assignedAt ? toISO(ofdEvent.assignedAt) : null;
@@ -840,22 +807,6 @@ router.get('/:consignmentNumber', async (req, res) => {
             shipmentData?.packagesCount || shipmentData?.totalPackages ? { label: 'Package Count', value: (shipmentData?.packagesCount || shipmentData?.totalPackages).toString() } : null,
             shipmentData?.actualWeight || shipmentData?.chargeableWeight ? { label: 'Weight', value: `${shipmentData?.actualWeight || shipmentData?.chargeableWeight} kg` } : null,
             shipmentData?.mode ? { label: 'Transit Mode', value: shipmentData.mode } : null
-          ].filter(Boolean);
-          break;
-        case 'received_at_ocl':
-          // Only use received timestamp if received array has actual data
-          timestamp = receivedEvent?.scannedAt ? toISO(receivedEvent.scannedAt) : null;
-          completed = !!timestamp;
-          description = timestamp ? 'Shipment verified at OCL.' : 'Awaiting receipt at OCL.';
-          fields = [
-            timestamp ? { label: 'Received Time', value: timestamp, format: 'datetime' } : null,
-            receivedEvent?.adminName ? { label: 'Received By', value: receivedEvent.adminName } : null,
-            pickupEvent?.courierName ? { label: 'Picked By', value: pickupEvent.courierName } : null,
-            pickupEvent?.courierPhone ? { label: 'Courier Phone', value: pickupEvent.courierPhone } : null,
-            courierAssignment?.courierBoyName ? { label: 'Courier Assigned', value: courierAssignment.courierBoyName } : null,
-            { label: 'Current Location', value: originLabel ? `OCL ${originLabel} Hub` : 'OCL Hub' },
-            { label: 'Scan Status', value: timestamp ? 'Shipment verified & processed' : 'Pending scan' },
-            shipmentData?.specialInstructions ? { label: 'Special Instructions', value: shipmentData.specialInstructions } : null
           ].filter(Boolean);
           break;
         case 'in_transit':
@@ -1223,19 +1174,14 @@ router.get('/:consignmentNumber/movement-history', async (req, res) => {
       inTransitTimestamp = getTimestampForStatus('intransit', 'in_transit');
     }
     
-    // Third priority: Check assigned array (coloader assignment is part of in_transit)
-    if (!inTransitTimestamp) {
-      inTransitTimestamp = assignedEvent?.assignedAt ? toISO(assignedEvent.assignedAt) : null;
-    }
-    
-    // Fourth priority: Check reachedHub (which is part of in_transit flow)
+    // Third priority: Check reachedHub (which is part of in_transit flow)
     if (!inTransitTimestamp) {
       inTransitTimestamp = reachedHubEvent?.timestamp ? toISO(reachedHubEvent.timestamp) : null;
     }
     
-    // Fallback: Check other transit-related statuses from history
+    // Fallback: Check other transit-related statuses from history (only actual in_transit statuses)
     if (!inTransitTimestamp) {
-      inTransitTimestamp = getTimestampForStatus('assigned', 'reached-hub', 'reachedhub', 'assigned_completed');
+      inTransitTimestamp = getTimestampForStatus('reached-hub', 'reachedhub');
     }
     
     const ofdTimestamp = ofdEvent?.assignedAt ? toISO(ofdEvent.assignedAt) : null;

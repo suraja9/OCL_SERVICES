@@ -779,7 +779,18 @@ const customerBookingSchema = new mongoose.Schema({
       trim: true,
       default: ''
     }
-  }]
+  }],
+
+  // Force delivery fields
+  forceDelivery: {
+    type: Boolean,
+    default: false,
+    index: true
+  },
+  force: {
+    type: mongoose.Schema.Types.Mixed,
+    required: false
+  }
 }, {
   timestamps: true,
   collection: 'customerbookings'

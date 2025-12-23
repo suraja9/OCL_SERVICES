@@ -87,6 +87,7 @@ export interface PaymentData {
   paymentType: 'FP' | 'TP' | 'COD' | ''; // FP = Freight Paid (Godown), TP = To Pay (Door Delivery)
   modeOfPayment?: string; // 'Cash' or 'To Pay'
   amount?: string;
+  currentStatus?: 'booked' | 'picked'; // Current status selection
 }
 
 // Bill Data Types

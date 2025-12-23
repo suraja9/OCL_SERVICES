@@ -131,68 +131,115 @@ const formSchema = new mongoose.Schema({
   },
 
   // New nested structure for full booking flow
+  // EXACT MATCH with CustomerBooking.origin structure
   originData: {
     type: new mongoose.Schema({
       name: { type: String, trim: true },
-      companyName: { type: String, trim: true },
-      email: { type: String, trim: true, lowercase: true },
       mobileNumber: { type: String, trim: true },
-      alternateNumbers: [{ type: String, trim: true }],
-      gstNumber: { type: String, trim: true },
-      addressType: { type: String, trim: true },
+      email: { type: String, trim: true, lowercase: true, default: '' },
+      companyName: { type: String, trim: true, default: '' },
+      flatBuilding: { type: String, trim: true, default: '' },
       locality: { type: String, trim: true },
-      flatBuilding: { type: String, trim: true },
-      landmark: { type: String, trim: true },
+      landmark: { type: String, trim: true, default: '' },
       pincode: { type: String, trim: true },
-      area: { type: String, trim: true },
+      area: { type: String, trim: true, default: '' },
       city: { type: String, trim: true },
       district: { type: String, trim: true },
-      state: { type: String, trim: true }
+      state: { type: String, trim: true },
+      gstNumber: { type: String, trim: true, default: '' },
+      alternateNumbers: [{ type: String, trim: true }],
+      addressType: { type: String, enum: ['HOME', 'OFFICE', 'OTHERS', 'Home', 'Office'], default: 'HOME' },
+      birthday: { type: String, trim: true, default: '' },
+      anniversary: { type: String, trim: true, default: '' },
+      website: { type: String, trim: true, default: '' },
+      otherAlternateNumber: { type: String, trim: true, default: '' }
     }, { _id: false }),
     default: undefined
   },
+  // EXACT MATCH with CustomerBooking.destination structure
   destinationData: {
     type: new mongoose.Schema({
       name: { type: String, trim: true },
-      companyName: { type: String, trim: true },
-      email: { type: String, trim: true, lowercase: true },
       mobileNumber: { type: String, trim: true },
-      alternateNumbers: [{ type: String, trim: true }],
-      gstNumber: { type: String, trim: true },
-      addressType: { type: String, trim: true },
+      email: { type: String, trim: true, lowercase: true, default: '' },
+      companyName: { type: String, trim: true, default: '' },
+      flatBuilding: { type: String, trim: true, default: '' },
       locality: { type: String, trim: true },
-      flatBuilding: { type: String, trim: true },
-      landmark: { type: String, trim: true },
+      landmark: { type: String, trim: true, default: '' },
       pincode: { type: String, trim: true },
-      area: { type: String, trim: true },
+      area: { type: String, trim: true, default: '' },
       city: { type: String, trim: true },
       district: { type: String, trim: true },
-      state: { type: String, trim: true }
+      state: { type: String, trim: true },
+      gstNumber: { type: String, trim: true, default: '' },
+      alternateNumbers: [{ type: String, trim: true }],
+      addressType: { type: String, enum: ['HOME', 'OFFICE', 'OTHERS', 'Home', 'Office'], default: 'HOME' },
+      birthday: { type: String, trim: true, default: '' },
+      anniversary: { type: String, trim: true, default: '' },
+      website: { type: String, trim: true, default: '' },
+      otherAlternateNumber: { type: String, trim: true, default: '' }
     }, { _id: false }),
     default: undefined
   },
+  // EXACT MATCH with CustomerBooking.shipment structure
   shipmentData: {
     type: new mongoose.Schema({
       natureOfConsignment: { type: String, trim: true },
-      services: { type: String, trim: true },
-      mode: { type: String, trim: true },
       insurance: { type: String, trim: true },
       riskCoverage: { type: String, trim: true },
-      packagingType: { type: String, trim: true },
+      packagesCount: { type: String, trim: true },
+      materials: { type: String, trim: true, default: '' },
+      others: { type: String, trim: true, default: '' },
+      description: { type: String, trim: true, default: '' },
+      declaredValue: { type: String, trim: true, default: '' },
+      weight: { type: String, trim: true, default: '' },
+      length: { type: String, trim: true, default: '' },
+      width: { type: String, trim: true, default: '' },
+      height: { type: String, trim: true, default: '' },
+      // Insurance details (if insurance is selected)
+      insuranceCompanyName: { type: String, trim: true, default: '' },
+      insurancePolicyNumber: { type: String, trim: true, default: '' },
+      insurancePolicyDate: { type: String, trim: true, default: '' },
+      insuranceValidUpto: { type: String, trim: true, default: '' },
+      insurancePremiumAmount: { type: String, trim: true, default: '' },
+      insuranceDocumentName: { type: String, trim: true, default: '' },
+      insuranceDocument: { type: String, trim: true, default: '' }, // S3 URL
+      // Declaration document fields
+      declarationDocumentName: { type: String, trim: true, default: '' },
+      declarationDocument: { type: String, trim: true, default: '' }, // S3 URL
+      // Office-specific fields (keep for backward compatibility)
+      services: { type: String, trim: true, default: '' },
+      mode: { type: String, trim: true, default: '' },
+      packagingType: { type: String, trim: true, default: '' },
       dimensions: [{
         length: { type: Number },
         breadth: { type: Number },
         height: { type: Number },
         unit: { type: String, trim: true }
       }],
-      actualWeight: { type: Number },
-      volumetricWeight: { type: Number },
-      chargeableWeight: { type: Number },
-      totalPackages: { type: String, trim: true },
-      description: { type: String, trim: true },
-      specialInstructions: { type: String, trim: true }
+      actualWeight: { type: Number, default: null },
+      volumetricWeight: { type: Number, default: null },
+      chargeableWeight: { type: Number, default: null },
+      totalPackages: { type: String, trim: true, default: '' },
+      specialInstructions: { type: String, trim: true, default: '' }
     }, { _id: false }),
     default: undefined
+  },
+  // Package Images at root level (EXACT MATCH with CustomerBooking)
+  packageImages: [{
+    type: String, // S3 URL
+    trim: true
+  }],
+  // Shipping Mode & Service Type at root level (EXACT MATCH with CustomerBooking)
+  shippingMode: {
+    type: String,
+    enum: ['byAir', 'byTrain', 'byRoad', ''],
+    default: ''
+  },
+  serviceType: {
+    type: String,
+    enum: ['standard', 'priority', ''],
+    default: ''
   },
   uploadData: {
     type: new mongoose.Schema({

@@ -16,6 +16,7 @@ import { getGlobalConsignmentSummary } from '../services/consignmentSequenceServ
 import { generateToken, authenticateAdmin, requireSuperAdmin, validateLoginInput, authenticateAdminOrOfficeAdmin } from '../middleware/auth.js';
 import S3Service from '../services/s3Service.js';
 import { uploadForceDeliveryPOD, handleUploadError } from '../middleware/upload.js';
+import whatsappService from '../services/whatsappService.js';
 
 const router = express.Router();
 
@@ -1179,6 +1180,108 @@ router.post('/tracking/force-delivery', authenticateAdmin, uploadForceDeliveryPO
 
     console.log(`✅ Force delivery completed for consignment #${tracking.consignmentNumber} by ${req.admin.name}`);
 
+    // Get booked data for email and WhatsApp
+    const bookedData = tracking.booked && tracking.booked.length > 0 ? tracking.booked[0] : {};
+
+    // Send delivery confirmation email to sender/origin (non-blocking)
+    try {
+      const emailService = (await import('../services/emailService.js')).default;
+      const originEmail = bookedData?.originData?.email || bookedData?.senderEmail || null;
+
+      if (originEmail) {
+        // Determine if this is a corporate booking or form-based booking
+        const isCorporate = tracking.corporateId || tracking.assignmentType === 'corporate';
+        
+        // Prepare delivery data for email
+        const deliveryEmailData = {
+          consignmentNumber: tracking.consignmentNumber,
+          bookingReference: tracking.bookingReference || tracking.consignmentNumber?.toString(),
+          bookingDate: bookedData?.bookingDate || tracking.createdAt,
+          deliveredAt: new Date(),
+          paymentStatus: bookedData?.paymentStatus || 'unpaid',
+          paymentMethod: bookedData?.paymentData?.paymentMethod || '',
+          shippingMode: bookedData?.shipmentData?.mode || bookedData?.invoiceData?.transportMode || 'Standard',
+          serviceType: bookedData?.shipmentData?.services || bookedData?.invoiceData?.serviceType || 'Express',
+          calculatedPrice: bookedData?.invoiceData?.finalPrice || bookedData?.invoiceData?.total || null,
+          basePrice: bookedData?.invoiceData?.basePrice || null,
+          gstAmount: bookedData?.invoiceData?.gstAmount || null,
+          pickupCharge: bookedData?.pickupCharge || 0,
+          totalAmount: bookedData?.invoiceData?.finalPrice || bookedData?.invoiceData?.total || null,
+          origin: bookedData?.originData || { email: originEmail },
+          destination: bookedData?.destinationData || {},
+          shipment: bookedData?.shipmentData || {},
+          packageImages: bookedData?.shipmentData?.packageImages || bookedData?.packageImages || [],
+          forceDelivery: {
+            personName: forceData.personName,
+            vehicleType: forceData.vehicleType,
+            vehicleNumber: forceData.vehicleNumber
+          }
+        };
+
+        // Send appropriate email based on booking type
+        if (isCorporate) {
+          emailService.sendCorporateDeliveryConfirmationEmail(deliveryEmailData)
+            .then(result => {
+              console.log(`✅ Corporate delivery confirmation email sent to ${originEmail} for consignment #${tracking.consignmentNumber}`);
+            })
+            .catch(error => {
+              console.error(`❌ Failed to send corporate delivery confirmation email to ${originEmail}:`, error);
+            });
+        } else {
+          // Form-based booking (from BookingPanel)
+          emailService.sendShipmentDeliveryConfirmationEmail({
+            ...deliveryEmailData,
+            senderEmail: originEmail,
+            originData: bookedData?.originData || {},
+            destinationData: bookedData?.destinationData || {},
+            shipmentData: bookedData?.shipmentData || {}
+          })
+            .then(result => {
+              console.log(`✅ Shipment delivery confirmation email sent to ${originEmail} for consignment #${tracking.consignmentNumber}`);
+            })
+            .catch(error => {
+              console.error(`❌ Failed to send shipment delivery confirmation email to ${originEmail}:`, error);
+            });
+        }
+      } else {
+        console.warn(`⚠️ No origin email found for tracking consignment #${tracking.consignmentNumber}, skipping delivery email`);
+      }
+    } catch (emailError) {
+      // Log error but don't fail the request
+      console.error('❌ Error preparing delivery confirmation email:', emailError);
+    }
+
+    // Send WhatsApp notification to sender/origin phone number (non-blocking)
+    try {
+      // Get origin phone number from booked data
+      const originPhoneNumber = bookedData?.originData?.mobileNumber || bookedData?.senderPhone || null;
+
+      if (originPhoneNumber) {
+        // Build tracking URL
+        const trackingUrl = `https://oclservices.com/tracking?view=progress&type=awb&number=${tracking.consignmentNumber}`;
+
+        // Send WhatsApp notification (non-blocking - don't fail if this fails)
+        whatsappService.sendDeliveredNotification({
+          phoneNumber: originPhoneNumber,
+          consignmentNumber: tracking.consignmentNumber,
+          trackingUrl: trackingUrl
+        }).then(result => {
+          if (result.success) {
+            console.log(`✅ WhatsApp delivered notification sent to ${originPhoneNumber} for consignment #${tracking.consignmentNumber}`);
+          } else {
+            console.error(`❌ Failed to send WhatsApp delivered notification to ${originPhoneNumber}:`, result.error);
+          }
+        }).catch(error => {
+          console.error(`❌ Error sending WhatsApp delivered notification to ${originPhoneNumber}:`, error);
+        });
+      } else {
+        console.warn(`⚠️ No origin phone number found for tracking consignment #${tracking.consignmentNumber}, skipping WhatsApp notification`);
+      }
+    } catch (whatsappError) {
+      // Log error but don't fail the request
+      console.error('❌ Error preparing WhatsApp notification:', whatsappError);
+    }
+
     res.json({
       success: true,
       message: 'Force delivery submitted successfully',
@@ -1191,6 +1294,296 @@ router.post('/tracking/force-delivery', authenticateAdmin, uploadForceDeliveryPO
     });
   } catch (error) {
     console.error('Force delivery submission error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to submit force delivery'
+    });
+  }
+});
+
+// Get customer booking records for force delivery (any currentStatus except delivered)
+router.get('/customerbookings/force-delivery', authenticateAdmin, async (req, res) => {
+  if (!req.admin.hasPermission('addressForms')) {
+    return res.status(403).json({
+      error: 'Access denied. Address forms permission required.'
+    });
+  }
+
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 100;
+    const skip = (page - 1) * limit;
+
+    // Query to exclude delivered and force delivered orders
+    const query = {
+      currentStatus: { $ne: 'delivered' },
+      $or: [
+        { forceDelivery: { $exists: false } },
+        { forceDelivery: false }
+      ]
+    };
+
+    // Fetch customer booking records with pagination
+    const [records, totalCount] = await Promise.all([
+      CustomerBooking.find(query)
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean(),
+      CustomerBooking.countDocuments(query)
+    ]);
+
+    // Transform records to match expected frontend structure
+    const transformedData = records.map(booking => {
+      return {
+        _id: booking._id,
+        consignmentNumber: booking.consignmentNumber,
+        bookingReference: booking.bookingReference || booking.consignmentNumber?.toString(),
+        originData: booking.origin ? {
+          name: booking.origin.name || null,
+          city: booking.origin.city || null,
+          state: booking.origin.state || null
+        } : null,
+        destinationData: booking.destination ? {
+          name: booking.destination.name || null,
+          city: booking.destination.city || null,
+          state: booking.destination.state || null
+        } : null,
+        currentStatus: booking.currentStatus,
+        createdAt: booking.BookedAt || booking.createdAt || new Date(),
+        senderName: booking.origin?.name || null,
+        receiverName: booking.destination?.name || null,
+        invoiceData: {
+          finalPrice: booking.calculatedPrice || booking.totalAmount || 0
+        },
+        paymentData: {
+          paymentType: booking.paymentMethod || null
+        },
+        paymentStatus: booking.paymentStatus || 'pending',
+        statusHistory: booking.statusHistory || [],
+        updatedAt: booking.updatedAt
+      };
+    });
+
+    res.json({
+      success: true,
+      data: transformedData,
+      pagination: {
+        currentPage: page,
+        totalPages: Math.ceil(totalCount / limit),
+        totalCount,
+        hasNext: page * limit < totalCount,
+        hasPrev: page > 1,
+        limit
+      }
+    });
+  } catch (error) {
+    console.error('Get force delivery customer booking records error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch force delivery customer booking records.' 
+    });
+  }
+});
+
+// Submit force delivery for customer booking (POST endpoint)
+router.post('/customerbookings/force-delivery', authenticateAdmin, uploadForceDeliveryPOD, handleUploadError, async (req, res) => {
+  if (!req.admin.hasPermission('addressForms')) {
+    return res.status(403).json({
+      error: 'Access denied. Address forms permission required.'
+    });
+  }
+
+  try {
+    const { bookingId, personName, vehicleType, vehicleNumber } = req.body;
+
+    // Validation
+    if (!bookingId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Booking ID is required'
+      });
+    }
+
+    if (!personName || !vehicleType || !vehicleNumber) {
+      return res.status(400).json({
+        success: false,
+        error: 'Person name, vehicle type, and vehicle number are required'
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        error: 'POD file is required'
+      });
+    }
+
+    // Find the customer booking record
+    const booking = await CustomerBooking.findById(bookingId);
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Customer booking record not found'
+      });
+    }
+
+    // Upload POD file to S3
+    let podImageUrl = '';
+    try {
+      const uploadResult = await S3Service.uploadFile(req.file, 'uploads/force-delivery-pod');
+      if (uploadResult.success) {
+        podImageUrl = uploadResult.url;
+      } else {
+        throw new Error('Failed to upload POD to S3');
+      }
+    } catch (uploadError) {
+      console.error('Error uploading POD to S3:', uploadError);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to upload POD file'
+      });
+    }
+
+    // Prepare force delivery data
+    const forceData = {
+      personName: personName.trim(),
+      vehicleType: vehicleType.trim(),
+      vehicleNumber: vehicleNumber.trim(),
+      podImageUrl: podImageUrl,
+      submittedBy: {
+        adminId: req.admin._id,
+        adminName: req.admin.name,
+        adminEmail: req.admin.email
+      },
+      submittedAt: new Date()
+    };
+
+    // Update customer booking record
+    booking.currentStatus = 'delivered';
+    booking.status = 'delivered';
+    booking.forceDelivery = true;
+    booking.force = forceData;
+
+    // Add status history entry
+    if (!booking.statusHistory) {
+      booking.statusHistory = [];
+    }
+    booking.statusHistory.push({
+      status: 'delivered',
+      timestamp: new Date(),
+      notes: `Force delivery completed by ${req.admin.name}. Person: ${personName}, Vehicle: ${vehicleType} - ${vehicleNumber}`
+    });
+
+    // Add to delivered object if it doesn't exist
+    if (!booking.delivered) {
+      booking.delivered = {
+        deliveredAt: new Date(),
+        amountCollected: booking.calculatedPrice || booking.totalAmount || null,
+        paymentMethod: booking.paymentMethod || null,
+        timestamp: new Date()
+      };
+    } else {
+      booking.delivered.deliveredAt = new Date();
+      booking.delivered.timestamp = new Date();
+    }
+
+    // Save the updated customer booking record
+    await booking.save();
+
+    console.log(`✅ Force delivery completed for customer booking consignment #${booking.consignmentNumber} by ${req.admin.name}`);
+
+    // Send delivery confirmation email to sender/origin (non-blocking)
+    try {
+      const emailService = (await import('../services/emailService.js')).default;
+      const originEmail = booking.origin?.email || null;
+
+      if (originEmail) {
+        // Prepare delivery data for email
+        const deliveryEmailData = {
+          consignmentNumber: booking.consignmentNumber,
+          bookingReference: booking.bookingReference || booking.consignmentNumber?.toString(),
+          bookingDate: booking.createdAt || booking.BookedAt,
+          deliveredAt: new Date(),
+          paymentStatus: booking.paymentStatus || 'unpaid',
+          paymentMethod: booking.paymentMethod || '',
+          shippingMode: booking.shippingMode || 'Standard',
+          serviceType: booking.serviceType || 'Express',
+          calculatedPrice: booking.calculatedPrice || booking.totalAmount || null,
+          basePrice: booking.basePrice || null,
+          gstAmount: booking.gstAmount || null,
+          pickupCharge: booking.pickupCharge || 100,
+          totalAmount: booking.totalAmount || booking.calculatedPrice || null,
+          origin: booking.origin || {},
+          destination: booking.destination || {},
+          shipment: booking.shipment || {},
+          packageImages: booking.packageImages || [],
+          forceDelivery: {
+            personName: forceData.personName,
+            vehicleType: forceData.vehicleType,
+            vehicleNumber: forceData.vehicleNumber
+          }
+        };
+
+        // Send online booking delivery confirmation email
+        emailService.sendOnlineDeliveryConfirmationEmail(deliveryEmailData)
+          .then(result => {
+            console.log(`✅ Online delivery confirmation email sent to ${originEmail} for consignment #${booking.consignmentNumber}`);
+          })
+          .catch(error => {
+            console.error(`❌ Failed to send online delivery confirmation email to ${originEmail}:`, error);
+          });
+      } else {
+        console.warn(`⚠️ No origin email found for customer booking consignment #${booking.consignmentNumber}, skipping delivery email`);
+      }
+    } catch (emailError) {
+      // Log error but don't fail the request
+      console.error('❌ Error preparing delivery confirmation email:', emailError);
+    }
+
+    // Send WhatsApp notification to sender/origin phone number (non-blocking)
+    try {
+      // Get origin phone number from booking
+      const originPhoneNumber = booking.origin?.mobileNumber || null;
+
+      if (originPhoneNumber) {
+        // Build tracking URL
+        const trackingUrl = `https://oclservices.com/tracking?view=progress&type=awb&number=${booking.consignmentNumber}`;
+
+        // Send WhatsApp notification (non-blocking - don't fail if this fails)
+        whatsappService.sendDeliveredNotification({
+          phoneNumber: originPhoneNumber,
+          consignmentNumber: booking.consignmentNumber,
+          trackingUrl: trackingUrl
+        }).then(result => {
+          if (result.success) {
+            console.log(`✅ WhatsApp delivered notification sent to ${originPhoneNumber} for consignment #${booking.consignmentNumber}`);
+          } else {
+            console.error(`❌ Failed to send WhatsApp delivered notification to ${originPhoneNumber}:`, result.error);
+          }
+        }).catch(error => {
+          console.error(`❌ Error sending WhatsApp delivered notification to ${originPhoneNumber}:`, error);
+        });
+      } else {
+        console.warn(`⚠️ No origin phone number found for customer booking consignment #${booking.consignmentNumber}, skipping WhatsApp notification`);
+      }
+    } catch (whatsappError) {
+      // Log error but don't fail the request
+      console.error('❌ Error preparing WhatsApp notification:', whatsappError);
+    }
+
+    res.json({
+      success: true,
+      message: 'Force delivery submitted successfully',
+      data: {
+        bookingId: booking._id,
+        consignmentNumber: booking.consignmentNumber,
+        currentStatus: booking.currentStatus,
+        forceDelivery: booking.forceDelivery
+      }
+    });
+  } catch (error) {
+    console.error('Force delivery submission error for customer booking:', error);
     res.status(500).json({
       success: false,
       error: 'Failed to submit force delivery'

@@ -71,7 +71,19 @@ const officeUserSchema = new mongoose.Schema({
     singleQuotation: { type: Boolean, default: false },
     courierBoyManagement: { type: Boolean, default: false },
     assignCourierBoy: { type: Boolean, default: false },
-    customerComplain: { type: Boolean, default: false }
+    customerComplain: { type: Boolean, default: false },
+    delivery: { type: Boolean, default: false },
+    forceDelivery: { type: Boolean, default: false },
+    undelivered: { type: Boolean, default: false },
+    medicineBooking: { type: Boolean, default: false },
+    customerBooking: { type: Boolean, default: false },
+    allBookings: { type: Boolean, default: false },
+    officeBooking: { type: Boolean, default: false },
+    corporateBooking: { type: Boolean, default: false },
+    coldCalling: { type: Boolean, default: false },
+    payments: { type: Boolean, default: false },
+    collectPayment: { type: Boolean, default: false },
+    salesForm: { type: Boolean, default: false }
   },
   permissionsUpdatedAt: {
     type: Date,

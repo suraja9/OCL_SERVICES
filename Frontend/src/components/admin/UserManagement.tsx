@@ -93,6 +93,18 @@ interface OfficeUser {
     courierBoyManagement: boolean;
     assignCourierBoy: boolean;
     customerComplain: boolean;
+    delivery: boolean;
+    forceDelivery: boolean;
+    undelivered: boolean;
+    medicineBooking: boolean;
+    customerBooking: boolean;
+    allBookings: boolean;
+    officeBooking: boolean;
+    corporateBooking: boolean;
+    coldCalling: boolean;
+    payments: boolean;
+    collectPayment: boolean;
+    salesForm: boolean;
   };
   department?: string;
   phone?: string;
@@ -161,7 +173,19 @@ const UserManagement = () => {
     singleQuotation: false,
     courierBoyManagement: false,
     assignCourierBoy: false,
-    customerComplain: false
+    customerComplain: false,
+    delivery: false,
+    forceDelivery: false,
+    undelivered: false,
+    medicineBooking: false,
+    customerBooking: false,
+    allBookings: false,
+    officeBooking: false,
+    corporateBooking: false,
+    coldCalling: false,
+    payments: false,
+    collectPayment: false,
+    salesForm: false
   });
 
   const { toast } = useToast();
@@ -252,7 +276,19 @@ const UserManagement = () => {
       singleQuotation: user.permissions.singleQuotation !== undefined ? user.permissions.singleQuotation : false,
       courierBoyManagement: user.permissions.courierBoyManagement !== undefined ? user.permissions.courierBoyManagement : false,
       assignCourierBoy: user.permissions.assignCourierBoy !== undefined ? user.permissions.assignCourierBoy : false,
-      customerComplain: user.permissions.customerComplain !== undefined ? user.permissions.customerComplain : false
+      customerComplain: user.permissions.customerComplain !== undefined ? user.permissions.customerComplain : false,
+      delivery: user.permissions.delivery !== undefined ? user.permissions.delivery : false,
+      forceDelivery: user.permissions.forceDelivery !== undefined ? user.permissions.forceDelivery : false,
+      undelivered: user.permissions.undelivered !== undefined ? user.permissions.undelivered : false,
+      medicineBooking: user.permissions.medicineBooking !== undefined ? user.permissions.medicineBooking : false,
+      customerBooking: user.permissions.customerBooking !== undefined ? user.permissions.customerBooking : false,
+      allBookings: user.permissions.allBookings !== undefined ? user.permissions.allBookings : false,
+      officeBooking: user.permissions.officeBooking !== undefined ? user.permissions.officeBooking : false,
+      corporateBooking: user.permissions.corporateBooking !== undefined ? user.permissions.corporateBooking : false,
+      coldCalling: user.permissions.coldCalling !== undefined ? user.permissions.coldCalling : false,
+      payments: user.permissions.payments !== undefined ? user.permissions.payments : false,
+      collectPayment: user.permissions.collectPayment !== undefined ? user.permissions.collectPayment : false,
+      salesForm: user.permissions.salesForm !== undefined ? user.permissions.salesForm : false
     };
     setPermissions(userPermissions);
     setIsPermissionsModalOpen(true);
@@ -589,6 +625,18 @@ const UserManagement = () => {
     if (permissions.courierBoyManagement) badges.push('Courier Boy Management');
     if (permissions.assignCourierBoy) badges.push('Assign Courier Boy');
     if (permissions.customerComplain) badges.push('Customer Complaints');
+    if (permissions.delivery) badges.push('Delivery');
+    if (permissions.forceDelivery) badges.push('Force Delivery');
+    if (permissions.undelivered) badges.push('Not Delivered');
+    if (permissions.medicineBooking) badges.push('Medicine Booking');
+    if (permissions.customerBooking) badges.push('Customer Booking');
+    if (permissions.allBookings) badges.push('All Bookings');
+    if (permissions.officeBooking) badges.push('Office Booking');
+    if (permissions.corporateBooking) badges.push('Corporate Booking');
+    if (permissions.coldCalling) badges.push('Cold Calling');
+    if (permissions.payments) badges.push('Payment Status');
+    if (permissions.collectPayment) badges.push('Collect Payment');
+    if (permissions.salesForm) badges.push('Sales Form');
     return badges;
   };
 
@@ -1475,6 +1523,306 @@ const UserManagement = () => {
                         checked={permissions.customerComplain}
                         onChange={() => { }}
                         className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Delivery */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.delivery
+                        ? 'border-indigo-500 bg-indigo-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      delivery: !prev.delivery
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Delivery</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Manage deliveries</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.delivery}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Force Delivery */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.forceDelivery
+                        ? 'border-yellow-500 bg-yellow-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      forceDelivery: !prev.forceDelivery
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Force Delivery</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Force delivery operations</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.forceDelivery}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-yellow-600 rounded focus:ring-yellow-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Undelivered */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.undelivered
+                        ? 'border-red-500 bg-red-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      undelivered: !prev.undelivered
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Not Delivered</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Manage undelivered orders</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.undelivered}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-red-600 rounded focus:ring-red-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Medicine Booking */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.medicineBooking
+                        ? 'border-purple-500 bg-purple-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      medicineBooking: !prev.medicineBooking
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Medicine Booking</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">View medicine bookings</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.medicineBooking}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-purple-600 rounded focus:ring-purple-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Customer Booking */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.customerBooking
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      customerBooking: !prev.customerBooking
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Customer Booking</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">View customer bookings</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.customerBooking}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* All Bookings */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.allBookings
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      allBookings: !prev.allBookings
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">All Bookings</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">View all bookings</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.allBookings}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Office Booking */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.officeBooking
+                        ? 'border-indigo-500 bg-indigo-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      officeBooking: !prev.officeBooking
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Office Booking</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Manage office bookings</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.officeBooking}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Corporate Booking */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.corporateBooking
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      corporateBooking: !prev.corporateBooking
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Corporate Booking</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Manage corporate bookings</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.corporateBooking}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Cold Calling */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.coldCalling
+                        ? 'border-teal-500 bg-teal-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      coldCalling: !prev.coldCalling
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Cold Calling</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Manage cold calling</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.coldCalling}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-teal-600 rounded focus:ring-teal-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Payments */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.payments
+                        ? 'border-emerald-500 bg-emerald-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      payments: !prev.payments
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Payment Status</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">View payment status</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.payments}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Collect Payment */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.collectPayment
+                        ? 'border-green-500 bg-green-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      collectPayment: !prev.collectPayment
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Collect Payment</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Collect payments</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.collectPayment}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-green-600 rounded focus:ring-green-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Sales Form */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.salesForm
+                        ? 'border-pink-500 bg-pink-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      salesForm: !prev.salesForm
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">Sales Form</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Manage sales forms</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.salesForm}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-pink-600 rounded focus:ring-pink-500 flex-shrink-0"
                       />
                     </div>
                   </div>

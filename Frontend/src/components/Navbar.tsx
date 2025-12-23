@@ -7,6 +7,7 @@ import oclLogo from "@/assets/ocl-logo.png";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Reset activeDropdown when mobile menu closes
@@ -15,6 +16,15 @@ const Navbar = () => {
       setActiveDropdown(null);
     }
   }, [isOpen]);
+
+  // Track viewport width so we only render the mobile CTA on small screens
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const update = () => setIsMobileViewport(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const handleMouseEnter = (label: string) => {
     if (timeoutRef.current) {
@@ -65,44 +75,45 @@ const Navbar = () => {
               <Phone className="h-5 w-5" />
             </a>
             {/* Mobile Ship Now Button */}
-            {navData.navigation
-              .filter((item) => item.type === "cta")
-              .map((item) => (
-                <a
-                  key={item.label}
-                  href={item.href}
-                  className="lg:hidden rounded-full text-white font-semibold text-sm transition-all duration-200 ship-now-btn flex items-center justify-center"
-                  style={{
-                    background: "linear-gradient(90deg, #ff8c00, #ffbb33, #0078ff)",
-                    backgroundSize: "200% auto",
-                    fontWeight: 600,
-                    border: "none",
-                    borderRadius: "30px",
-                    padding: "8px 16px",
-                    marginTop: "4px",
-                    marginBottom: "4px",
-                    cursor: "pointer",
-                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-                    transition: "all 0.3s ease",
-                    animation: "gradientShift 4s ease infinite",
-                    minHeight: "32px",
-                    textAlign: "center",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = "scale(1.05)";
-                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(255, 140, 0, 0.4)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = "scale(1)";
-                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,0,0,0.1)";
-                  }}
-                >
-                  {item.label}
-                </a>
-              ))}
+            {isMobileViewport &&
+              navData.navigation
+                .filter((item) => item.type === "cta")
+                .map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.href}
+                    className="md:hidden rounded-full text-white font-semibold text-sm transition-all duration-200 ship-now-btn flex items-center justify-center"
+                    style={{
+                      background: "linear-gradient(90deg, #ff8c00, #ffbb33, #0078ff)",
+                      backgroundSize: "200% auto",
+                      fontWeight: 600,
+                      border: "none",
+                      borderRadius: "30px",
+                      padding: "8px 16px",
+                      marginTop: "4px",
+                      marginBottom: "4px",
+                      cursor: "pointer",
+                      boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                      transition: "all 0.3s ease",
+                      animation: "gradientShift 4s ease infinite",
+                      minHeight: "32px",
+                      textAlign: "center",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "scale(1.05)";
+                      e.currentTarget.style.boxShadow = "0 6px 20px rgba(255, 140, 0, 0.4)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "scale(1)";
+                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,0,0,0.1)";
+                    }}
+                  >
+                    {item.label}
+                  </a>
+                ))}
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-2 xl:space-x-6">
             {navData.navigation.map((item) => (

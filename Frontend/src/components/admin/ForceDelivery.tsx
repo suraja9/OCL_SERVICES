@@ -41,6 +41,7 @@ interface TrackingData {
         paymentType: string;
     };
     paymentStatus?: string;
+    source?: 'tracking' | 'customerbooking'; // Add source to distinguish collection
 }
 
 // Floating Input Component
@@ -197,48 +198,94 @@ const ForceDelivery = () => {
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const itemsPerPage = 7;
+    const [totalCount, setTotalCount] = useState(0);
+    const [trackingTotalCount, setTrackingTotalCount] = useState(0);
+    const [bookingTotalCount, setBookingTotalCount] = useState(0);
+    const [hasMoreData, setHasMoreData] = useState(true);
     const { toast } = useToast();
 
-    const fetchForceDeliveryData = async () => {
+    const fetchForceDeliveryData = async (page: number = 1, append: boolean = false) => {
         setLoading(true);
         try {
             const token = localStorage.getItem('adminToken');
             
-            // Fetch all orders from force delivery API with pagination
-            const allOrders: TrackingData[] = [];
-            let page = 1;
-            const limit = 100;
-            let hasMore = true;
+            // Fetch enough items to cover multiple pages when combining data
+            // Since we're combining two sources, we fetch more items to ensure we have enough after combining
+            // Fetch enough items per collection to cover at least 2-3 pages of combined results
+            const fetchLimit = itemsPerPage * 3; // Fetch 21 items from each collection per API call
+            
+            // Fetch from tracking collection
+            const trackingResponse = await fetch(`/api/admin/tracking/force-delivery?page=${page}&limit=${fetchLimit}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
 
-            while (hasMore) {
-                const response = await fetch(`/api/admin/tracking/force-delivery?page=${page}&limit=${limit}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch data');
-                }
-
-                const result = await response.json();
-                if (result.success && result.data) {
-                    // Data is already transformed by the backend API
-                    allOrders.push(...result.data);
-
-                    // Check if there are more pages
-                    const pagination = result.pagination;
-                    if (!pagination?.hasNext || result.data.length < limit) {
-                        hasMore = false;
-                    } else {
-                        page++;
-                    }
-                } else {
-                    hasMore = false;
-                }
+            if (!trackingResponse.ok) {
+                throw new Error('Failed to fetch tracking data');
             }
 
-            setData(allOrders);
+            const trackingResult = await trackingResponse.json();
+            let trackingData: TrackingData[] = [];
+            if (trackingResult.success && trackingResult.data) {
+                trackingData = trackingResult.data.map((item: TrackingData) => ({
+                    ...item,
+                    source: 'tracking' as const
+                }));
+                setTrackingTotalCount(trackingResult.pagination?.totalCount || 0);
+            }
+
+            // Fetch from customerbookings collection
+            const bookingResponse = await fetch(`/api/admin/customerbookings/force-delivery?page=${page}&limit=${fetchLimit}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!bookingResponse.ok) {
+                throw new Error('Failed to fetch customer booking data');
+            }
+
+            const bookingResult = await bookingResponse.json();
+            let bookingData: TrackingData[] = [];
+            if (bookingResult.success && bookingResult.data) {
+                bookingData = bookingResult.data.map((item: TrackingData) => ({
+                    ...item,
+                    source: 'customerbooking' as const
+                }));
+                setBookingTotalCount(bookingResult.pagination?.totalCount || 0);
+            }
+
+            // Combine and sort by date (most recent first)
+            const newOrders = [...trackingData, ...bookingData].sort((a, b) => {
+                const dateA = new Date(a.createdAt).getTime();
+                const dateB = new Date(b.createdAt).getTime();
+                return dateB - dateA;
+            });
+
+            // Update data - either append for search or replace for pagination
+            if (append || searchTerm) {
+                // When searching, we might need to load more data
+                setData(prev => {
+                    // Remove duplicates based on _id
+                    const existingIds = new Set(prev.map(item => item._id));
+                    const uniqueNewOrders = newOrders.filter(item => !existingIds.has(item._id));
+                    return [...prev, ...uniqueNewOrders];
+                });
+            } else {
+                // Normal pagination - replace data
+                setData(newOrders);
+            }
+
+            // Calculate total count
+            const combinedTotal = (trackingResult.pagination?.totalCount || 0) + (bookingResult.pagination?.totalCount || 0);
+            setTotalCount(combinedTotal);
+
+            // Check if there's more data to load
+            const trackingHasMore = trackingResult.pagination?.hasNext || false;
+            const bookingHasMore = bookingResult.pagination?.hasNext || false;
+            setHasMoreData(trackingHasMore || bookingHasMore);
+
             setError('');
         } catch (error) {
             console.error('Error fetching force delivery data:', error);
@@ -254,8 +301,15 @@ const ForceDelivery = () => {
     };
 
     useEffect(() => {
-        fetchForceDeliveryData();
-    }, []);
+        if (searchTerm) {
+            // When searching, load more data to ensure we can filter properly
+            // But still limit to reasonable amount
+            fetchForceDeliveryData(1, false);
+        } else {
+            // Normal pagination - load only current page
+            fetchForceDeliveryData(currentPage, false);
+        }
+    }, [currentPage, searchTerm]);
 
     // Filter data based on search term
     const filteredData = useMemo(() => {
@@ -298,20 +352,24 @@ const ForceDelivery = () => {
         setCurrentPage(1);
     }, [searchTerm]);
 
-    // Calculate pagination based on filtered data
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    // Calculate pagination based on filtered data (for search) or fetched data (for normal pagination)
+    const displayData = searchTerm ? filteredData : data;
+    const calculatedTotalPages = searchTerm 
+        ? Math.ceil(filteredData.length / itemsPerPage)
+        : Math.ceil(totalCount / itemsPerPage);
+    
     const startIndex = (currentPage - 1) * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const paginatedData = useMemo(() => {
-        return filteredData.slice(startIndex, endIndex);
-    }, [filteredData, startIndex, endIndex]);
+        return displayData.slice(startIndex, endIndex);
+    }, [displayData, startIndex, endIndex]);
 
     // Reset to page 1 when filtered data changes
     useEffect(() => {
-        if (filteredData.length > 0 && currentPage > totalPages) {
+        if (searchTerm && filteredData.length > 0 && currentPage > calculatedTotalPages) {
             setCurrentPage(1);
         }
-    }, [filteredData.length, totalPages, currentPage]);
+    }, [searchTerm, filteredData.length, calculatedTotalPages, currentPage]);
 
     const handlePreviousPage = () => {
         if (currentPage > 1) {
@@ -320,8 +378,12 @@ const ForceDelivery = () => {
     };
 
     const handleNextPage = () => {
-        if (currentPage < totalPages) {
+        if (currentPage < calculatedTotalPages) {
             setCurrentPage(currentPage + 1);
+            // If we're near the end and have more data, preload next page
+            if (!searchTerm && currentPage === Math.ceil(data.length / itemsPerPage) - 1 && hasMoreData) {
+                fetchForceDeliveryData(currentPage + 1, false);
+            }
         }
     };
 
@@ -406,15 +468,22 @@ const ForceDelivery = () => {
         try {
             const token = localStorage.getItem('adminToken');
             
+            // Determine the correct endpoint based on source
+            const isCustomerBooking = selectedOrder.source === 'customerbooking';
+            const endpoint = isCustomerBooking 
+                ? '/api/admin/customerbookings/force-delivery'
+                : '/api/admin/tracking/force-delivery';
+            const idFieldName = isCustomerBooking ? 'bookingId' : 'trackingId';
+            
             // Create FormData for file upload
             const submitFormData = new FormData();
-            submitFormData.append('trackingId', selectedOrder._id);
+            submitFormData.append(idFieldName, selectedOrder._id);
             submitFormData.append('personName', formData.personName.trim());
             submitFormData.append('vehicleType', formData.vehicleType);
             submitFormData.append('vehicleNumber', formData.vehicleNumber.trim());
             submitFormData.append('podFile', formData.podFile);
 
-            const response = await fetch('/api/admin/tracking/force-delivery', {
+            const response = await fetch(endpoint, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -443,10 +512,12 @@ const ForceDelivery = () => {
             });
 
             // Refresh list after successful submission - order will be hidden as it's now delivered
-            await fetchForceDeliveryData();
+            await fetchForceDeliveryData(currentPage);
             
-            // Reset to page 1 if current page becomes empty
-            setCurrentPage(1);
+            // If current page becomes empty and we're not on page 1, go to previous page
+            if (data.length <= 1 && currentPage > 1) {
+                setCurrentPage(currentPage - 1);
+            }
         } catch (error: any) {
             console.error('Error submitting force delivery form:', error);
             toast({
@@ -475,7 +546,7 @@ const ForceDelivery = () => {
                             </div>
                         </div>
                         <Button
-                            onClick={fetchForceDeliveryData}
+                            onClick={() => fetchForceDeliveryData(currentPage)}
                             disabled={loading}
                             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
                         >
@@ -508,7 +579,7 @@ const ForceDelivery = () => {
                         {searchTerm && (
                             <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <span>
-                                    {filteredData.length} of {data.length} orders
+                                    {filteredData.length} of {totalCount} orders
                                 </span>
                                 <Button
                                     variant="outline"
@@ -529,10 +600,10 @@ const ForceDelivery = () => {
                         <div className="flex items-center gap-2">
                             <Package className="h-4 w-4 text-gray-600" />
                             <h3 className="font-semibold text-gray-800">
-                                Orders ({searchTerm ? filteredData.length : data.length})
+                                Orders ({searchTerm ? filteredData.length : totalCount})
                             </h3>
                             <span className="text-xs text-gray-500 ml-2">
-                                (Booked, Received, Pickup, Assigned, In Transit, Reached Hub)
+                                (From Trackings & Customer Bookings - Any status except delivered)
                             </span>
                         </div>
                     </div>
@@ -553,7 +624,7 @@ const ForceDelivery = () => {
                                 <span className="text-sm text-gray-400 mt-1">
                                     {searchTerm 
                                         ? 'Try adjusting your search terms'
-                                        : 'No orders with status: booked, received, pickup, assigned, intransit, or reached-hub'
+                                        : 'No orders found (excluding delivered status)'
                                     }
                                 </span>
                             </div>
@@ -563,6 +634,7 @@ const ForceDelivery = () => {
                                     <TableHeader>
                                         <TableRow className="border-b border-gray-200">
                                             <TableHead className="font-medium text-gray-700 py-3 px-4">Consignment No.</TableHead>
+                                            <TableHead className="font-medium text-gray-700 py-3 px-4">Source</TableHead>
                                             <TableHead className="font-medium text-gray-700 py-3 px-4">Receiver Name</TableHead>
                                             <TableHead className="font-medium text-gray-700 py-3 px-4">Destination</TableHead>
                                             <TableHead className="font-medium text-gray-700 py-3 px-4">Status</TableHead>
@@ -581,6 +653,18 @@ const ForceDelivery = () => {
                                                     {item.bookingReference && item.bookingReference !== item.consignmentNumber?.toString() && (
                                                         <div className="text-xs text-gray-500">{item.bookingReference}</div>
                                                     )}
+                                                </TableCell>
+                                                <TableCell className="py-3 px-4">
+                                                    <Badge 
+                                                        variant="outline" 
+                                                        className={`text-xs ${
+                                                            item.source === 'customerbooking' 
+                                                                ? 'bg-purple-50 text-purple-700 border-purple-200' 
+                                                                : 'bg-blue-50 text-blue-700 border-blue-200'
+                                                        }`}
+                                                    >
+                                                        {item.source === 'customerbooking' ? 'Customer Booking' : 'Tracking'}
+                                                    </Badge>
                                                 </TableCell>
                                                 <TableCell className="py-3 px-4">
                                                     <span className="text-sm text-gray-900">
@@ -640,12 +724,17 @@ const ForceDelivery = () => {
                 </div>
 
                 {/* Pagination */}
-                {!loading && filteredData.length > 0 && totalPages > 1 && (
+                {!loading && displayData.length > 0 && calculatedTotalPages > 1 && (
                     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
                         <div className="flex justify-between items-center">
                             <div className="text-sm text-gray-600">
-                                Showing {startIndex + 1} to {Math.min(endIndex, filteredData.length)} of {filteredData.length} orders
-                                {searchTerm && ` (${data.length} total)`}
+                                Showing {startIndex + 1} to {Math.min(endIndex, displayData.length)} of {searchTerm ? displayData.length : totalCount} orders
+                                {searchTerm && ` (filtered from ${totalCount} total)`}
+                                {!searchTerm && (
+                                    <span className="text-xs text-gray-500 ml-2">
+                                        (Tracking: {trackingTotalCount}, Customer Bookings: {bookingTotalCount})
+                                    </span>
+                                )}
                             </div>
                             <div className="flex items-center gap-2">
                                 <Button
@@ -654,18 +743,20 @@ const ForceDelivery = () => {
                                     disabled={currentPage === 1 || loading}
                                     className="px-3 py-1 h-8 text-sm"
                                 >
+                                    <ChevronLeft className="h-4 w-4 mr-1" />
                                     Previous
                                 </Button>
                                 <span className="text-sm text-gray-600 px-2">
-                                    Page {currentPage} of {totalPages}
+                                    Page {currentPage} of {calculatedTotalPages}
                                 </span>
                                 <Button
                                     variant="outline"
                                     onClick={handleNextPage}
-                                    disabled={currentPage === totalPages || loading}
+                                    disabled={currentPage >= calculatedTotalPages || loading}
                                     className="px-3 py-1 h-8 text-sm"
                                 >
                                     Next
+                                    <ChevronRight className="h-4 w-4 ml-1" />
                                 </Button>
                             </div>
                         </div>

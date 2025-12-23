@@ -38,7 +38,7 @@ interface ShipmentData {
     city: string;
     state: string;
   };
-  status: 'booked' | 'received_at_ocl' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'cancelled';
+  status: 'booked' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'cancelled';
   bookingDate: string;
 }
 
@@ -48,7 +48,6 @@ interface CorporateTrackingProps {
 
 type CorporateTrackingStepKey =
   | "booked"
-  | "received_at_ocl"
   | "in_transit"
   | "out_for_delivery"
   | "delivered";
@@ -160,16 +159,16 @@ const mapTrackingStatusToComponentStatus = (trackingStatus: string | undefined |
   const normalized = trackingStatus.toLowerCase();
   const statusMap: Record<string, ShipmentData['status']> = {
     'booked': 'booked',
-    'picked': 'received_at_ocl',
-    'pickup': 'received_at_ocl',
-    'picked_up': 'received_at_ocl',
-    'received': 'received_at_ocl',
-    'assigned': 'in_transit',
-    'courierboy': 'in_transit',
+    'picked': 'booked',
+    'pickup': 'booked',
+    'picked_up': 'booked',
+    'received': 'booked',
+    'assigned': 'booked',
+    'courierboy': 'booked',
     'in_transit': 'in_transit',
     'intransit': 'in_transit',
     'reached-hub': 'in_transit',
-    'assigned_completed': 'in_transit',
+    'assigned_completed': 'booked',
     'ofp': 'out_for_delivery',
     'out_for_delivery': 'out_for_delivery',
     'delivered': 'delivered',
@@ -287,7 +286,6 @@ const CorporateTracking: React.FC<CorporateTrackingProps> = ({ isDarkMode }) => 
   const trackerSteps = useMemo<TrackerStep[]>(
     () => [
       { key: "booked", title: "Booked", icon: ShoppingCart },
-      { key: "received_at_ocl", title: "Received at OCL", icon: Home },
       { key: "in_transit", title: "In Transit", icon: Truck },
       { key: "out_for_delivery", title: "Out for Delivery", icon: Navigation },
       { key: "delivered", title: "Delivered", icon: CheckCircle },
@@ -304,7 +302,6 @@ const CorporateTracking: React.FC<CorporateTrackingProps> = ({ isDarkMode }) => 
 
   const statusToStepMap: Record<string, TrackerStep["key"]> = {
     'booked': 'booked',
-    'received_at_ocl': 'received_at_ocl',
     'in_transit': 'in_transit',
     'out_for_delivery': 'out_for_delivery',
     'delivered': 'delivered',
@@ -652,14 +649,6 @@ const CorporateTracking: React.FC<CorporateTrackingProps> = ({ isDarkMode }) => 
           return false;
         }
 
-        // Received at OCL: hide scan status 1
-        if (
-          detail.key === "received_at_ocl" &&
-          (label === "scan status 1" || label.includes("scan status 1"))
-        ) {
-          return false;
-        }
-
         // In transit: hide movement updates
         if (
           detail.key === "in_transit" &&
@@ -994,10 +983,6 @@ const CorporateTracking: React.FC<CorporateTrackingProps> = ({ isDarkMode }) => 
               light: 'bg-blue-50/80 border-blue-100',
               dark: 'bg-blue-950/30 border-blue-800/40'
             },
-            'received_at_ocl': {
-              light: 'bg-purple-50/80 border-purple-100',
-              dark: 'bg-purple-950/30 border-purple-800/40'
-            },
             'in_transit': {
               light: 'bg-amber-50/80 border-amber-100',
               dark: 'bg-amber-950/30 border-amber-800/40'
@@ -1201,10 +1186,6 @@ const CorporateTracking: React.FC<CorporateTrackingProps> = ({ isDarkMode }) => 
               light: 'bg-blue-50/80 border-blue-100',
               dark: 'bg-blue-950/30 border-blue-800/40'
             },
-            'received_at_ocl': {
-              light: 'bg-purple-50/80 border-purple-100',
-              dark: 'bg-purple-950/30 border-purple-800/40'
-            },
             'in_transit': {
               light: 'bg-amber-50/80 border-amber-100',
               dark: 'bg-amber-950/30 border-amber-800/40'
@@ -1391,7 +1372,6 @@ const CorporateTracking: React.FC<CorporateTrackingProps> = ({ isDarkMode }) => 
               >
                 <SelectItem value="all">All statuses</SelectItem>
                 <SelectItem value="booked">Booked</SelectItem>
-                <SelectItem value="received_at_ocl">Received at OCL</SelectItem>
                 <SelectItem value="in_transit">In Transit</SelectItem>
                 <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
                 <SelectItem value="delivered">Delivered</SelectItem>

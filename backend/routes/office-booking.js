@@ -113,7 +113,8 @@ router.post('/create', async (req, res) => {
       onlineCustomerId,
       paymentInfo = {},
       detailsData = {},
-      invoiceValue = ''
+      invoiceValue = '',
+      currentStatus = 'booked' // Accept currentStatus from request, default to 'booked'
     } = req.body;
 
     // Validate required fields
@@ -282,7 +283,7 @@ router.post('/create', async (req, res) => {
       bookingReference: bookingReference,
       consignmentNumber,
       status: 'pending',
-      currentStatus: 'booked', // Set initial tracking status to 'booked'
+      currentStatus: currentStatus === 'picked' ? 'picked' : 'booked', // Use currentStatus from request
       BookedAt: new Date(), // Record booking timestamp
       onlineCustomerId: onlineCustomerId || null,
       paymentStatus: normalizedPayment.paymentStatus,
@@ -300,6 +301,38 @@ router.post('/create', async (req, res) => {
     // Create booking
     const booking = new CustomerBooking(bookingData);
     await booking.save();
+
+    // If currentStatus is 'picked', populate booked, pickup, and picked data
+    if (currentStatus === 'picked') {
+      const now = new Date();
+      
+      // Add booked entry to statusHistory
+      if (!booking.statusHistory) {
+        booking.statusHistory = [];
+      }
+      booking.statusHistory.push({
+        status: 'booked',
+        timestamp: booking.BookedAt || now,
+        notes: 'Shipment booked'
+      });
+
+      // Add pickup entry to statusHistory
+      booking.statusHistory.push({
+        status: 'pickup',
+        timestamp: now,
+        notes: 'Shipment picked up'
+      });
+
+      // Add picked entry to statusHistory
+      booking.statusHistory.push({
+        status: 'picked',
+        timestamp: now,
+        notes: 'Shipment picked'
+      });
+
+      // Save the updated booking with status history
+      await booking.save();
+    }
 
     // Record consignment usage for tracking (same pattern as BookNow.tsx)
     try {

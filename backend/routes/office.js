@@ -210,7 +210,30 @@ router.post('/signup', async (req, res) => {
         consignmentManagement: true,
         courierRequests: false,
         invoiceManagement: false,
-        userManagement: false
+        userManagement: false,
+        baggingManagement: false,
+        receivedOrders: false,
+        manageOrders: false,
+        medicineSettlement: false,
+        trackMedicine: false,
+        arrivedMedicine: false,
+        customerPricing: false,
+        singleQuotation: false,
+        courierBoyManagement: false,
+        assignCourierBoy: false,
+        customerComplain: false,
+        delivery: false,
+        forceDelivery: false,
+        undelivered: false,
+        medicineBooking: false,
+        customerBooking: false,
+        allBookings: false,
+        officeBooking: false,
+        corporateBooking: false,
+        coldCalling: false,
+        payments: false,
+        collectPayment: false,
+        salesForm: false
       }
     });
     
@@ -322,7 +345,27 @@ router.post('/google-auth', async (req, res) => {
           userManagement: false,
           baggingManagement: false,
           receivedOrders: false,
-          manageOrders: false
+          manageOrders: false,
+          medicineSettlement: false,
+          trackMedicine: false,
+          arrivedMedicine: false,
+          customerPricing: false,
+          singleQuotation: false,
+          courierBoyManagement: false,
+          assignCourierBoy: false,
+          customerComplain: false,
+          delivery: false,
+          forceDelivery: false,
+          undelivered: false,
+          medicineBooking: false,
+          customerBooking: false,
+          allBookings: false,
+          officeBooking: false,
+          corporateBooking: false,
+          coldCalling: false,
+          payments: false,
+          collectPayment: false,
+          salesForm: false
         }
       });
       

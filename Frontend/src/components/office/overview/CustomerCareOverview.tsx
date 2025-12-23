@@ -184,10 +184,10 @@ const determineRoute = (pincode: string): RouteKey => {
 
 const sanitizePincode = (value: string) => value.replace(/\D/g, '').slice(0, 6);
 
-type ShipmentStatus = 'booked' | 'received_at_ocl' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'cancelled';
+type ShipmentStatus = 'booked' | 'in_transit' | 'out_for_delivery' | 'delivered' | 'cancelled';
 type StatusCounts = Record<ShipmentStatus, number>;
 
-const STATUS_KEYS: ShipmentStatus[] = ['booked', 'received_at_ocl', 'in_transit', 'out_for_delivery', 'delivered', 'cancelled'];
+const STATUS_KEYS: ShipmentStatus[] = ['booked', 'in_transit', 'out_for_delivery', 'delivered', 'cancelled'];
 
 const createEmptyStatusCounts = (): StatusCounts =>
   STATUS_KEYS.reduce((acc, key) => {
@@ -205,18 +205,17 @@ const normalizeStatus = (rawStatus?: string | null): ShipmentStatus => {
   // Map tracking status from database to simplified component status format
   const statusMap: Record<string, ShipmentStatus> = {
     'booked': 'booked',
-    'picked': 'received_at_ocl',
-    'pickup': 'received_at_ocl',
-    'picked_up': 'received_at_ocl',
-    'received': 'received_at_ocl',
-    'received_at_ocl': 'received_at_ocl',
-    'assigned': 'in_transit',
-    'partially_assigned': 'in_transit',
-    'courierboy': 'in_transit',
+    'picked': 'booked',
+    'pickup': 'booked',
+    'picked_up': 'booked',
+    'received': 'booked',
+    'assigned': 'booked',
+    'partially_assigned': 'booked',
+    'courierboy': 'booked',
     'in_transit': 'in_transit',
     'intransit': 'in_transit',
     'reached-hub': 'in_transit',
-    'assigned_completed': 'in_transit',
+    'assigned_completed': 'booked',
     'ofp': 'out_for_delivery',
     'out_for_delivery': 'out_for_delivery',
     'delivered': 'delivered',
@@ -245,7 +244,6 @@ const statusTint: Record<string, string> = {
   picked_up: 'bg-amber-100 text-amber-700',
   in_transit: 'bg-cyan-100 text-cyan-700',
   failed: 'bg-rose-100 text-rose-700',
-  received_at_ocl: 'bg-purple-100 text-purple-700',
   out_for_delivery: 'bg-blue-100 text-blue-700',
   cancelled: 'bg-rose-100 text-rose-700',
 };

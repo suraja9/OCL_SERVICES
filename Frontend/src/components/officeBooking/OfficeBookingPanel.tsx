@@ -864,6 +864,9 @@ const OfficeBookingPanel: React.FC = () => {
       };
       const calculatedPrice = parsePrice(bookingState.detailsData.grandTotal);
 
+      // Determine currentStatus from paymentData (default to 'booked' if not set)
+      const currentStatus = bookingState.paymentData.currentStatus || 'booked';
+
       // Build booking payload matching BookNow structure exactly
       const bookingPayload = {
         origin: {
@@ -909,6 +912,7 @@ const OfficeBookingPanel: React.FC = () => {
         originAddressInfo: bookingState.originAddressInfo,
         destinationAddressInfo: bookingState.destinationAddressInfo,
         onlineCustomerId: null, // Office bookings don't have online customer ID
+        currentStatus: currentStatus, // Pass currentStatus to backend
         paymentInfo: {
           // If Cash is selected, payment status is 'paid', otherwise 'pending'
           paymentStatus: bookingState.paymentData.modeOfPayment === 'Cash' ? 'paid' : 'pending',

@@ -847,8 +847,8 @@ const AdminDashboard = () => {
       </aside>
 
       {/* Main content */}
-      <main className={`${isSidebarCollapsed ? 'ml-16 w-[calc(100vw-4rem)]' : 'ml-64 w-[calc(100vw-16rem)]'} h-screen overflow-y-auto p-3 transition-all duration-300 ease-in-out`}>
-        <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(16,24,40,0.08)] border border-gray-100 p-4 min-h-[calc(100vh-3rem)]">
+      <main className={`${isSidebarCollapsed ? 'ml-16 w-[calc(100vw-4rem)]' : 'ml-64 w-[calc(100vw-16rem)]'} h-screen overflow-y-auto p-4 transition-all duration-300 ease-in-out`}>
+        <div className="bg-white rounded-2xl shadow-[0_20px_50px_rgba(16,24,40,0.08)] border border-gray-100 p-6 min-h-[calc(100vh-3rem)]">
           {error && (
             <Alert variant="destructive" className="mb-6 bg-red-50/80 border-0">
               <AlertDescription>{error}</AlertDescription>
@@ -857,89 +857,89 @@ const AdminDashboard = () => {
 
           {/* Overview - Complete Dashboard Design */}
           {activeTab === 'overview' && stats && (
-            <div className="space-y-1.5">
+            <div className="space-y-6">
               {/* Header */}
-              <div className="flex items-center justify-between mb-1 pb-1.5 border-b border-gray-200">
-                <div className="flex items-center gap-2">
-                  <h1 className="text-lg font-bold text-gray-900">Dashboard Overview</h1>
-                  <span className="text-xs text-gray-500">Welcome, {adminInfo?.name}</span>
+              <div className="flex items-center justify-between pb-4 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+                  <span className="text-sm text-gray-500">Welcome, {adminInfo?.name}</span>
                   <Badge variant="outline" className="text-xs">{adminInfo?.role}</Badge>
-                    </div>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => fetchDashboardStats()}
-                  className="h-7 px-2 text-xs"
+                  className="h-8 px-3 text-xs"
                 >
-                  <Activity className="h-3 w-3 mr-1" />
+                  <Activity className="h-3 w-3 mr-2" />
                   Refresh
                 </Button>
-                </div>
+              </div>
 
-              {/* Compact Main Stats Row */}
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
+              {/* Main Stats Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {/* Total Bookings */}
                 <div 
-                  className="col-span-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-2.5 text-white shadow-sm hover:shadow transition-all cursor-pointer"
+                  className="col-span-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setActiveTab('allBookings')}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <Package className="h-4 w-4 opacity-90" />
-                    <Badge className="bg-white/20 text-white border-0 text-[10px] px-1.5 py-0">All</Badge>
-                    </div>
-                  <div className="text-2xl font-bold leading-tight mb-1">
+                  <div className="flex items-center justify-between mb-2">
+                    <Package className="h-5 w-5 opacity-90" />
+                    <Badge className="bg-white/20 text-white border-0 text-xs px-2 py-0.5">All</Badge>
+                  </div>
+                  <div className="text-3xl font-bold leading-tight mb-2">
                     {((stats.bookings?.medicine?.total || 0) + (stats.bookings?.customer?.total || 0) + (stats.bookings?.corporate?.total || 0)) || 0}
                   </div>
-                  <div className="flex gap-2 text-[10px] text-blue-100">
-                    <span>M:{stats.bookings?.medicine?.total || 0}</span>
-                    <span>C:{stats.bookings?.customer?.total || 0}</span>
-                    <span>Co:{stats.bookings?.corporate?.total || 0}</span>
+                  <div className="flex gap-3 text-xs text-blue-100">
+                    <span>M: {stats.bookings?.medicine?.total || 0}</span>
+                    <span>C: {stats.bookings?.customer?.total || 0}</span>
+                    <span>Co: {stats.bookings?.corporate?.total || 0}</span>
                   </div>
                 </div>
 
                 {/* Active Corporates */}
                 <div 
-                  className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-2.5 text-white shadow-sm hover:shadow transition-all cursor-pointer"
+                  className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setActiveTab('corporateManagement')}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <Building2 className="h-4 w-4 opacity-90" />
-                    <Badge className="bg-white/20 text-white border-0 text-[10px] px-1.5 py-0">{stats.corporates?.active || 0}</Badge>
-                    </div>
-                  <div className="text-xl font-bold leading-tight">{stats.corporates?.active || 0}</div>
-                  <p className="text-[10px] text-purple-100 mt-0.5">of {stats.corporates?.total || 0} total</p>
-                  {stats.corporates?.pending > 0 && (
-                    <p className="text-[9px] text-purple-200 mt-0.5">{stats.corporates.pending} pending</p>
-                  )}
+                  <div className="flex items-center justify-between mb-2">
+                    <Building2 className="h-5 w-5 opacity-90" />
+                    <Badge className="bg-white/20 text-white border-0 text-xs px-2 py-0.5">{stats.corporates?.active || 0}</Badge>
                   </div>
+                  <div className="text-2xl font-bold leading-tight mb-1">{stats.corporates?.active || 0}</div>
+                  <p className="text-xs text-purple-100">of {stats.corporates?.total || 0} total</p>
+                  {stats.corporates?.pending > 0 && (
+                    <p className="text-xs text-purple-200 mt-1">{stats.corporates.pending} pending</p>
+                  )}
+                </div>
 
                 {/* Courier Boys */}
                 <div 
-                  className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-lg p-2.5 text-white shadow-sm hover:shadow transition-all cursor-pointer"
+                  className="bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-xl p-4 text-white shadow-md hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setActiveTab('courierBoyManagement')}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <Bike className="h-4 w-4 opacity-90" />
-                    <Badge className="bg-white/20 text-white border-0 text-[10px] px-1.5 py-0">{stats.courierBoys?.verified || 0}</Badge>
+                  <div className="flex items-center justify-between mb-2">
+                    <Bike className="h-5 w-5 opacity-90" />
+                    <Badge className="bg-white/20 text-white border-0 text-xs px-2 py-0.5">{stats.courierBoys?.verified || 0}</Badge>
                   </div>
-                  <div className="text-xl font-bold leading-tight">{stats.courierBoys?.verified || 0}</div>
-                  <p className="text-[10px] text-cyan-100 mt-0.5">of {stats.courierBoys?.total || 0} total</p>
-                  <p className="text-[9px] text-cyan-200 mt-0.5">{stats.courierBoys?.approved || 0} approved</p>
+                  <div className="text-2xl font-bold leading-tight mb-1">{stats.courierBoys?.verified || 0}</div>
+                  <p className="text-xs text-cyan-100">of {stats.courierBoys?.total || 0} total</p>
+                  <p className="text-xs text-cyan-200 mt-1">{stats.courierBoys?.approved || 0} approved</p>
                 </div>
 
                 {/* Complaints */}
                 <div 
-                  className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm hover:shadow transition-all cursor-pointer"
+                  className="bg-white rounded-xl p-4 border border-gray-200 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setActiveTab('customerComplain')}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <MessageCircle className="h-4 w-4 text-orange-600" />
+                  <div className="flex items-center justify-between mb-2">
+                    <MessageCircle className="h-5 w-5 text-orange-600" />
                     {stats.complaints?.open > 0 && (
-                      <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{stats.complaints.open}</Badge>
+                      <Badge variant="destructive" className="text-xs px-2 py-0.5">{stats.complaints.open}</Badge>
                     )}
-                    </div>
-                  <div className="text-xl font-bold text-gray-900 leading-tight">{stats.complaints?.total || 0}</div>
-                  <div className="flex gap-1 text-[9px] text-gray-600 mt-0.5">
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 leading-tight mb-1">{stats.complaints?.total || 0}</div>
+                  <div className="flex gap-2 text-xs text-gray-600">
                     <span className="text-orange-600">{stats.complaints?.open || 0}O</span>
                     <span>•</span>
                     <span className="text-blue-600">{stats.complaints?.inProgress || 0}P</span>
@@ -950,30 +950,30 @@ const AdminDashboard = () => {
 
                 {/* Coloaders */}
                 <div 
-                  className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm hover:shadow transition-all cursor-pointer"
+                  className="bg-white rounded-xl p-4 border border-gray-200 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setActiveTab('coloaderManagement')}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <Truck className="h-4 w-4 text-indigo-600" />
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">{stats.coloaders?.active || 0}</Badge>
+                  <div className="flex items-center justify-between mb-2">
+                    <Truck className="h-5 w-5 text-indigo-600" />
+                    <Badge variant="outline" className="text-xs px-2 py-0.5">{stats.coloaders?.active || 0}</Badge>
                   </div>
-                  <div className="text-xl font-bold text-gray-900 leading-tight">{stats.coloaders?.total || 0}</div>
-                  <p className="text-[9px] text-indigo-600 mt-0.5">{stats.coloaders?.approved || 0} approved</p>
-              </div>
+                  <div className="text-2xl font-bold text-gray-900 leading-tight mb-1">{stats.coloaders?.total || 0}</div>
+                  <p className="text-xs text-indigo-600">{stats.coloaders?.approved || 0} approved</p>
+                </div>
 
                 {/* Invoices */}
                 <div 
-                  className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm hover:shadow transition-all cursor-pointer"
+                  className="bg-white rounded-xl p-4 border border-gray-200 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setActiveTab('invoiceManagement')}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <FileText className="h-4 w-4 text-emerald-600" />
+                  <div className="flex items-center justify-between mb-2">
+                    <FileText className="h-5 w-5 text-emerald-600" />
                     {stats.invoices?.pending > 0 && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{stats.invoices.pending}</Badge>
-                          )}
-                        </div>
-                  <div className="text-xl font-bold text-gray-900 leading-tight">{stats.invoices?.total || 0}</div>
-                  <div className="flex gap-1 text-[9px] text-gray-600 mt-0.5">
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5">{stats.invoices.pending}</Badge>
+                    )}
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 leading-tight mb-1">{stats.invoices?.total || 0}</div>
+                  <div className="flex gap-2 text-xs text-gray-600">
                     <span className="text-green-600">{stats.invoices?.paid || 0}P</span>
                     <span>•</span>
                     <span className="text-orange-600">{stats.invoices?.pending || 0}U</span>
@@ -981,32 +981,32 @@ const AdminDashboard = () => {
                 </div>
               </div>
 
-              {/* Compact Second Row - More Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-1.5">
+              {/* Second Row - More Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {/* Employees */}
                 <div 
-                  className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm hover:shadow transition-all cursor-pointer"
+                  className="bg-white rounded-xl p-4 border border-gray-200 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setActiveTab('employeeManagement')}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <Users className="h-4 w-4 text-teal-600" />
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">{stats.employees?.active || 0}</Badge>
-                        </div>
-                  <div className="text-xl font-bold text-gray-900 leading-tight">{stats.employees?.total || 0}</div>
-                  <p className="text-[9px] text-gray-500 mt-0.5">Employees</p>
-                      </div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Users className="h-5 w-5 text-teal-600" />
+                    <Badge variant="outline" className="text-xs px-2 py-0.5">{stats.employees?.active || 0}</Badge>
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 leading-tight mb-1">{stats.employees?.total || 0}</div>
+                  <p className="text-xs text-gray-500">Employees</p>
+                </div>
 
                 {/* Forms */}
                 <div 
-                  className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm hover:shadow transition-all cursor-pointer"
+                  className="bg-white rounded-xl p-4 border border-gray-200 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setActiveTab('addressforms')}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <FileText className="h-4 w-4 text-blue-600" />
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">{stats.forms.completionRate}%</Badge>
+                  <div className="flex items-center justify-between mb-2">
+                    <FileText className="h-5 w-5 text-blue-600" />
+                    <Badge variant="outline" className="text-xs px-2 py-0.5">{stats.forms.completionRate}%</Badge>
                   </div>
-                  <div className="text-xl font-bold text-gray-900 leading-tight">{stats.forms.total}</div>
-                  <div className="flex gap-1 text-[9px] text-gray-600 mt-0.5">
+                  <div className="text-2xl font-bold text-gray-900 leading-tight mb-1">{stats.forms.total}</div>
+                  <div className="flex gap-2 text-xs text-gray-600">
                     <span className="text-green-600">{stats.forms.completed}C</span>
                     <span>•</span>
                     <span className="text-orange-600">{stats.forms.incomplete}I</span>
@@ -1014,30 +1014,30 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Tracking */}
-                <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-1">
-                    <Search className="h-4 w-4 text-green-600" />
-                    <span className="text-[10px] text-gray-500">Total</span>
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <Search className="h-5 w-5 text-green-600" />
+                    <span className="text-xs text-gray-500">Total</span>
                   </div>
-                  <div className="text-xl font-bold text-gray-900 leading-tight">{stats.trackings?.total || 0}</div>
-                  <div className="flex gap-1 text-[9px] text-gray-600 mt-0.5">
+                  <div className="text-2xl font-bold text-gray-900 leading-tight mb-1">{stats.trackings?.total || 0}</div>
+                  <div className="flex gap-2 text-xs text-gray-600">
                     {stats.trackings?.byStatus?.slice(0, 2).map((s, i) => (
-                      <span key={i}>{s._id?.substring(0, 3) || 'N/A'}:{s.count}</span>
+                      <span key={i}>{s._id?.substring(0, 3) || 'N/A'}: {s.count}</span>
                     ))}
                   </div>
                 </div>
 
                 {/* Pincodes */}
                 <div 
-                  className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm hover:shadow transition-all cursor-pointer"
+                  className="bg-white rounded-xl p-4 border border-gray-200 shadow-md hover:shadow-lg transition-all cursor-pointer"
                   onClick={() => setActiveTab('pincodes')}
                 >
-                  <div className="flex items-center justify-between mb-1">
-                    <MapPin className="h-4 w-4 text-purple-600" />
-                    <span className="text-[10px] text-gray-500">Coverage</span>
+                  <div className="flex items-center justify-between mb-2">
+                    <MapPin className="h-5 w-5 text-purple-600" />
+                    <span className="text-xs text-gray-500">Coverage</span>
                   </div>
-                  <div className="text-xl font-bold text-gray-900 leading-tight">{stats.pincodes.total}</div>
-                  <div className="flex gap-1 text-[9px] text-gray-600 mt-0.5">
+                  <div className="text-2xl font-bold text-gray-900 leading-tight mb-1">{stats.pincodes.total}</div>
+                  <div className="flex gap-2 text-xs text-gray-600">
                     <span>{stats.pincodes.states}S</span>
                     <span>•</span>
                     <span>{stats.pincodes.cities}C</span>
@@ -1045,132 +1045,132 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* Online Customers */}
-                <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-1">
-                    <Users className="h-4 w-4 text-blue-600" />
-                    <span className="text-[10px] text-gray-500">Online</span>
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <Users className="h-5 w-5 text-blue-600" />
+                    <span className="text-xs text-gray-500">Online</span>
                   </div>
-                  <div className="text-xl font-bold text-gray-900 leading-tight">{stats.onlineCustomers?.total || 0}</div>
-                  <p className="text-[9px] text-gray-500 mt-0.5">Customers</p>
+                  <div className="text-2xl font-bold text-gray-900 leading-tight mb-1">{stats.onlineCustomers?.total || 0}</div>
+                  <p className="text-xs text-gray-500">Customers</p>
                 </div>
 
                 {/* Courier Requests */}
-                <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-1">
-                    <Truck className="h-4 w-4 text-orange-600" />
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <div className="flex items-center justify-between mb-2">
+                    <Truck className="h-5 w-5 text-orange-600" />
                     {stats.courierRequests?.pending > 0 && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{stats.courierRequests.pending}</Badge>
+                      <Badge variant="secondary" className="text-xs px-2 py-0.5">{stats.courierRequests.pending}</Badge>
                     )}
                   </div>
-                  <div className="text-xl font-bold text-gray-900 leading-tight">{stats.courierRequests?.total || 0}</div>
-                  <p className="text-[9px] text-gray-500 mt-0.5">Requests</p>
+                  <div className="text-2xl font-bold text-gray-900 leading-tight mb-1">{stats.courierRequests?.total || 0}</div>
+                  <p className="text-xs text-gray-500">Requests</p>
                 </div>
               </div>
 
-              {/* Compact Third Row - Activity & Actions */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5">
-                {/* Recent Bookings - Compact */}
-                <div className="lg:col-span-2 bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <h3 className="text-sm font-semibold text-gray-900">Recent Bookings</h3>
+              {/* Third Row - Activity & Actions */}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                {/* Recent Bookings */}
+                <div className="lg:col-span-2 bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-semibold text-gray-900">Recent Bookings</h3>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setActiveTab('allBookings')}
-                      className="h-6 px-2 text-xs"
+                      className="h-8 px-3 text-xs"
                     >
                       View All →
                     </Button>
                   </div>
-                  <div className="space-y-1 max-h-44 overflow-y-auto">
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
                     {stats.bookings?.recent?.medicine?.slice(0, 5).map((booking: any, idx: number) => (
                       booking && (
-                        <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
+                        <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
                           <div className="flex items-center gap-2">
-                            <Package className="h-3 w-3 text-purple-600" />
+                            <Package className="h-4 w-4 text-purple-600" />
                             <span className="font-medium text-gray-900">{booking.consignmentNumber || 'N/A'}</span>
                             <span className="text-gray-400">•</span>
                             <span className="text-gray-500">Medicine</span>
                           </div>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{booking.status || 'Unknown'}</Badge>
+                          <Badge variant="outline" className="text-xs px-2 py-0.5">{booking.status || 'Unknown'}</Badge>
                         </div>
                       )
                     ))}
                     {stats.bookings?.recent?.customer?.slice(0, 3).map((booking: any, idx: number) => (
                       booking && (
-                        <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded text-xs">
+                        <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
                           <div className="flex items-center gap-2">
-                            <Package className="h-3 w-3 text-blue-600" />
+                            <Package className="h-4 w-4 text-blue-600" />
                             <span className="font-medium text-gray-900">{booking.consignmentNumber || 'N/A'}</span>
                             <span className="text-gray-400">•</span>
                             <span className="text-gray-500">Customer</span>
                           </div>
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{booking.status || 'Unknown'}</Badge>
+                          <Badge variant="outline" className="text-xs px-2 py-0.5">{booking.status || 'Unknown'}</Badge>
                         </div>
                       )
                     ))}
                     {(!stats.bookings?.recent?.medicine?.length && !stats.bookings?.recent?.customer?.length) && (
-                      <p className="text-xs text-gray-500 text-center py-2">No recent bookings</p>
+                      <p className="text-sm text-gray-500 text-center py-4">No recent bookings</p>
                     )}
                   </div>
                 </div>
 
-                {/* Quick Actions - Compact */}
-                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-2.5 text-white shadow-sm">
-                  <h3 className="text-sm font-semibold mb-1.5">Quick Actions</h3>
-                  <div className="grid grid-cols-2 gap-1">
+                {/* Quick Actions */}
+                <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl p-4 text-white shadow-md">
+                  <h3 className="text-base font-semibold mb-4">Quick Actions</h3>
+                  <div className="grid grid-cols-2 gap-2">
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-7 text-xs px-2"
+                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-9 text-xs px-3"
                       onClick={() => setActiveTab('medicineBooking')}
                     >
-                      <Package className="h-3 w-3 mr-1" />
+                      <Package className="h-4 w-4 mr-1.5" />
                       Medicine
                     </Button>
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-7 text-xs px-2"
+                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-9 text-xs px-3"
                       onClick={() => setActiveTab('customerBooking')}
                     >
-                      <Users className="h-3 w-3 mr-1" />
+                      <Users className="h-4 w-4 mr-1.5" />
                       Customer
                     </Button>
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-7 text-xs px-2"
+                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-9 text-xs px-3"
                       onClick={() => setActiveTab('corporateBooking')}
                     >
-                      <Building2 className="h-3 w-3 mr-1" />
+                      <Building2 className="h-4 w-4 mr-1.5" />
                       Corporate
                     </Button>
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-7 text-xs px-2"
+                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-9 text-xs px-3"
                       onClick={() => setActiveTab('receivedOrders')}
                     >
-                      <Inbox className="h-3 w-3 mr-1" />
+                      <Inbox className="h-4 w-4 mr-1.5" />
                       Received
                     </Button>
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-7 text-xs px-2"
+                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-9 text-xs px-3"
                       onClick={() => setActiveTab('assignCourierBoy')}
                     >
-                      <Bike className="h-3 w-3 mr-1" />
+                      <Bike className="h-4 w-4 mr-1.5" />
                       Courier
                     </Button>
                     <Button
                       variant="secondary"
                       size="sm"
-                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-7 text-xs px-2"
+                      className="bg-white/10 hover:bg-white/20 text-white border-0 h-9 text-xs px-3"
                       onClick={() => setActiveTab('delivery')}
                     >
-                      <Truck className="h-3 w-3 mr-1" />
+                      <Truck className="h-4 w-4 mr-1.5" />
                       Delivery
                     </Button>
                   </div>
@@ -1178,12 +1178,12 @@ const AdminDashboard = () => {
               </div>
 
               {/* Charts and Analytics Row */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-1.5">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 {/* Booking Trends Chart */}
-                <div className="lg:col-span-2 bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <div className="flex items-center justify-between mb-1.5">
-                    <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-blue-600" />
+                <div className="lg:col-span-2 bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-base font-semibold text-gray-900 flex items-center gap-2">
+                      <TrendingUp className="h-5 w-5 text-blue-600" />
                       Booking Trends (Last 6 Months)
                     </h3>
                   </div>
@@ -1195,7 +1195,7 @@ const AdminDashboard = () => {
                           color: "#3b82f6",
                         },
                       }}
-                      className="h-[180px] w-full"
+                      className="h-[200px] w-full"
                     >
                       <LineChart data={stats.bookings.monthlyTrend.map((item: any) => ({
                         month: `${item._id?.month || 0}/${item._id?.year || 0}`,
@@ -1222,16 +1222,16 @@ const AdminDashboard = () => {
                       </LineChart>
                     </ChartContainer>
                   ) : (
-                    <div className="h-[180px] flex items-center justify-center text-xs text-gray-400">
+                    <div className="h-[200px] flex items-center justify-center text-sm text-gray-400">
                       No trend data available
-                          </div>
+                    </div>
                   )}
-                        </div>
+                </div>
 
                 {/* Booking Type Distribution */}
-                <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1.5 flex items-center gap-2">
-                    <BarChart3 className="h-4 w-4 text-purple-600" />
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-purple-600" />
                     Booking Types
                   </h3>
                   <ChartContainer
@@ -1268,11 +1268,11 @@ const AdminDashboard = () => {
               </div>
 
               {/* Status Distribution and Top States */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Tracking Status Distribution */}
-                <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1.5 flex items-center gap-2">
-                    <Search className="h-4 w-4 text-green-600" />
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <Search className="h-5 w-5 text-green-600" />
                     Tracking Status Distribution
                   </h3>
                   {stats.trackings?.byStatus && stats.trackings.byStatus.length > 0 ? (
@@ -1283,7 +1283,7 @@ const AdminDashboard = () => {
                           { label: s._id || 'Unknown', color: `hsl(${i * 60}, 70%, 50%)` }
                         ])
                       )}
-                      className="h-[160px] w-full"
+                      className="h-[200px] w-full"
                     >
                       <BarChart data={stats.trackings.byStatus.slice(0, 5).map((s: any) => ({
                         status: (s._id || 'Unknown').substring(0, 15),
@@ -1307,100 +1307,100 @@ const AdminDashboard = () => {
                       </BarChart>
                     </ChartContainer>
                   ) : (
-                    <div className="h-[160px] flex items-center justify-center text-xs text-gray-400">
+                    <div className="h-[200px] flex items-center justify-center text-sm text-gray-400">
                       No tracking data available
                     </div>
                   )}
                 </div>
 
                 {/* Top States */}
-                <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-1.5 flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-purple-600" />
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <h3 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                    <MapPin className="h-5 w-5 text-purple-600" />
                     Top States by Activity
                   </h3>
-                  <div className="space-y-1.5 max-h-[160px] overflow-y-auto">
+                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
                     {stats.recent?.topStates && stats.recent.topStates.length > 0 ? (
                       stats.recent.topStates.map((state: any, idx: number) => (
-                        <div key={idx} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                          <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold">
+                        <div key={idx} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-7 h-7 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold">
                               {idx + 1}
                             </div>
                             <span className="text-sm font-medium text-gray-900">{state._id}</span>
                           </div>
                           <Badge variant="outline" className="text-xs">
-                          {state.count} forms
-                        </Badge>
+                            {state.count} forms
+                          </Badge>
                         </div>
                       ))
                     ) : (
-                      <p className="text-xs text-gray-400 text-center py-4">No state data available</p>
+                      <p className="text-sm text-gray-400 text-center py-6">No state data available</p>
                     )}
                   </div>
                 </div>
               </div>
 
               {/* Detailed Status Breakdown */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Medicine Bookings Status */}
-                <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <h3 className="text-xs font-semibold text-gray-900 mb-1.5 flex items-center gap-1">
-                    <Package className="h-3 w-3 text-purple-600" />
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Package className="h-4 w-4 text-purple-600" />
                     Medicine Status
                   </h3>
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {stats.bookings?.medicine?.byStatus?.slice(0, 5).map((status: any, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between text-xs">
+                      <div key={idx} className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 truncate flex-1">{status._id || 'Unknown'}</span>
-                        <span className="font-bold text-gray-900 ml-2">{status.count}</span>
+                        <span className="font-bold text-gray-900 ml-3">{status.count}</span>
                       </div>
                     ))}
                     {(!stats.bookings?.medicine?.byStatus || stats.bookings.medicine.byStatus.length === 0) && (
-                      <p className="text-xs text-gray-400 text-center py-2">No data</p>
+                      <p className="text-sm text-gray-400 text-center py-4">No data</p>
                     )}
                   </div>
                 </div>
 
                 {/* Customer Bookings Status */}
-                <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <h3 className="text-xs font-semibold text-gray-900 mb-1.5 flex items-center gap-1">
-                    <Users className="h-3 w-3 text-blue-600" />
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Users className="h-4 w-4 text-blue-600" />
                     Customer Status
                   </h3>
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     {stats.bookings?.customer?.byStatus?.slice(0, 5).map((status: any, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between text-xs">
+                      <div key={idx} className="flex items-center justify-between text-sm">
                         <span className="text-gray-600 truncate flex-1">{status._id || 'Unknown'}</span>
-                        <span className="font-bold text-gray-900 ml-2">{status.count}</span>
+                        <span className="font-bold text-gray-900 ml-3">{status.count}</span>
                       </div>
                     ))}
                     {(!stats.bookings?.customer?.byStatus || stats.bookings.customer.byStatus.length === 0) && (
-                      <p className="text-xs text-gray-400 text-center py-2">No data</p>
+                      <p className="text-sm text-gray-400 text-center py-4">No data</p>
                     )}
                   </div>
                 </div>
 
                 {/* Complaint Categories */}
-                <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <h3 className="text-xs font-semibold text-gray-900 mb-1.5 flex items-center gap-1">
-                    <MessageCircle className="h-3 w-3 text-orange-600" />
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <MessageCircle className="h-4 w-4 text-orange-600" />
                     Complaints
                   </h3>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Total</span>
                       <span className="font-bold text-gray-900">{stats.complaints?.total || 0}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-orange-600">Open</span>
                       <span className="font-bold text-orange-600">{stats.complaints?.open || 0}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-blue-600">In Progress</span>
                       <span className="font-bold text-blue-600">{stats.complaints?.inProgress || 0}</span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-green-600">Resolved</span>
                       <span className="font-bold text-green-600">{stats.complaints?.resolved || 0}</span>
                     </div>
@@ -1408,31 +1408,31 @@ const AdminDashboard = () => {
                 </div>
 
                 {/* System Health */}
-                <div className="bg-white rounded-lg p-2.5 border border-gray-200 shadow-sm">
-                  <h3 className="text-xs font-semibold text-gray-900 mb-1.5 flex items-center gap-1">
-                    <Activity className="h-3 w-3 text-green-600" />
+                <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-md">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-green-600" />
                     System Health
                   </h3>
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between text-xs">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Forms Completion</span>
-                      <Badge variant={stats.forms.completionRate >= 80 ? "default" : "secondary"} className="text-[10px]">
+                      <Badge variant={stats.forms.completionRate >= 80 ? "default" : "secondary"} className="text-xs">
                         {stats.forms.completionRate}%
                       </Badge>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Active Corporates</span>
                       <span className="font-bold text-gray-900">
                         {stats.corporates?.active || 0}/{stats.corporates?.total || 0}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Verified Couriers</span>
                       <span className="font-bold text-gray-900">
                         {stats.courierBoys?.verified || 0}/{stats.courierBoys?.total || 0}
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
+                    <div className="flex items-center justify-between text-sm">
                       <span className="text-gray-600">Active Coloaders</span>
                       <span className="font-bold text-gray-900">
                         {stats.coloaders?.active || 0}/{stats.coloaders?.total || 0}

@@ -93,7 +93,8 @@ export const DEFAULT_UPLOAD_DATA = {
 export const DEFAULT_PAYMENT_DATA = {
   paymentType: '' as const,
   modeOfPayment: '',
-  amount: ''
+  amount: '',
+  currentStatus: 'booked' as const
 };
 
 export const DEFAULT_BILL_DATA = {

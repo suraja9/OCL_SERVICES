@@ -304,10 +304,91 @@ app.post("/api/form", async (req, res) => {
       
       // Debug: Log the sanitized invoice number
       console.log('🔍 DEBUG - Sanitized invoice number:', sanitizedUploadData.invoiceNumber);
-      updateData.originData = originData;
-      updateData.destinationData = destinationData;
-      updateData.shipmentData = shipmentData;
+      
+      // Map originData and destinationData - ensure all fields match CustomerBooking structure
+      const mappedOriginData = {
+        ...originData,
+        birthday: originData?.birthday || '',
+        anniversary: originData?.anniversary || '',
+        website: originData?.website || '',
+        otherAlternateNumber: originData?.otherAlternateNumber || '',
+        email: originData?.email || '',
+        companyName: originData?.companyName || '',
+        flatBuilding: originData?.flatBuilding || '',
+        landmark: originData?.landmark || '',
+        area: originData?.area || '',
+        gstNumber: originData?.gstNumber || '',
+        alternateNumbers: originData?.alternateNumbers || [],
+        addressType: originData?.addressType || 'HOME'
+      };
+      
+      const mappedDestinationData = {
+        ...destinationData,
+        birthday: destinationData?.birthday || '',
+        anniversary: destinationData?.anniversary || '',
+        website: destinationData?.website || '',
+        otherAlternateNumber: destinationData?.otherAlternateNumber || '',
+        email: destinationData?.email || '',
+        companyName: destinationData?.companyName || '',
+        flatBuilding: destinationData?.flatBuilding || '',
+        landmark: destinationData?.landmark || '',
+        area: destinationData?.area || '',
+        gstNumber: destinationData?.gstNumber || '',
+        alternateNumbers: destinationData?.alternateNumbers || [],
+        addressType: destinationData?.addressType || 'HOME'
+      };
+      
+      // Map shipmentData to match CustomerBooking.shipment structure exactly
+      const mappedShipmentData = {
+        natureOfConsignment: shipmentData?.natureOfConsignment || '',
+        insurance: shipmentData?.insurance || '',
+        riskCoverage: shipmentData?.riskCoverage || '',
+        // Map totalPackages to packagesCount (CustomerBooking uses packagesCount)
+        packagesCount: shipmentData?.totalPackages || shipmentData?.packagesCount || '',
+        materials: shipmentData?.materials || uploadData?.materials || '',
+        others: shipmentData?.others || '',
+        description: shipmentData?.description || shipmentData?.specialInstructions || '',
+        declaredValue: shipmentData?.declaredValue || '',
+        // Map weight fields - use actualWeight if available, otherwise weight string
+        weight: shipmentData?.weight || (shipmentData?.actualWeight ? String(shipmentData.actualWeight) : ''),
+        // Map dimensions - extract from dimensions array or use individual fields
+        length: shipmentData?.length || (shipmentData?.dimensions?.[0]?.length ? String(shipmentData.dimensions[0].length) : ''),
+        width: shipmentData?.width || (shipmentData?.dimensions?.[0]?.breadth ? String(shipmentData.dimensions[0].breadth) : ''),
+        height: shipmentData?.height || (shipmentData?.dimensions?.[0]?.height ? String(shipmentData.dimensions[0].height) : ''),
+        // Insurance fields
+        insuranceCompanyName: shipmentData?.insuranceCompanyName || '',
+        insurancePolicyNumber: shipmentData?.insurancePolicyNumber || '',
+        insurancePolicyDate: shipmentData?.insurancePolicyDate || '',
+        insuranceValidUpto: shipmentData?.insuranceValidUpto || '',
+        insurancePremiumAmount: shipmentData?.insurancePremiumAmount || '',
+        insuranceDocumentName: shipmentData?.insuranceDocumentName || '',
+        insuranceDocument: shipmentData?.insuranceDocument || '',
+        // Declaration document fields
+        declarationDocumentName: shipmentData?.declarationDocumentName || '',
+        declarationDocument: shipmentData?.declarationDocument || '',
+        // Keep office-specific fields for backward compatibility
+        services: shipmentData?.services || '',
+        mode: shipmentData?.mode || '',
+        packagingType: shipmentData?.packagingType || '',
+        dimensions: shipmentData?.dimensions || [],
+        actualWeight: shipmentData?.actualWeight || null,
+        volumetricWeight: shipmentData?.volumetricWeight || null,
+        chargeableWeight: shipmentData?.chargeableWeight || null,
+        totalPackages: shipmentData?.totalPackages || shipmentData?.packagesCount || '',
+        specialInstructions: shipmentData?.specialInstructions || ''
+      };
+      
+      updateData.originData = mappedOriginData;
+      updateData.destinationData = mappedDestinationData;
+      updateData.shipmentData = mappedShipmentData;
       updateData.uploadData = sanitizedUploadData;
+      
+      // Map package images to root level (EXACT MATCH with CustomerBooking)
+      updateData.packageImages = normalizeToStringArray(uploadData?.packageImages || []);
+      
+      // Map shipping mode and service type to root level (EXACT MATCH with CustomerBooking)
+      updateData.shippingMode = shipmentData?.mode || shipmentData?.shippingMode || '';
+      updateData.serviceType = shipmentData?.services || shipmentData?.serviceType || '';
       
       // Use the consignment number provided by the frontend (from office user assignment)
       // If no consignment number provided, fall back to timestamp-based generation

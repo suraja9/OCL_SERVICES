@@ -5,7 +5,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CreditCard, DollarSign, Truck, Building, CheckCircle, Check, ArrowLeft, ArrowRight } from 'lucide-react';
+import { CreditCard, DollarSign, Truck, Building, CheckCircle, Check, ArrowLeft, ArrowRight, Package, PackageCheck } from 'lucide-react';
 import { PaymentData } from '../types';
 import { cn } from '@/lib/utils';
 
@@ -38,8 +38,12 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     onChange({ ...data, paymentType: deliveryType });
   };
 
+  const handleCurrentStatusChange = (status: 'booked' | 'picked') => {
+    onChange({ ...data, currentStatus: status });
+  };
+
   const isStepValid = () => {
-    return !!(data.modeOfPayment && data.paymentType);
+    return !!(data.modeOfPayment && data.paymentType && data.currentStatus);
   };
 
   const paymentOptions = [
@@ -68,6 +72,19 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     }
   ];
 
+  const currentStatusOptions = [
+    {
+      value: 'booked' as const,
+      title: 'Booked',
+      icon: Package
+    },
+    {
+      value: 'picked' as const,
+      title: 'Picked',
+      icon: PackageCheck
+    }
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -76,8 +93,9 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     >
       {/* Payment Method Selection */}
       <div className="space-y-3 sm:space-y-4">
-        
-
+        <h3 className={cn('text-base font-semibold', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+          Payment Mode
+        </h3>
         <div className="grid gap-2 grid-cols-1 md:grid-cols-2">
           {paymentOptions.map((option) => {
             const isSelected = data.modeOfPayment === option.value;
@@ -128,8 +146,9 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
       {/* Delivery Type Section */}
       <div className="space-y-3 sm:space-y-4">
-        
-
+        <h3 className={cn('text-base font-semibold', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+          Delivery Type
+        </h3>
         <div className="grid gap-2 grid-cols-1 md:grid-cols-2">
           {deliveryOptions.map((option) => {
             const isSelected = data.paymentType === option.value;
@@ -139,6 +158,59 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                 type="button"
                 key={option.value}
                 onClick={() => handleDeliveryTypeChange(option.value)}
+                className={cn(
+                  'w-full text-left rounded-xl border px-3 py-3 transition-all duration-200 focus:outline-none',
+                  isSelected
+                    ? isDarkMode
+                      ? 'border-blue-500 bg-blue-500/20 shadow-[0_8px_24px_rgba(59,130,246,0.25)]'
+                      : 'border-blue-500 bg-blue-50/80 shadow-[0_8px_24px_rgba(59,130,246,0.15)]'
+                    : isDarkMode
+                      ? 'border-slate-700/60 bg-slate-800/50 hover:border-blue-500/50 hover:bg-blue-500/10'
+                      : 'border-slate-200 hover:border-blue-400/60 hover:bg-blue-50/60'
+                )}
+              >
+                <div className="flex items-start gap-2">
+                  <div
+                    className={cn(
+                      'mt-0.5 flex h-4 w-4 items-center justify-center rounded-full border text-xs transition-colors',
+                      isSelected
+                        ? 'border-blue-500 bg-blue-500 text-white'
+                        : isDarkMode
+                          ? 'border-slate-600 bg-slate-700/50 text-transparent'
+                          : 'border-slate-300 text-transparent'
+                    )}
+                  >
+                    <Check className="h-2.5 w-2.5" />
+                  </div>
+                  <div className="flex-1">
+                    <p className={cn('text-sm font-semibold', isDarkMode ? 'text-slate-100' : 'text-slate-900')}>
+                      <span className="inline-flex items-center gap-1.5">
+                        {IconComponent && <IconComponent className={cn('h-3.5 w-3.5', isDarkMode ? 'text-blue-400' : 'text-blue-500')} />}
+                        {option.title}
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Current Status Section */}
+      <div className="space-y-3 sm:space-y-4">
+        <h3 className={cn('text-base font-semibold', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+          CurrentStatus
+        </h3>
+        <div className="grid gap-2 grid-cols-1 md:grid-cols-2">
+          {currentStatusOptions.map((option) => {
+            const isSelected = data.currentStatus === option.value;
+            const IconComponent = option.icon;
+            return (
+              <button
+                type="button"
+                key={option.value}
+                onClick={() => handleCurrentStatusChange(option.value)}
                 className={cn(
                   'w-full text-left rounded-xl border px-3 py-3 transition-all duration-200 focus:outline-none',
                   isSelected
