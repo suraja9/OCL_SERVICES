@@ -18,6 +18,22 @@ import {
   Package,
   X,
   Menu,
+  DollarSign,
+  Tag,
+  CheckCircle,
+  Building2,
+  Bike,
+  Search,
+  Inbox,
+  MessageCircle,
+  PhoneCall,
+  CreditCard,
+  Zap,
+  ClipboardList,
+  TrendingUp,
+  TrendingDown,
+  ArrowUpRight,
+  ArrowDownRight,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import BookingPanel from '@/components/BookingPanel';
@@ -43,6 +59,26 @@ import ReceivedConsignment from '@/components/admin/ReceivedConsignment';
 import AssignColoader from '@/components/admin/AssignColoader';
 import CustomerCareOverview from '@/components/office/overview/CustomerCareOverview';
 import AccountsOverview from '@/components/office/overview/AccountsOverview';
+import MedicineSettlement from '@/components/admin/MedicineSettlement';
+import TrackMedicine from '@/components/admin/TrackMedicine';
+import ArrivedMedicine from '@/components/admin/ArrivedMedicine';
+import CustomerPricing from '@/components/admin/CustomerPricing';
+import SingleQuotation from '@/components/admin/SingleQuotation';
+import CourierBoyManagement from '@/components/admin/CourierBoyManagement';
+import AssignCourierBoy from '@/components/admin/AssignCourierBoy';
+import CustomerComplain from '@/components/admin/CustomerComplain';
+import Delivery from '@/components/admin/Delivery';
+import ForceDelivery from '@/components/admin/ForceDelivery';
+import Undelivered from '@/components/admin/Undelivered';
+import MedicineBookingOverview from '@/components/admin/medicineBookingOverview';
+import CustomerBookingOverview from '@/components/admin/CustomerBookingOverview';
+import AllBookings from '@/components/admin/AllBookings';
+import { OfficeBookingPanel } from '@/components/officeBooking';
+import CorporateBooking from '@/components/admin/CorporateBooking';
+import ColdCalling from '@/components/admin/ColdCalling';
+import PaymentStatus from '@/components/admin/PaymentStatus';
+import CollectPayment from '@/components/admin/CollectPayment';
+import SalesForm from '@/components/admin/SalesForm';
 
 interface PermissionSet {
   dashboard: boolean;
@@ -66,6 +102,26 @@ interface PermissionSet {
   baggingManagement: boolean;
   receivedOrders: boolean;
   manageOrders: boolean;
+  medicineSettlement: boolean;
+  trackMedicine: boolean;
+  arrivedMedicine: boolean;
+  customerPricing: boolean;
+  singleQuotation: boolean;
+  courierBoyManagement: boolean;
+  assignCourierBoy: boolean;
+  customerComplain: boolean;
+  delivery: boolean;
+  forceDelivery: boolean;
+  undelivered: boolean;
+  medicineBooking: boolean;
+  customerBooking: boolean;
+  allBookings: boolean;
+  officeBooking: boolean;
+  corporateBooking: boolean;
+  coldCalling: boolean;
+  payments: boolean;
+  collectPayment: boolean;
+  salesForm: boolean;
 }
 
 interface OfficeUser {
@@ -126,34 +182,47 @@ const OfficeDashboard = () => {
         
         // Ensure the new permission fields exist in the user data
         // This handles cases where existing users don't have the new fields
+        const defaultPermissions = {
+          coloaderRegistration: false,
+          baggingManagement: false,
+          receivedOrders: false,
+          manageOrders: false,
+          medicineSettlement: false,
+          trackMedicine: false,
+          arrivedMedicine: false,
+          customerPricing: false,
+          singleQuotation: false,
+          courierBoyManagement: false,
+          assignCourierBoy: false,
+          customerComplain: false,
+          delivery: false,
+          forceDelivery: false,
+          undelivered: false,
+          medicineBooking: false,
+          customerBooking: false,
+          allBookings: false,
+          officeBooking: false,
+          corporateBooking: false,
+          coldCalling: false,
+          payments: false,
+          collectPayment: false,
+          salesForm: false,
+        };
+
         if (userData.permissions) {
-          if (userData.permissions.coloaderRegistration === undefined) {
-            userData.permissions.coloaderRegistration = false;
-          }
-          if (userData.permissions.baggingManagement === undefined) {
-            userData.permissions.baggingManagement = false;
-          }
-          if (userData.permissions.receivedOrders === undefined) {
-            userData.permissions.receivedOrders = false;
-          }
-          if (userData.permissions.manageOrders === undefined) {
-            userData.permissions.manageOrders = false;
-          }
+          Object.keys(defaultPermissions).forEach(key => {
+            if (userData.permissions[key] === undefined) {
+              userData.permissions[key] = defaultPermissions[key];
+            }
+          });
         }
         
         if (userData.adminInfo && userData.adminInfo.permissions) {
-          if (userData.adminInfo.permissions.coloaderRegistration === undefined) {
-            userData.adminInfo.permissions.coloaderRegistration = false;
-          }
-          if (userData.adminInfo.permissions.baggingManagement === undefined) {
-            userData.adminInfo.permissions.baggingManagement = false;
-          }
-          if (userData.adminInfo.permissions.receivedOrders === undefined) {
-            userData.adminInfo.permissions.receivedOrders = false;
-          }
-          if (userData.adminInfo.permissions.manageOrders === undefined) {
-            userData.adminInfo.permissions.manageOrders = false;
-          }
+          Object.keys(defaultPermissions).forEach(key => {
+            if (userData.adminInfo.permissions[key] === undefined) {
+              userData.adminInfo.permissions[key] = defaultPermissions[key];
+            }
+          });
         }
         
         setUser(userData);
@@ -262,13 +331,48 @@ const OfficeDashboard = () => {
         const data = await response.json();
         const userData = data.user;
         
-        // Ensure the new permission field exists in the user data
-        if (userData.permissions && userData.permissions.coloaderRegistration === undefined) {
-          userData.permissions.coloaderRegistration = false;
+        // Ensure the new permission fields exist in the user data
+        const defaultPermissions = {
+          coloaderRegistration: false,
+          baggingManagement: false,
+          receivedOrders: false,
+          manageOrders: false,
+          medicineSettlement: false,
+          trackMedicine: false,
+          arrivedMedicine: false,
+          customerPricing: false,
+          singleQuotation: false,
+          courierBoyManagement: false,
+          assignCourierBoy: false,
+          customerComplain: false,
+          delivery: false,
+          forceDelivery: false,
+          undelivered: false,
+          medicineBooking: false,
+          customerBooking: false,
+          allBookings: false,
+          officeBooking: false,
+          corporateBooking: false,
+          coldCalling: false,
+          payments: false,
+          collectPayment: false,
+          salesForm: false,
+        };
+
+        if (userData.permissions) {
+          Object.keys(defaultPermissions).forEach(key => {
+            if (userData.permissions[key] === undefined) {
+              userData.permissions[key] = defaultPermissions[key];
+            }
+          });
         }
         
-        if (userData.adminInfo && userData.adminInfo.permissions && userData.adminInfo.permissions.coloaderRegistration === undefined) {
-          userData.adminInfo.permissions.coloaderRegistration = false;
+        if (userData.adminInfo && userData.adminInfo.permissions) {
+          Object.keys(defaultPermissions).forEach(key => {
+            if (userData.adminInfo.permissions[key] === undefined) {
+              userData.adminInfo.permissions[key] = defaultPermissions[key];
+            }
+          });
         }
         
         permissionVersionRef.current = userData.permissionsUpdatedAt || userData.updatedAt || null;
@@ -792,6 +896,326 @@ const OfficeDashboard = () => {
               </button>
             )}
 
+            {/* Medicine Settlement - only shown when user has access */}
+            {(user?.permissions?.medicineSettlement || user?.adminInfo?.permissions?.medicineSettlement) && (
+              <button
+                onClick={() => setActiveTab('medicineSettlement')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'medicineSettlement'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Medicine Settlement" : ""}
+              >
+                <DollarSign className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Medicine Settlement</span>}
+              </button>
+            )}
+
+            {/* Track Medicine - only shown when user has access */}
+            {(user?.permissions?.trackMedicine || user?.adminInfo?.permissions?.trackMedicine) && (
+              <button
+                onClick={() => setActiveTab('trackMedicine')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'trackMedicine'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Track Medicine" : ""}
+              >
+                <Search className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Track Medicine</span>}
+              </button>
+            )}
+
+            {/* Arrived Medicine - only shown when user has access */}
+            {(user?.permissions?.arrivedMedicine || user?.adminInfo?.permissions?.arrivedMedicine) && (
+              <button
+                onClick={() => setActiveTab('arrivedMedicine')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'arrivedMedicine'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Arrived Medicine" : ""}
+              >
+                <CheckCircle className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Arrived Medicine</span>}
+              </button>
+            )}
+
+            {/* Customer Pricing - only shown when user has access */}
+            {(user?.permissions?.customerPricing || user?.adminInfo?.permissions?.customerPricing) && (
+              <button
+                onClick={() => setActiveTab('customerPricing')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'customerPricing'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Customer Pricing" : ""}
+              >
+                <Tag className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Customer Pricing</span>}
+              </button>
+            )}
+
+            {/* Single Quotation - only shown when user has access */}
+            {(user?.permissions?.singleQuotation || user?.adminInfo?.permissions?.singleQuotation) && (
+              <button
+                onClick={() => setActiveTab('singleQuotation')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'singleQuotation'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Single Quotation" : ""}
+              >
+                <FileText className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Single Quotation</span>}
+              </button>
+            )}
+
+            {/* Courier Boy Management - only shown when user has access */}
+            {(user?.permissions?.courierBoyManagement || user?.adminInfo?.permissions?.courierBoyManagement) && (
+              <button
+                onClick={() => setActiveTab('courierBoyManagement')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'courierBoyManagement'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Courier Boy Management" : ""}
+              >
+                <Bike className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Courier Boy Management</span>}
+              </button>
+            )}
+
+            {/* Assign Courier Boy - only shown when user has access */}
+            {(user?.permissions?.assignCourierBoy || user?.adminInfo?.permissions?.assignCourierBoy) && (
+              <button
+                onClick={() => setActiveTab('assignCourierBoy')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'assignCourierBoy'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Assign Courier Boy" : ""}
+              >
+                <Bike className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Assign Courier Boy</span>}
+              </button>
+            )}
+
+            {/* Customer Complaints - only shown when user has access */}
+            {(user?.permissions?.customerComplain || user?.adminInfo?.permissions?.customerComplain) && (
+              <button
+                onClick={() => setActiveTab('customerComplain')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'customerComplain'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Customer Complaints" : ""}
+              >
+                <MessageCircle className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Customer Complaints</span>}
+              </button>
+            )}
+
+            {/* Delivery - only shown when user has access */}
+            {(user?.permissions?.delivery || user?.adminInfo?.permissions?.delivery) && (
+              <button
+                onClick={() => setActiveTab('delivery')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'delivery'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Delivery" : ""}
+              >
+                <Truck className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Delivery</span>}
+              </button>
+            )}
+
+            {/* Force Delivery - only shown when user has access */}
+            {(user?.permissions?.forceDelivery || user?.adminInfo?.permissions?.forceDelivery) && (
+              <button
+                onClick={() => setActiveTab('forceDelivery')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'forceDelivery'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Force Delivery" : ""}
+              >
+                <Zap className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Force Delivery</span>}
+              </button>
+            )}
+
+            {/* Undelivered - only shown when user has access */}
+            {(user?.permissions?.undelivered || user?.adminInfo?.permissions?.undelivered) && (
+              <button
+                onClick={() => setActiveTab('undelivered')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'undelivered'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Undelivered" : ""}
+              >
+                <X className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Undelivered</span>}
+              </button>
+            )}
+
+            {/* Medicine Booking - only shown when user has access */}
+            {(user?.permissions?.medicineBooking || user?.adminInfo?.permissions?.medicineBooking) && (
+              <button
+                onClick={() => setActiveTab('medicineBooking')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'medicineBooking'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Medicine Booking" : ""}
+              >
+                <Package className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Medicine Booking</span>}
+              </button>
+            )}
+
+            {/* Customer Booking - only shown when user has access */}
+            {(user?.permissions?.customerBooking || user?.adminInfo?.permissions?.customerBooking) && (
+              <button
+                onClick={() => setActiveTab('customerBooking')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'customerBooking'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Customer Booking" : ""}
+              >
+                <Package className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Customer Booking</span>}
+              </button>
+            )}
+
+            {/* All Bookings - only shown when user has access */}
+            {(user?.permissions?.allBookings || user?.adminInfo?.permissions?.allBookings) && (
+              <button
+                onClick={() => setActiveTab('allBookings')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'allBookings'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "All Bookings" : ""}
+              >
+                <ClipboardList className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">All Bookings</span>}
+              </button>
+            )}
+
+            {/* Office Booking - only shown when user has access */}
+            {(user?.permissions?.officeBooking || user?.adminInfo?.permissions?.officeBooking) && (
+              <button
+                onClick={() => setActiveTab('officeBooking')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'officeBooking'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Office Booking" : ""}
+              >
+                <Building2 className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Office Booking</span>}
+              </button>
+            )}
+
+            {/* Corporate Booking - only shown when user has access */}
+            {(user?.permissions?.corporateBooking || user?.adminInfo?.permissions?.corporateBooking) && (
+              <button
+                onClick={() => setActiveTab('corporateBooking')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'corporateBooking'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Corporate Booking" : ""}
+              >
+                <Building2 className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Corporate Booking</span>}
+              </button>
+            )}
+
+            {/* Cold Calling - only shown when user has access */}
+            {(user?.permissions?.coldCalling || user?.adminInfo?.permissions?.coldCalling) && (
+              <button
+                onClick={() => setActiveTab('coldCalling')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'coldCalling'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Cold Calling" : ""}
+              >
+                <PhoneCall className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Cold Calling</span>}
+              </button>
+            )}
+
+            {/* Payment Status - only shown when user has access */}
+            {(user?.permissions?.payments || user?.adminInfo?.permissions?.payments) && (
+              <button
+                onClick={() => setActiveTab('payments')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'payments'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Payment Status" : ""}
+              >
+                <CreditCard className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Payment Status</span>}
+              </button>
+            )}
+
+            {/* Collect Payment - only shown when user has access */}
+            {(user?.permissions?.collectPayment || user?.adminInfo?.permissions?.collectPayment) && (
+              <button
+                onClick={() => setActiveTab('collectPayment')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'collectPayment'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Collect Payment" : ""}
+              >
+                <DollarSign className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Collect Payment</span>}
+              </button>
+            )}
+
+            {/* Sales Form - only shown when user has access */}
+            {(user?.permissions?.salesForm || user?.adminInfo?.permissions?.salesForm) && (
+              <button
+                onClick={() => setActiveTab('salesForm')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'salesForm'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Sales Form" : ""}
+              >
+                <FileText className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Sales Form</span>}
+              </button>
+            )}
+
             {/* Admin-only sections */}
             {user?.adminInfo && user?.adminInfo?.role === 'super_admin' && (
               <button
@@ -1086,6 +1510,146 @@ const OfficeDashboard = () => {
             <div className="space-y-6">
               
               <AssignColoader />
+            </div>
+          )}
+
+          {/* Medicine Settlement */}
+          {activeTab === 'medicineSettlement' && (
+            <div className="space-y-6">
+              <MedicineSettlement />
+            </div>
+          )}
+
+          {/* Track Medicine */}
+          {activeTab === 'trackMedicine' && (
+            <div className="space-y-6">
+              <TrackMedicine />
+            </div>
+          )}
+
+          {/* Arrived Medicine */}
+          {activeTab === 'arrivedMedicine' && (
+            <div className="space-y-6">
+              <ArrivedMedicine />
+            </div>
+          )}
+
+          {/* Customer Pricing */}
+          {activeTab === 'customerPricing' && (
+            <div className="space-y-6">
+              <CustomerPricing />
+            </div>
+          )}
+
+          {/* Single Quotation */}
+          {activeTab === 'singleQuotation' && (
+            <div className="space-y-6">
+              <SingleQuotation />
+            </div>
+          )}
+
+          {/* Courier Boy Management */}
+          {activeTab === 'courierBoyManagement' && (
+            <div className="space-y-6">
+              <CourierBoyManagement />
+            </div>
+          )}
+
+          {/* Assign Courier Boy */}
+          {activeTab === 'assignCourierBoy' && (
+            <div className="space-y-6">
+              <AssignCourierBoy />
+            </div>
+          )}
+
+          {/* Customer Complaints */}
+          {activeTab === 'customerComplain' && (
+            <div className="space-y-6">
+              <CustomerComplain />
+            </div>
+          )}
+
+          {/* Delivery */}
+          {activeTab === 'delivery' && (
+            <div className="space-y-6">
+              <Delivery />
+            </div>
+          )}
+
+          {/* Force Delivery */}
+          {activeTab === 'forceDelivery' && (
+            <div className="space-y-6">
+              <ForceDelivery />
+            </div>
+          )}
+
+          {/* Undelivered */}
+          {activeTab === 'undelivered' && (
+            <div className="space-y-6">
+              <Undelivered />
+            </div>
+          )}
+
+          {/* Medicine Booking */}
+          {activeTab === 'medicineBooking' && (
+            <div className="space-y-6">
+              <MedicineBookingOverview />
+            </div>
+          )}
+
+          {/* Customer Booking */}
+          {activeTab === 'customerBooking' && (
+            <div className="space-y-6">
+              <CustomerBookingOverview />
+            </div>
+          )}
+
+          {/* All Bookings */}
+          {activeTab === 'allBookings' && (
+            <div className="space-y-6">
+              <AllBookings />
+            </div>
+          )}
+
+          {/* Office Booking */}
+          {activeTab === 'officeBooking' && (
+            <div className="space-y-6">
+              <OfficeBookingPanel />
+            </div>
+          )}
+
+          {/* Corporate Booking */}
+          {activeTab === 'corporateBooking' && (
+            <div className="space-y-6">
+              <CorporateBooking />
+            </div>
+          )}
+
+          {/* Cold Calling */}
+          {activeTab === 'coldCalling' && (
+            <div className="space-y-6">
+              <ColdCalling />
+            </div>
+          )}
+
+          {/* Payment Status */}
+          {activeTab === 'payments' && (
+            <div className="space-y-6">
+              <PaymentStatus />
+            </div>
+          )}
+
+          {/* Collect Payment */}
+          {activeTab === 'collectPayment' && (
+            <div className="space-y-6">
+              <CollectPayment />
+            </div>
+          )}
+
+          {/* Sales Form */}
+          {activeTab === 'salesForm' && (
+            <div className="space-y-6">
+              <SalesForm />
             </div>
           )}
 

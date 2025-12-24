@@ -40,6 +40,18 @@ interface OriginStepProps {
   onAddAlternateNumber: () => void;
   onRemoveAlternateNumber: (index: number) => void;
   isDarkMode?: boolean;
+  // OTP verification props (for sender only)
+  showOriginOtpVerification?: boolean;
+  originOtpDigits?: string[];
+  originOtpVerified?: boolean;
+  originOtpError?: string | null;
+  isOriginOtpSending?: boolean;
+  onOriginOtpDigitChange?: (index: number, value: string) => void;
+  onOriginOtpKeyDown?: (index: number, e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onResendOriginOtp?: () => void;
+  onCloseOriginOtp?: () => void;
+  // GST input props
+  onOriginGstChange?: (value: string) => void;
 }
 
 const OriginStep: React.FC<OriginStepProps> = ({
@@ -68,7 +80,17 @@ const OriginStep: React.FC<OriginStepProps> = ({
   onAlternateNumberChange,
   onAddAlternateNumber,
   onRemoveAlternateNumber,
-  isDarkMode = false
+  isDarkMode = false,
+  showOriginOtpVerification = false,
+  originOtpDigits = Array(6).fill(''),
+  originOtpVerified = false,
+  originOtpError = null,
+  isOriginOtpSending = false,
+  onOriginOtpDigitChange,
+  onOriginOtpKeyDown,
+  onResendOriginOtp,
+  onCloseOriginOtp,
+  onOriginGstChange
 }) => {
   const addressTypeOptions = ['HOME', 'OFFICE', 'OTHERS'];
   const getDigitInputId = (index: number) => `origin-modal-digit-${index}`;
@@ -127,6 +149,16 @@ const OriginStep: React.FC<OriginStepProps> = ({
       }, 100);
     }
   }, [phoneModalOpen]);
+
+  // Auto-focus first OTP input when OTP modal opens
+  useEffect(() => {
+    if (showOriginOtpVerification) {
+      setTimeout(() => {
+        const firstInput = document.getElementById('origin-otp-digit-0');
+        firstInput?.focus();
+      }, 100);
+    }
+  }, [showOriginOtpVerification]);
 
   return (
     <div className={cn('space-y-6', isDarkMode ? 'text-slate-100' : '')}>
@@ -219,6 +251,123 @@ const OriginStep: React.FC<OriginStepProps> = ({
         </DialogContent>
       </Dialog>
 
+      {/* OTP Verification Modal (for sender when phone not found) */}
+      {showOriginOtpVerification && (
+        <Dialog open={showOriginOtpVerification} onOpenChange={() => {}}>
+          <DialogContent 
+            className={cn(
+              "w-[98%] sm:w-full max-w-xl p-0 rounded-[15px] [&>button]:hidden overflow-hidden",
+              isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
+            )}
+            onInteractOutside={(e) => e.preventDefault()}
+            onEscapeKeyDown={(e) => e.preventDefault()}
+          >
+            <div className="p-3 sm:p-5">
+              <DialogTitle className={cn(
+                "text-sm sm:text-base font-bold mb-3 sm:mb-4 text-center sm:text-left",
+                isDarkMode ? "text-slate-100" : "text-slate-900"
+              )}>
+                Verify Sender Phone Number
+              </DialogTitle>
+              
+              <div className={cn(
+                "text-xs sm:text-sm mb-4",
+                isDarkMode ? "text-slate-300" : "text-slate-600"
+              )}>
+                We've sent an OTP to <span className="font-semibold">+91 {originMobileDigits.join('')}</span>
+              </div>
+
+              {/* OTP Input Fields */}
+              <div className="flex items-center justify-center gap-2 sm:gap-3 mb-4">
+                {originOtpDigits.map((digit, index) => (
+                  <input
+                    key={index}
+                    id={`origin-otp-digit-${index}`}
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/\D/g, '');
+                      if (value.length <= 1 && onOriginOtpDigitChange) {
+                        onOriginOtpDigitChange(index, value);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      if (onOriginOtpKeyDown) {
+                        onOriginOtpKeyDown(index, e);
+                      }
+                    }}
+                    onFocus={(e) => e.target.select()}
+                    className={cn(
+                      "h-10 sm:h-12 w-10 sm:w-12 rounded-lg border-2 text-center text-base sm:text-lg font-bold transition-all duration-200",
+                      "focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200",
+                      isDarkMode
+                        ? digit
+                          ? "border-blue-500 bg-blue-500/20 text-blue-200"
+                          : "border-slate-600 bg-slate-800/80 text-slate-300 focus:ring-blue-500/30"
+                        : digit
+                          ? "border-blue-500 bg-blue-50 text-blue-700"
+                          : "border-slate-300 bg-white text-slate-700"
+                    )}
+                  />
+                ))}
+              </div>
+
+              {/* Error Message */}
+              {originOtpError && (
+                <div className={cn(
+                  "text-xs sm:text-sm mb-3 text-center",
+                  isDarkMode ? "text-red-400" : "text-red-600"
+                )}>
+                  {originOtpError}
+                </div>
+              )}
+
+              {/* Resend OTP */}
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onResendOriginOtp) {
+                      onResendOriginOtp();
+                    }
+                  }}
+                  disabled={isOriginOtpSending}
+                  className={cn(
+                    "text-xs sm:text-sm font-medium transition-colors",
+                    isOriginOtpSending
+                      ? isDarkMode ? "text-slate-500 cursor-not-allowed" : "text-slate-400 cursor-not-allowed"
+                      : isDarkMode
+                        ? "text-blue-400 hover:text-blue-300"
+                        : "text-blue-600 hover:text-blue-700"
+                  )}
+                >
+                  {isOriginOtpSending ? 'Sending...' : "Didn't receive OTP? Resend"}
+                </button>
+              </div>
+
+              {/* Go Back Button */}
+              {onCloseOriginOtp && (
+                <button
+                  type="button"
+                  onClick={onCloseOriginOtp}
+                  className={cn(
+                    "w-full px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                    isDarkMode
+                      ? "bg-slate-700 hover:bg-slate-600 text-slate-200"
+                      : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+                  )}
+                >
+                  Go Back to Phone Number
+                </button>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+
       {/* Form Modal */}
       <Dialog open={formModalOpen} onOpenChange={() => {}}>
         <DialogContent 
@@ -274,7 +423,13 @@ const OriginStep: React.FC<OriginStepProps> = ({
                   <FloatingInput
                     label="GST No. :"
                     value={data.gstNumber}
-                    onChange={(value) => onChange({ ...data, gstNumber: value })}
+                    onChange={(value) => {
+                      if (onOriginGstChange) {
+                        onOriginGstChange(value);
+                      } else {
+                        onChange({ ...data, gstNumber: value });
+                      }
+                    }}
                     isDarkMode={isDarkMode}
                   />
                   <FloatingInput

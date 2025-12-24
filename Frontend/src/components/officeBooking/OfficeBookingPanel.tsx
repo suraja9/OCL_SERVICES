@@ -53,6 +53,13 @@ const OfficeBookingPanel: React.FC = () => {
   const [showPreviewInModal, setShowPreviewInModal] = useState(false);
   const [selectedRecordIndex, setSelectedRecordIndex] = useState(0);
   
+  // OTP verification states (for sender/origin only)
+  const [showOriginOtpVerification, setShowOriginOtpVerification] = useState(false);
+  const [originOtpDigits, setOriginOtpDigits] = useState<string[]>(Array(6).fill(''));
+  const [originOtpVerified, setOriginOtpVerified] = useState(false);
+  const [originOtpError, setOriginOtpError] = useState<string | null>(null);
+  const [isOriginOtpSending, setIsOriginOtpSending] = useState(false);
+  
   // Areas for pincode
   const [originAreas, setOriginAreas] = useState<string[]>([]);
   const [destinationAreas, setDestinationAreas] = useState<string[]>([]);
@@ -319,27 +326,146 @@ const OfficeBookingPanel: React.FC = () => {
           setShowPreviewInModal(true);
         }, 300);
       } else {
-        // No results found - open blank form
+        // No results found
+        if (type === 'origin') {
+          // For sender: Show OTP verification
+          setPhoneSearchResults([]);
+          setPhoneSearchModalOpen({ type: null, phoneNumber: '' });
+          setPhoneModalOpen({ type: null });
+          setShowOriginOtpVerification(true);
+          setOriginOtpVerified(false);
+          setOriginOtpError(null);
+          // Send OTP automatically
+          setTimeout(() => {
+            sendOriginOTP(phoneNumber);
+          }, 100);
+        } else {
+          // For receiver: Open blank form (no OTP)
+          setPhoneSearchResults([]);
+          setPhoneSearchModalOpen({ type: null, phoneNumber: '' });
+          setPhoneModalOpen({ type: null });
+          setTimeout(() => {
+            setFormModalOpen({ type });
+          }, 300);
+        }
+      }
+    } catch (error) {
+      console.error('Error searching by phone number:', error);
+      if (type === 'origin') {
+        // For sender: Show OTP verification on error
         setPhoneSearchResults([]);
         setPhoneSearchModalOpen({ type: null, phoneNumber: '' });
-        // Close phone modal and open form modal
+        setPhoneModalOpen({ type: null });
+        setShowOriginOtpVerification(true);
+        setOriginOtpVerified(false);
+        setOriginOtpError(null);
+        setTimeout(() => {
+          sendOriginOTP(phoneNumber);
+        }, 100);
+      } else {
+        // For receiver: Open blank form on error
+        setPhoneSearchResults([]);
+        setPhoneSearchModalOpen({ type: null, phoneNumber: '' });
         setPhoneModalOpen({ type: null });
         setTimeout(() => {
           setFormModalOpen({ type });
         }, 300);
       }
-    } catch (error) {
-      console.error('Error searching by phone number:', error);
-      // On error, open blank form
-      setPhoneSearchResults([]);
-      setPhoneSearchModalOpen({ type: null, phoneNumber: '' });
-      // Close phone modal and open form modal
-      setPhoneModalOpen({ type: null });
-      setTimeout(() => {
-        setFormModalOpen({ type });
-      }, 300);
     } finally {
       setSearchingPhone(false);
+    }
+  };
+
+  // Send OTP for origin (sender) phone number
+  const sendOriginOTP = async (phoneNumber?: string) => {
+    try {
+      const mobileNumber = phoneNumber || originMobileDigits.filter(digit => digit !== '').join('');
+      
+      if (mobileNumber.length !== 10) {
+        setOriginOtpError('Invalid phone number length. Expected 10 digits.');
+        return;
+      }
+      
+      setIsOriginOtpSending(true);
+      setOriginOtpError(null);
+      
+      const response = await fetch(`${API_BASE}/api/otp/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ phoneNumber: mobileNumber })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log('OTP sent successfully for origin phone:', mobileNumber);
+        setOriginOtpError(null);
+      } else {
+        setOriginOtpError(result.error || 'Failed to send OTP. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      setOriginOtpError('Failed to send OTP. Please try again.');
+    } finally {
+      setIsOriginOtpSending(false);
+    }
+  };
+
+  // Verify OTP for origin (sender) phone number
+  const verifyOriginOTP = async (otp: string) => {
+    if (otp.length !== 6) {
+      setOriginOtpError('Please enter a valid 6-digit OTP.');
+      return;
+    }
+
+    try {
+      const mobileNumber = originMobileDigits.filter(digit => digit !== '').join('');
+      
+      if (mobileNumber.length !== 10) {
+        setOriginOtpError('Invalid phone number.');
+        return;
+      }
+      
+      const response = await fetch(`${API_BASE}/api/otp/verify`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phoneNumber: mobileNumber,
+          otp: otp
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setOriginOtpVerified(true);
+        setOriginOtpError(null);
+        console.log('OTP verified successfully for origin phone:', mobileNumber);
+        // Close OTP modal and open blank form
+        setShowOriginOtpVerification(false);
+        setTimeout(() => {
+          setFormModalOpen({ type: 'origin' });
+        }, 300);
+      } else {
+        setOriginOtpError(result.error || 'Invalid OTP. Please try again.');
+        setOriginOtpDigits(Array(6).fill(''));
+        setTimeout(() => {
+          const firstInput = document.getElementById('origin-otp-digit-0');
+          firstInput?.focus();
+        }, 100);
+      }
+    } catch (error) {
+      console.error('Error verifying OTP:', error);
+      setOriginOtpError('Error verifying OTP. Please try again.');
+      setOriginOtpDigits(Array(6).fill(''));
+      setTimeout(() => {
+        const firstInput = document.getElementById('origin-otp-digit-0');
+        firstInput?.focus();
+      }, 100);
     }
   };
 
@@ -697,25 +823,27 @@ const OfficeBookingPanel: React.FC = () => {
 
       console.log('Starting booking submission process...');
       
-      // 1) Fetch next consignment number for this office user
+      // 1) Fetch next consignment number for this office user (optional - only if officeToken exists)
+      // If no officeToken (e.g., admin user), backend will generate using global sequence
       let nextConsignmentNumber: number | null = null;
-      try {
-        const officeToken = localStorage.getItem('officeToken');
-        if (!officeToken) {
-          throw new Error('Not authenticated as office user');
+      const officeToken = localStorage.getItem('officeToken');
+      if (officeToken) {
+        try {
+          const nextRes = await axios.get(`${API_BASE}/api/office/consignment/next`, {
+            headers: { Authorization: `Bearer ${officeToken}` }
+          });
+          nextConsignmentNumber = nextRes?.data?.consignmentNumber ?? null;
+          // If no consignment number from office user assignment, backend will use global sequence
+          if (!nextConsignmentNumber) {
+            console.log('No office user consignment assignment found, backend will use global sequence');
+          }
+        } catch (e: any) {
+          // Log error but don't fail - backend will generate consignment number
+          console.warn('Could not fetch office user consignment number, backend will generate:', e?.message || 'Unknown error');
         }
-        const nextRes = await axios.get(`${API_BASE}/api/office/consignment/next`, {
-          headers: { Authorization: `Bearer ${officeToken}` }
-        });
-        nextConsignmentNumber = nextRes?.data?.consignmentNumber ?? null;
-        if (!nextConsignmentNumber) {
-          throw new Error('No consignment number available');
-        }
-      } catch (e: any) {
-        const msg = e?.response?.data?.error || e?.message || 'Failed to get next consignment number';
-        bookingState.setSubmitError(msg);
-        bookingState.setIsSubmitting(false);
-        return;
+      } else {
+        // No officeToken (likely admin user) - backend will generate using global sequence
+        console.log('No officeToken found, backend will generate consignment number using global sequence');
       }
       
       // Frontend validation
@@ -988,13 +1116,14 @@ const OfficeBookingPanel: React.FC = () => {
       bookingState.setCurrentStep(9);
       bookingState.setCompletedSteps(Array(bookingState.steps.length).fill(true));
       
-      // Record consignment usage (non-blocking) if we have a consignment number
-      if (nextConsignmentNumber && bookingId) {
+      // Record consignment usage (non-blocking) if we have a consignment number and officeToken
+      // Only record usage for office users with assigned consignment numbers
+      if (consignmentNumber && bookingId) {
         try {
           const officeToken = localStorage.getItem('officeToken');
           if (officeToken) {
             await axios.post(`${API_BASE}/api/office/consignment/use`, {
-              consignmentNumber: nextConsignmentNumber,
+              consignmentNumber: consignmentNumber,
               bookingReference: bookingReference || bookingId,
               bookingData: bookingPayload
             }, {
@@ -1007,7 +1136,7 @@ const OfficeBookingPanel: React.FC = () => {
                 detail: {
                   officeUserId: officeUserId,
                   assignmentType: 'office_user',
-                  consignmentNumber: nextConsignmentNumber,
+                  consignmentNumber: consignmentNumber,
                   bookingReference: bookingReference || bookingId
                 }
               });
@@ -1091,6 +1220,112 @@ const OfficeBookingPanel: React.FC = () => {
     bookingState.destinationData.state,
   ].every((field) => field && String(field).trim().length > 0);
 
+  // OTP digit handlers for origin
+  const handleOriginOtpDigitChange = (index: number, value: string) => {
+    if (!/^[0-9]*$/.test(value)) return;
+    if (value.length > 1) return;
+    
+    const newDigits = [...originOtpDigits];
+    newDigits[index] = value;
+    setOriginOtpDigits(newDigits);
+    setOriginOtpError(null);
+    
+    // Auto-focus next input
+    if (value && index < 5) {
+      setTimeout(() => {
+        const nextInput = document.getElementById('origin-otp-digit-' + (index + 1));
+        nextInput?.focus();
+      }, 0);
+    }
+    
+    // Auto-verify when 6 digits are entered
+    const updatedDigits = [...newDigits];
+    updatedDigits[index] = value;
+    const otp = updatedDigits.filter(digit => digit !== '').join('');
+    if (otp.length === 6) {
+      // Use setTimeout to ensure state is updated before verification
+      setTimeout(() => {
+        verifyOriginOTP(otp);
+      }, 100);
+    }
+  };
+
+  const handleOriginOtpKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && !originOtpDigits[index] && index > 0) {
+      e.preventDefault();
+      const prevInput = document.getElementById('origin-otp-digit-' + (index - 1));
+      prevInput?.focus();
+      handleOriginOtpDigitChange(index - 1, '');
+    }
+  };
+
+  // GST validation function - validates and formats input
+  const validateGSTFormat = (value: string): string => {
+    // Remove any non-alphanumeric characters and convert to uppercase
+    let cleanValue = value.replace(/[^A-Z0-9]/g, '').toUpperCase();
+    
+    // Limit to 15 characters
+    cleanValue = cleanValue.slice(0, 15);
+    
+    // Apply GST format rules - filter characters based on position
+    let formattedValue = '';
+    
+    for (let i = 0; i < cleanValue.length; i++) {
+      const char = cleanValue[i];
+      
+      if (i < 2) {
+        // First 2 positions: State code (numbers only)
+        if (/[0-9]/.test(char)) {
+          formattedValue += char;
+        }
+      } else if (i < 7) {
+        // Positions 2-6: First part of PAN (letters only)
+        if (/[A-Z]/.test(char)) {
+          formattedValue += char;
+        }
+      } else if (i < 11) {
+        // Positions 7-10: Second part of PAN (numbers only)
+        if (/[0-9]/.test(char)) {
+          formattedValue += char;
+        }
+      } else if (i === 11) {
+        // Position 11: Third part of PAN (letter only)
+        if (/[A-Z]/.test(char)) {
+          formattedValue += char;
+        }
+      } else if (i === 12) {
+        // Position 12: Registration number (1-9 or A-Z)
+        if (/[1-9A-Z]/.test(char)) {
+          formattedValue += char;
+        }
+      } else if (i === 13) {
+        // Position 13: Default letter (always Z)
+        if (char === 'Z') {
+          formattedValue += char;
+        }
+      } else if (i === 14) {
+        // Position 14: Checksum (number or letter)
+        if (/[0-9A-Z]/.test(char)) {
+          formattedValue += char;
+        }
+      }
+    }
+    
+    return formattedValue;
+  };
+
+  // Handle origin GST input change
+  const handleOriginGstChange = (value: string) => {
+    const validatedValue = validateGSTFormat(value);
+    bookingState.setOriginData(prev => ({ ...prev, gstNumber: validatedValue }));
+  };
+
+  // Handle destination GST input change
+  const handleDestinationGstChange = (value: string) => {
+    const validatedValue = validateGSTFormat(value);
+    bookingState.setDestinationData(prev => ({ ...prev, gstNumber: validatedValue }));
+  };
+
   // Alternate number handlers
   const handleAlternateNumberChange = (
     type: 'origin' | 'destination',
@@ -1144,13 +1379,13 @@ const OfficeBookingPanel: React.FC = () => {
 
   // Auto-open phone modal when entering step 1 if phone not complete
   useEffect(() => {
-    if (bookingState.currentStep === 1 && !isOriginPhoneComplete && !phoneModalOpen.type && !formModalOpen.type && !showPreviewInModal) {
+    if (bookingState.currentStep === 1 && !isOriginPhoneComplete && !phoneModalOpen.type && !formModalOpen.type && !showPreviewInModal && !showOriginOtpVerification) {
       setTimeout(() => {
         setPhoneModalOpen({ type: 'origin' });
         setCurrentSection('origin');
       }, 300);
     }
-  }, [bookingState.currentStep, isOriginPhoneComplete, phoneModalOpen.type, formModalOpen.type, showPreviewInModal]);
+  }, [bookingState.currentStep, isOriginPhoneComplete, phoneModalOpen.type, formModalOpen.type, showPreviewInModal, showOriginOtpVerification]);
 
   // Auto-open phone modal when entering step 2 if destination phone not complete
   useEffect(() => {
@@ -1226,6 +1461,24 @@ const OfficeBookingPanel: React.FC = () => {
             onAddAlternateNumber={() => addAlternateNumber('origin')}
             onRemoveAlternateNumber={(index) => removeAlternateNumber('origin', index)}
             isDarkMode={isDarkMode}
+            showOriginOtpVerification={showOriginOtpVerification}
+            onOriginGstChange={handleOriginGstChange}
+            originOtpDigits={originOtpDigits}
+            originOtpVerified={originOtpVerified}
+            originOtpError={originOtpError}
+            isOriginOtpSending={isOriginOtpSending}
+            onOriginOtpDigitChange={handleOriginOtpDigitChange}
+            onOriginOtpKeyDown={handleOriginOtpKeyDown}
+            onResendOriginOtp={() => {
+              const mobileNumber = originMobileDigits.filter(digit => digit !== '').join('');
+              sendOriginOTP(mobileNumber);
+            }}
+            onCloseOriginOtp={() => {
+              setShowOriginOtpVerification(false);
+              setOriginOtpDigits(Array(6).fill(''));
+              setOriginOtpVerified(false);
+              setOriginOtpError(null);
+            }}
           />
         );
       
@@ -1264,6 +1517,7 @@ const OfficeBookingPanel: React.FC = () => {
             onAddAlternateNumber={() => addAlternateNumber('destination')}
             onRemoveAlternateNumber={(index) => removeAlternateNumber('destination', index)}
             isDarkMode={isDarkMode}
+            onDestinationGstChange={handleDestinationGstChange}
           />
         );
       

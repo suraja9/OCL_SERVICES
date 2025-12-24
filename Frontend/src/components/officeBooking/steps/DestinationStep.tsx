@@ -41,6 +41,8 @@ interface DestinationStepProps {
   onAddAlternateNumber: () => void;
   onRemoveAlternateNumber: (index: number) => void;
   isDarkMode?: boolean;
+  // GST input props
+  onDestinationGstChange?: (value: string) => void;
 }
 
 const DestinationStep: React.FC<DestinationStepProps> = ({
@@ -70,7 +72,8 @@ const DestinationStep: React.FC<DestinationStepProps> = ({
   onAlternateNumberChange,
   onAddAlternateNumber,
   onRemoveAlternateNumber,
-  isDarkMode = false
+  isDarkMode = false,
+  onDestinationGstChange
 }) => {
   const addressTypeOptions = ['HOME', 'OFFICE', 'OTHERS'];
   const getDigitInputId = (index: number) => `destination-modal-digit-${index}`;
@@ -275,7 +278,13 @@ const DestinationStep: React.FC<DestinationStepProps> = ({
                   <FloatingInput
                     label="GST No. :"
                     value={data.gstNumber}
-                    onChange={(value) => onChange({ ...data, gstNumber: value })}
+                    onChange={(value) => {
+                      if (onDestinationGstChange) {
+                        onDestinationGstChange(value);
+                      } else {
+                        onChange({ ...data, gstNumber: value });
+                      }
+                    }}
                     isDarkMode={isDarkMode}
                   />
                   <FloatingInput
