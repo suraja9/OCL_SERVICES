@@ -1077,6 +1077,7 @@ const OfficeBookingPanel: React.FC = () => {
       };
 
       console.log('🚀 Starting office booking submission to office-booking/create...');
+      console.log('API_BASE:', API_BASE);
       console.log('Booking payload:', bookingPayload);
       
       // Use the new office-booking endpoint (separate from customer-booking)
@@ -1087,10 +1088,22 @@ const OfficeBookingPanel: React.FC = () => {
         },
         body: JSON.stringify(bookingPayload),
       });
+      
+      console.log('Response status:', response.status, response.statusText);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save booking');
+        let errorData;
+        try {
+          errorData = await response.json();
+          console.error('❌ Backend error response:', errorData);
+        } catch (parseError) {
+          // If response is not JSON, use status text
+          console.error('❌ Failed to parse error response as JSON:', parseError);
+          throw new Error(`Failed to save booking: ${response.status} ${response.statusText || 'Unknown error'}`);
+        }
+        const errorMessage = errorData.message || errorData.error || 'Failed to save booking';
+        const errorDetails = Array.isArray(errorData.details) ? `: ${errorData.details.join('; ')}` : '';
+        throw new Error(errorMessage + errorDetails);
       }
 
       const result = await response.json();
@@ -1151,12 +1164,15 @@ const OfficeBookingPanel: React.FC = () => {
     } catch (err: any) {
       console.error('Booking submission error:', err);
       
+      // Handle fetch errors properly (fetch doesn't have err.response like axios)
       if (err.message && err.message.includes('upload')) {
         bookingState.setSubmitError(`Upload failed: ${err.message}`);
+      } else if (err.message) {
+        // For fetch, the error message is already set in the Error object from the throw statement
+        bookingState.setSubmitError(err.message);
       } else {
-        const backendError = err?.response?.data;
-        const details = Array.isArray(backendError?.details) ? `: ${backendError.details.join('; ')}` : '';
-        const errorMsg = (backendError?.error || "Failed to submit booking") + details;
+        // Fallback for network errors or other unexpected errors
+        const errorMsg = err?.toString() || "Failed to submit booking. Please check your connection and try again.";
         bookingState.setSubmitError(errorMsg);
       }
     } finally {
