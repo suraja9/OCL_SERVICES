@@ -8,14 +8,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { Stepper } from './shared';
 import { ServiceabilityStep, OriginStep, DestinationStep, ShipmentDetailsStep, MaterialDetailsStep, UploadStep, BillStep, DetailsStep, PaymentStep } from './steps';
 import { useBookingState } from './hooks/useBookingState';
 import { API_BASE } from './utils/constants';
 import type { AddressData } from './types';
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Phone, Pencil, X, Building, MapPin, Mail, Loader2, CheckCircle, Package, ArrowRight, Truck, FileText, DollarSign, Download, Printer } from 'lucide-react';
+import { Phone, Pencil, X, Building, MapPin, Mail, Loader2, CheckCircle, Package, ArrowRight, Truck, FileText, DollarSign, Download, Printer, Eye, Image, ArrowLeft, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FloatingInput, FloatingSelect } from './shared';
 import html2canvas from 'html2canvas';
@@ -169,6 +168,21 @@ const OfficeBookingPanel: React.FC = () => {
       day: "numeric",
       year: "numeric",
     });
+  };
+
+  const formatDateWithTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const datePart = date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const timePart = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return `${datePart} ${timePart}`;
   };
 
   const getConsignmentValue = (reference?: string | number | null) => {
@@ -733,13 +747,18 @@ const OfficeBookingPanel: React.FC = () => {
     bookingState.nextStep();
   };
 
-  const handleBillNext = () => {
+  const handleReviewNext = () => {
     bookingState.markStepComplete(6);
     bookingState.nextStep();
   };
 
-  const handleDetailsNext = () => {
+  const handleBillNext = () => {
     bookingState.markStepComplete(7);
+    bookingState.nextStep();
+  };
+
+  const handleDetailsNext = () => {
+    bookingState.markStepComplete(8);
     bookingState.nextStep();
   };
 
@@ -992,11 +1011,11 @@ const OfficeBookingPanel: React.FC = () => {
       };
       const calculatedPrice = parsePrice(bookingState.detailsData.grandTotal);
 
-      // Determine currentStatus from paymentData (default to 'booked' if not set)
-      const currentStatus = bookingState.paymentData.currentStatus || 'booked';
+      // Get currentStatus from paymentData (optional - no default)
+      const currentStatus = bookingState.paymentData.currentStatus;
 
       // Build booking payload matching BookNow structure exactly
-      const bookingPayload = {
+      const bookingPayload: any = {
         origin: {
           ...bookingState.originData,
           alternateNumbers: bookingState.originData.alternateNumbers.filter(num => num.trim() !== '')
@@ -1040,7 +1059,12 @@ const OfficeBookingPanel: React.FC = () => {
         originAddressInfo: bookingState.originAddressInfo,
         destinationAddressInfo: bookingState.destinationAddressInfo,
         onlineCustomerId: null, // Office bookings don't have online customer ID
-        currentStatus: currentStatus, // Pass currentStatus to backend
+        // Include currentStatus only if it's set
+        ...(currentStatus && { currentStatus }),
+        // Include courierBoyId if currentStatus is 'picked' and courierBoyId is set
+        ...(currentStatus === 'picked' && bookingState.paymentData.courierBoyId && { 
+          courierBoyId: bookingState.paymentData.courierBoyId 
+        }),
         paymentInfo: {
           // If Cash is selected, payment status is 'paid', otherwise 'pending'
           paymentStatus: bookingState.paymentData.modeOfPayment === 'Cash' ? 'paid' : 'pending',
@@ -1126,7 +1150,7 @@ const OfficeBookingPanel: React.FC = () => {
       
       // Mark booking as submitted and move to success step
       bookingState.setSubmitSuccess(true);
-      bookingState.setCurrentStep(9);
+      bookingState.setCurrentStep(10);
       bookingState.setCompletedSteps(Array(bookingState.steps.length).fill(true));
       
       // Record consignment usage (non-blocking) if we have a consignment number and officeToken
@@ -1181,7 +1205,7 @@ const OfficeBookingPanel: React.FC = () => {
   };
 
   const handlePaymentSubmit = async () => {
-    bookingState.markStepComplete(8);
+    bookingState.markStepComplete(9);
     await submitBooking();
   };
 
@@ -1340,6 +1364,65 @@ const OfficeBookingPanel: React.FC = () => {
   const handleDestinationGstChange = (value: string) => {
     const validatedValue = validateGSTFormat(value);
     bookingState.setDestinationData(prev => ({ ...prev, gstNumber: validatedValue }));
+  };
+
+  // Review step state
+  const [editingSection, setEditingSection] = useState<'origin' | 'destination' | 'shipment' | 'package' | null>(null);
+  const [documentPreviewUrl, setDocumentPreviewUrl] = useState<string | null>(null);
+  const [documentPreviewOpen, setDocumentPreviewOpen] = useState(false);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+  // Update image previews when packageImages change
+  useEffect(() => {
+    if (bookingState.currentStep === 6) {
+      const newPreviews: string[] = [];
+      bookingState.uploadData.packageImages.forEach((file) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          newPreviews.push(reader.result as string);
+          if (newPreviews.length === bookingState.uploadData.packageImages.length) {
+            setImagePreviews(newPreviews);
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+      if (bookingState.uploadData.packageImages.length === 0) {
+        setImagePreviews([]);
+      }
+    }
+  }, [bookingState.uploadData.packageImages, bookingState.currentStep]);
+
+  // Review step options
+  const addressTypeOptions = ['Home', 'Office', 'Others'];
+  const packageTypeOptions = [
+    { value: 'Auto & Machine Parts', icon: Package },
+    { value: 'Books', icon: FileText },
+    { value: 'Documents', icon: FileText },
+    { value: 'Clothing (General)', icon: Package },
+    { value: 'Electronics', icon: Package },
+    { value: 'Medicines', icon: Package },
+    { value: 'Others', icon: Package }
+  ];
+  const insuranceOptions = [
+    { value: 'Without insurance', icon: Package },
+    { value: 'With insurance', icon: Package }
+  ];
+  const riskCoverageOptions = [
+    { value: 'Owner', icon: Package },
+    { value: 'Carrier', icon: Package }
+  ];
+
+  // Helper functions for review step
+  const sanitizeInteger = (value: string) => value.replace(/\D/g, '');
+  const sanitizeDecimal = (value: string) => {
+    const numeric = value.replace(/[^0-9.]/g, '');
+    const firstDotIndex = numeric.indexOf('.');
+    if (firstDotIndex === -1) {
+      return numeric;
+    }
+    const beforeDot = numeric.slice(0, firstDotIndex);
+    const afterDot = numeric.slice(firstDotIndex + 1).replace(/\./g, '');
+    return `${beforeDot}.${afterDot}`;
   };
 
   // Alternate number handlers
@@ -1572,7 +1655,1026 @@ const OfficeBookingPanel: React.FC = () => {
           />
         );
       
-      case 6: // Bill
+      case 6: // Review & Edit
+        return (() => {
+          const originAlternates = bookingState.originData.alternateNumbers?.filter((num) => num.trim()) || [];
+          const destinationAlternates = bookingState.destinationData.alternateNumbers?.filter((num) => num.trim()) || [];
+          
+          const formatDate = (value: string) => {
+            if (!value) return null;
+            const parsed = new Date(value);
+            if (Number.isNaN(parsed.getTime())) return null;
+            return parsed.toLocaleDateString('en-IN', {
+              day: '2-digit',
+              month: 'short',
+              year: 'numeric'
+            });
+          };
+          
+          const renderAddress = (data: typeof bookingState.originData) => {
+            const lines = [
+              [data.flatBuilding, data.landmark].filter(Boolean).join(', '),
+              [data.locality, data.area].filter(Boolean).join(', '),
+              [data.city, data.state, data.pincode].filter(Boolean).join(', ')
+            ].filter((line) => line);
+            return lines.join(', ');
+          };
+
+          // Calculate weights for display
+          const lengthValue = parseFloat(bookingState.uploadData.length || '0') || 0;
+          const widthValue = parseFloat(bookingState.uploadData.width || '0') || 0;
+          const heightValue = parseFloat(bookingState.uploadData.height || '0') || 0;
+          const actualWeight = parseFloat(bookingState.uploadData.weight || '0') || 0;
+          const VOLUMETRIC_DIVISOR = 5000;
+          
+          let volumetricWeight = 0;
+          if (lengthValue > 0 && widthValue > 0 && heightValue > 0) {
+            const volume = lengthValue * widthValue * heightValue;
+            if (Number.isFinite(volume) && volume > 0) {
+              volumetricWeight = parseFloat((volume / VOLUMETRIC_DIVISOR).toFixed(2));
+            }
+          }
+          
+          const chargeableWeight = Math.max(actualWeight, volumetricWeight);
+          const displayActualWeight = actualWeight > 0 ? `${actualWeight.toFixed(2)} kg` : '—';
+          const displayVolumetricWeight = volumetricWeight > 0 ? `${volumetricWeight.toFixed(2)} kg` : '—';
+          const displayChargeableWeight = chargeableWeight > 0 ? `${chargeableWeight.toFixed(2)} kg` : '—';
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-2"
+            >
+              <div className="space-y-2.5">
+                {/* Origin Address */}
+                <div className={cn(
+                  'rounded-lg border p-2.5 transition-all duration-200',
+                  isDarkMode
+                    ? 'border-slate-800/50 bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-800/80 hover:border-blue-500/30'
+                    : 'border-slate-200/60 bg-gradient-to-br from-slate-100/90 via-blue-50/70 to-slate-100/90 hover:border-blue-400/50'
+                )}>
+                  <div className={cn(
+                    'flex items-center justify-between mb-2',
+                    isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                  )}>
+                    <h4 className={cn(
+                      'text-sm font-semibold flex items-center gap-1.5',
+                      isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                    )}>
+                      <MapPin className="h-3.5 w-3.5" />
+                      Sender :
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      {bookingState.originData.addressType && (
+                        <span className={cn(
+                          'text-xs font-semibold px-3 py-1.5 rounded-full border-2 shadow-sm',
+                          'uppercase tracking-wide',
+                          isDarkMode 
+                            ? 'text-blue-300 bg-blue-500/20 border-blue-400/40 shadow-blue-500/10' 
+                            : 'text-blue-700 bg-blue-50 border-blue-300 shadow-blue-200/50'
+                        )}>
+                          {bookingState.originData.addressType}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => setEditingSection(editingSection === 'origin' ? null : 'origin')}
+                        className={cn(
+                          'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors',
+                          isDarkMode
+                            ? 'text-blue-300 hover:bg-blue-500/20'
+                            : 'text-blue-600 hover:bg-blue-50'
+                        )}
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    {/* Line 1: Company name, Concern person */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <p className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                        {bookingState.originData.companyName || ''}
+                      </p>
+                      <p className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>{bookingState.originData.name}</p>
+                    </div>
+                    
+                    {/* Line 2: Address */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div className="md:col-span-3">
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{renderAddress(bookingState.originData)}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Line 3: Phone, Email, Website */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>+91 {bookingState.originData.mobileNumber}</p>
+                      {bookingState.originData.email && (
+                        <a 
+                          href={`mailto:${bookingState.originData.email}`}
+                          className={cn(
+                            'text-[9px] sm:text-[10px] md:text-xs font-medium underline hover:opacity-80',
+                            isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                          )}
+                        >
+                          {bookingState.originData.email}
+                        </a>
+                      )}
+                      {bookingState.originData.website && (
+                        <a 
+                          href={bookingState.originData.website.startsWith('http') ? bookingState.originData.website : `https://${bookingState.originData.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            'text-[9px] sm:text-[10px] md:text-xs font-medium underline hover:opacity-80',
+                            isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                          )}
+                        >
+                          {bookingState.originData.website}
+                        </a>
+                      )}
+                    </div>
+                    
+                    {/* Line 4: GST, Birthday and Anniversary */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      {bookingState.originData.gstNumber && (
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{bookingState.originData.gstNumber}</p>
+                      )}
+                      {bookingState.originData.birthday && (
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                          {formatDate(bookingState.originData.birthday) || bookingState.originData.birthday}
+                        </p>
+                      )}
+                      {bookingState.originData.anniversary && (
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                          {formatDate(bookingState.originData.anniversary) || bookingState.originData.anniversary}
+                        </p>
+                      )}
+                    </div>
+                    
+                    {/* Alternate Numbers - if any */}
+                    {originAlternates && originAlternates.length > 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{originAlternates.join(', ')}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Origin Address Edit Dialog */}
+                <Dialog open={editingSection === 'origin'} onOpenChange={(open) => !open && setEditingSection(null)}>
+                  <DialogContent className={cn(
+                    'max-w-3xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
+                    isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                  )}>
+                    <DialogHeader>
+                      <DialogTitle className={cn(isDarkMode ? 'text-slate-100' : 'text-slate-900')}>
+                        Edit Sender :
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FloatingInput
+                          label="Concern Person"
+                          value={bookingState.originData.name}
+                          onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, name: value }))}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingSelect
+                          label="Address Type"
+                          value={bookingState.originData.addressType}
+                          onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, addressType: value as any }))}
+                          options={addressTypeOptions}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Company Name"
+                          value={bookingState.originData.companyName}
+                          onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, companyName: value }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Phone"
+                          value={`+91 ${bookingState.originData.mobileNumber}`}
+                          onChange={() => {}}
+                          disabled
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Email"
+                          value={bookingState.originData.email}
+                          onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, email: value }))}
+                          type="email"
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="GST Number"
+                          value={bookingState.originData.gstNumber}
+                          onChange={(value) => handleOriginGstChange(value)}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Flat, Building"
+                          value={bookingState.originData.flatBuilding}
+                          onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, flatBuilding: value }))}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Locality"
+                          value={bookingState.originData.locality}
+                          onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, locality: value }))}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Landmark"
+                          value={bookingState.originData.landmark}
+                          onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, landmark: value }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        {originAreas.length > 0 ? (
+                          <FloatingSelect
+                            label="Area"
+                            value={bookingState.originData.area}
+                            onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, area: value }))}
+                            options={originAreas}
+                            required
+                            isDarkMode={isDarkMode}
+                          />
+                        ) : (
+                          <FloatingInput
+                            label="Area"
+                            value={bookingState.originData.area}
+                            onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, area: value }))}
+                            required
+                            isDarkMode={isDarkMode}
+                          />
+                        )}
+                        <FloatingInput
+                          label="District"
+                          value={bookingState.originData.district}
+                          onChange={(_value) => {}}
+                          disabled
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Website"
+                          value={bookingState.originData.website}
+                          onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, website: value }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Birthday"
+                          value={bookingState.originData.birthday}
+                          onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, birthday: value }))}
+                          type="date"
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Anniversary"
+                          value={bookingState.originData.anniversary}
+                          onChange={(value) => bookingState.setOriginData((prev) => ({ ...prev, anniversary: value }))}
+                          type="date"
+                          isDarkMode={isDarkMode}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setEditingSection(null)}
+                        className={cn(
+                          isDarkMode
+                            ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                            : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                        )}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => setEditingSection(null)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Destination Address - Similar structure */}
+                <div className={cn(
+                  'rounded-lg border p-2.5 transition-all duration-200',
+                  isDarkMode
+                    ? 'border-slate-800/50 bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-800/80 hover:border-blue-500/30'
+                    : 'border-slate-200/60 bg-gradient-to-br from-slate-100/90 via-blue-50/70 to-slate-100/90 hover:border-blue-400/50'
+                )}>
+                  <div className={cn(
+                    'flex items-center justify-between mb-2',
+                    isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                  )}>
+                    <h4 className={cn(
+                      'text-sm font-semibold flex items-center gap-1.5',
+                      isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                    )}>
+                      <MapPin className="h-3.5 w-3.5" />
+                      Recipient :
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      {bookingState.destinationData.addressType && (
+                        <span className={cn(
+                          'text-xs font-semibold px-3 py-1.5 rounded-full border-2 shadow-sm',
+                          'uppercase tracking-wide',
+                          isDarkMode 
+                            ? 'text-blue-300 bg-blue-500/20 border-blue-400/40 shadow-blue-500/10' 
+                            : 'text-blue-700 bg-blue-50 border-blue-300 shadow-blue-200/50'
+                        )}>
+                          {bookingState.destinationData.addressType}
+                        </span>
+                      )}
+                      <button
+                        onClick={() => setEditingSection(editingSection === 'destination' ? null : 'destination')}
+                        className={cn(
+                          'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors',
+                          isDarkMode
+                            ? 'text-blue-300 hover:bg-blue-500/20'
+                            : 'text-blue-600 hover:bg-blue-50'
+                        )}
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </button>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <p className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                        {bookingState.destinationData.companyName || ''}
+                      </p>
+                      <p className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>{bookingState.destinationData.name}</p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div className="md:col-span-3">
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{renderAddress(bookingState.destinationData)}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>+91 {bookingState.destinationData.mobileNumber}</p>
+                      {bookingState.destinationData.email && (
+                        <a 
+                          href={`mailto:${bookingState.destinationData.email}`}
+                          className={cn(
+                            'text-[9px] sm:text-[10px] md:text-xs font-medium underline hover:opacity-80',
+                            isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                          )}
+                        >
+                          {bookingState.destinationData.email}
+                        </a>
+                      )}
+                      {bookingState.destinationData.website && (
+                        <a 
+                          href={bookingState.destinationData.website.startsWith('http') ? bookingState.destinationData.website : `https://${bookingState.destinationData.website}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            'text-[9px] sm:text-[10px] md:text-xs font-medium underline hover:opacity-80',
+                            isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                          )}
+                        >
+                          {bookingState.destinationData.website}
+                        </a>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      {bookingState.destinationData.gstNumber && (
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{bookingState.destinationData.gstNumber}</p>
+                      )}
+                      {bookingState.destinationData.birthday && (
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                          {formatDate(bookingState.destinationData.birthday) || bookingState.destinationData.birthday}
+                        </p>
+                      )}
+                      {bookingState.destinationData.anniversary && (
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                          {formatDate(bookingState.destinationData.anniversary) || bookingState.destinationData.anniversary}
+                        </p>
+                      )}
+                    </div>
+                    {destinationAlternates && destinationAlternates.length > 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{destinationAlternates.join(', ')}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Destination Address Edit Dialog */}
+                <Dialog open={editingSection === 'destination'} onOpenChange={(open) => !open && setEditingSection(null)}>
+                  <DialogContent className={cn(
+                    'max-w-3xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
+                    isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                  )}>
+                    <DialogHeader>
+                      <DialogTitle className={cn(isDarkMode ? 'text-slate-100' : 'text-slate-900')}>
+                        Edit Recipient
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FloatingInput
+                          label="Concern Person"
+                          value={bookingState.destinationData.name}
+                          onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, name: value }))}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingSelect
+                          label="Address Type"
+                          value={bookingState.destinationData.addressType}
+                          onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, addressType: value as any }))}
+                          options={addressTypeOptions}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Company Name"
+                          value={bookingState.destinationData.companyName}
+                          onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, companyName: value }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Phone"
+                          value={`+91 ${bookingState.destinationData.mobileNumber}`}
+                          onChange={() => {}}
+                          disabled
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Email"
+                          value={bookingState.destinationData.email}
+                          onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, email: value }))}
+                          type="email"
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="GST Number"
+                          value={bookingState.destinationData.gstNumber}
+                          onChange={(value) => handleDestinationGstChange(value)}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Flat, Building"
+                          value={bookingState.destinationData.flatBuilding}
+                          onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, flatBuilding: value }))}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Locality"
+                          value={bookingState.destinationData.locality}
+                          onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, locality: value }))}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Landmark"
+                          value={bookingState.destinationData.landmark}
+                          onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, landmark: value }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        {destinationAreas.length > 0 ? (
+                          <FloatingSelect
+                            label="Area"
+                            value={bookingState.destinationData.area}
+                            onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, area: value }))}
+                            options={destinationAreas}
+                            required
+                            isDarkMode={isDarkMode}
+                          />
+                        ) : (
+                          <FloatingInput
+                            label="Area"
+                            value={bookingState.destinationData.area}
+                            onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, area: value }))}
+                            required
+                            isDarkMode={isDarkMode}
+                          />
+                        )}
+                        <FloatingInput
+                          label="District"
+                          value={bookingState.destinationData.district}
+                          onChange={(_value) => {}}
+                          disabled
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Website"
+                          value={bookingState.destinationData.website}
+                          onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, website: value }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Birthday"
+                          value={bookingState.destinationData.birthday}
+                          onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, birthday: value }))}
+                          type="date"
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Anniversary"
+                          value={bookingState.destinationData.anniversary}
+                          onChange={(value) => bookingState.setDestinationData((prev) => ({ ...prev, anniversary: value }))}
+                          type="date"
+                          isDarkMode={isDarkMode}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setEditingSection(null)}
+                        className={cn(
+                          isDarkMode
+                            ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                            : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                        )}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => setEditingSection(null)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Shipment Details */}
+                <div className={cn(
+                  'rounded-lg border p-2.5 transition-all duration-200',
+                  isDarkMode
+                    ? 'border-slate-800/50 bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-800/80 hover:border-blue-500/30'
+                    : 'border-slate-200/60 bg-gradient-to-br from-slate-100/90 via-blue-50/70 to-slate-100/90 hover:border-blue-400/50'
+                )}>
+                  <div className={cn(
+                    'flex items-center justify-between mb-2',
+                    isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                  )}>
+                    <h4 className={cn(
+                      'text-sm font-semibold flex items-center gap-1.5',
+                      isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                    )}>
+                      <Package className="h-3.5 w-3.5" />
+                      Shipment Details :
+                    </h4>
+                    <button
+                      onClick={() => setEditingSection(editingSection === 'shipment' ? null : 'shipment')}
+                      className={cn(
+                        'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors',
+                        isDarkMode
+                          ? 'text-blue-300 hover:bg-blue-500/20'
+                          : 'text-blue-600 hover:bg-blue-50'
+                      )}
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                          {bookingState.shipmentData.natureOfConsignment === 'DOX' ? 'Document' : 
+                           bookingState.shipmentData.natureOfConsignment === 'NON-DOX' ? 'Parcel' : 
+                           bookingState.shipmentData.natureOfConsignment}
+                        </p>
+                      </div>
+                      <div>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{bookingState.shipmentData.insurance}</p>
+                      </div>
+                      <div>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{bookingState.shipmentData.riskCoverage}</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{bookingState.uploadData.totalPackages}</p>
+                      </div>
+                      <div>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                          {bookingState.uploadData.materials}
+                          {bookingState.uploadData.materials === 'Others' && bookingState.uploadData.others && ` (${bookingState.uploadData.others})`}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <span className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Content Description:</span>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                          {bookingState.uploadData.contentDescription || '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Declared Value:</span>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                          {bookingState.uploadData.invoiceValue ? `₹${parseFloat(bookingState.uploadData.invoiceValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                      <div>
+                        <span className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Actual Weight:</span>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{displayActualWeight}</p>
+                      </div>
+                      <div>
+                        <span className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Volumetric Weight:</span>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>{displayVolumetricWeight}</p>
+                      </div>
+                      <div>
+                        <span className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Chargeable Weight:</span>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-blue-300' : 'text-blue-600')}>{displayChargeableWeight}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Package Images */}
+                {imagePreviews.length > 0 && (
+                  <div className={cn(
+                    'rounded-lg border p-2.5 transition-all duration-200',
+                    isDarkMode
+                      ? 'border-slate-800/50 bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-800/80 hover:border-blue-500/30'
+                      : 'border-slate-200/60 bg-gradient-to-br from-slate-100/90 via-blue-50/70 to-slate-100/90 hover:border-blue-400/50'
+                  )}>
+                    <div className={cn(
+                      'flex items-center justify-between mb-2',
+                      isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                    )}>
+                      <h4 className={cn(
+                        'text-sm font-semibold flex items-center gap-1.5',
+                        isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                      )}>
+                        <Image className="h-3.5 w-3.5" />
+                        Package Images :
+                      </h4>
+                      <button
+                        onClick={() => setEditingSection(editingSection === 'package' ? null : 'package')}
+                        className={cn(
+                          'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors',
+                          isDarkMode
+                            ? 'text-blue-300 hover:bg-blue-500/20'
+                            : 'text-blue-600 hover:bg-blue-50'
+                        )}
+                      >
+                        <Pencil className="h-3 w-3" />
+                        Edit
+                      </button>
+                    </div>
+                    <div className={cn(
+                      "grid gap-2",
+                      imagePreviews.length === 3 ? "grid-cols-3" :
+                      imagePreviews.length === 4 ? "grid-cols-4" :
+                      "grid-cols-5"
+                    )}>
+                      {imagePreviews.map((preview, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            'overflow-hidden rounded border',
+                            isDarkMode ? 'border-slate-700' : 'border-slate-200'
+                          )}
+                        >
+                          <img
+                            src={preview}
+                            alt={`Package ${index + 1}`}
+                            className="h-16 w-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Shipment Details Edit Dialog */}
+                <Dialog open={editingSection === 'shipment'} onOpenChange={(open) => !open && setEditingSection(null)}>
+                  <DialogContent className={cn(
+                    'max-w-2xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
+                    isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                  )}>
+                    <DialogHeader>
+                      <DialogTitle className={cn(isDarkMode ? 'text-slate-100' : 'text-slate-900')}>
+                        Edit Shipment Details
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FloatingSelect
+                          label="Nature of Consignment"
+                          value={bookingState.shipmentData.natureOfConsignment === 'DOX' ? 'Document' : 
+                                 bookingState.shipmentData.natureOfConsignment === 'NON-DOX' ? 'Parcel' : 
+                                 bookingState.shipmentData.natureOfConsignment}
+                          onChange={(value) => {
+                            const actualValue = value === 'Document' ? 'DOX' : value === 'Parcel' ? 'NON-DOX' : value;
+                            bookingState.setShipmentData((prev) => ({ ...prev, natureOfConsignment: actualValue }));
+                          }}
+                          options={['Document', 'Parcel']}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingSelect
+                          label="Insurance"
+                          value={bookingState.shipmentData.insurance}
+                          onChange={(value) => bookingState.setShipmentData((prev) => ({ ...prev, insurance: value }))}
+                          options={insuranceOptions.map(opt => opt.value)}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingSelect
+                          label="Risk Coverage"
+                          value={bookingState.shipmentData.riskCoverage}
+                          onChange={(value) => bookingState.setShipmentData((prev) => ({ ...prev, riskCoverage: value }))}
+                          options={riskCoverageOptions.map(opt => opt.value)}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="No. of Packages"
+                          value={bookingState.uploadData.totalPackages}
+                          onChange={(value) => bookingState.setUploadData((prev) => ({ ...prev, totalPackages: sanitizeInteger(value) }))}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingSelect
+                          label="Package Type"
+                          value={bookingState.uploadData.materials}
+                          onChange={(value) => bookingState.setUploadData((prev) => ({ 
+                            ...prev, 
+                            materials: value,
+                            others: value === 'Others' ? prev.others : ''
+                          }))}
+                          options={packageTypeOptions.map(opt => opt.value)}
+                          required
+                          isDarkMode={isDarkMode}
+                        />
+                        {bookingState.uploadData.materials === 'Others' && (
+                          <FloatingInput
+                            label="Others - Specify"
+                            value={bookingState.uploadData.others}
+                            onChange={(value) => bookingState.setUploadData((prev) => ({ ...prev, others: value }))}
+                            required
+                            isDarkMode={isDarkMode}
+                            className="md:col-span-2"
+                          />
+                        )}
+                        <FloatingInput
+                          label="Length (cm)"
+                          value={bookingState.uploadData.length}
+                          onChange={(value) => bookingState.setUploadData((prev) => ({ ...prev, length: sanitizeDecimal(value) }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Width (cm)"
+                          value={bookingState.uploadData.width}
+                          onChange={(value) => bookingState.setUploadData((prev) => ({ ...prev, width: sanitizeDecimal(value) }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Height (cm)"
+                          value={bookingState.uploadData.height}
+                          onChange={(value) => bookingState.setUploadData((prev) => ({ ...prev, height: sanitizeDecimal(value) }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Actual Weight (kg)"
+                          value={bookingState.uploadData.weight}
+                          onChange={(value) => bookingState.setUploadData((prev) => ({ ...prev, weight: sanitizeDecimal(value) }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Content Description"
+                          value={bookingState.uploadData.contentDescription}
+                          onChange={(value) => bookingState.setUploadData((prev) => ({ ...prev, contentDescription: value }))}
+                          isDarkMode={isDarkMode}
+                        />
+                        <FloatingInput
+                          label="Declared Value (₹)"
+                          value={bookingState.uploadData.invoiceValue}
+                          onChange={(value) => bookingState.setUploadData((prev) => ({ ...prev, invoiceValue: sanitizeDecimal(value) }))}
+                          isDarkMode={isDarkMode}
+                          icon={<DollarSign className="h-4 w-4" />}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setEditingSection(null)}
+                        className={cn(
+                          isDarkMode
+                            ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                            : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                        )}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => setEditingSection(null)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Package Images Edit Dialog */}
+                <Dialog open={editingSection === 'package'} onOpenChange={(open) => !open && setEditingSection(null)}>
+                  <DialogContent className={cn(
+                    'max-w-2xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
+                    isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                  )}>
+                    <DialogHeader>
+                      <DialogTitle className={cn(isDarkMode ? 'text-slate-100' : 'text-slate-900')}>
+                        Edit Package Images
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                      <div
+                        className={cn(
+                          'flex flex-wrap items-center gap-2 rounded-md border p-2',
+                          isDarkMode
+                            ? 'border-slate-700 bg-slate-800/50'
+                            : 'border-slate-300 bg-slate-50'
+                        )}
+                      >
+                        <input
+                          id="image-upload-edit"
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          className="hidden"
+                          onChange={(e) => {
+                            const files = Array.from(e.target.files || []);
+                            if (files.length + bookingState.uploadData.packageImages.length > 5) {
+                              toast({
+                                title: "Maximum images exceeded",
+                                description: "Maximum 5 images allowed",
+                                variant: "destructive"
+                              });
+                              return;
+                            }
+                            bookingState.setUploadData((prev) => ({
+                              ...prev,
+                              packageImages: [...prev.packageImages, ...files]
+                            }));
+                          }}
+                        />
+                        <label
+                          htmlFor="image-upload-edit"
+                          className={cn(
+                            'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                            isDarkMode
+                              ? 'bg-blue-500 text-white hover:bg-blue-600'
+                              : 'bg-blue-500 text-white hover:bg-blue-600'
+                          )}
+                        >
+                          Select Images
+                        </label>
+                        <div className="min-w-0 flex-1 text-xs">
+                          <p className={cn('truncate', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                            {bookingState.uploadData.packageImages.length > 0 
+                              ? `${bookingState.uploadData.packageImages.length} image${bookingState.uploadData.packageImages.length !== 1 ? 's' : ''} selected`
+                              : 'No images selected'}
+                          </p>
+                          <p className={cn('text-[10px]', isDarkMode ? 'text-slate-500' : 'text-slate-500')}>
+                            Accepted formats: JPG, PNG. Max 5 images.
+                          </p>
+                        </div>
+                        {bookingState.uploadData.packageImages.length > 0 && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              bookingState.setUploadData((prev) => ({
+                                ...prev,
+                                packageImages: []
+                              }));
+                              setImagePreviews([]);
+                            }}
+                            className={cn(
+                              'rounded-md px-3 py-1.5 text-xs font-medium transition-colors flex items-center gap-1.5',
+                              isDarkMode
+                                ? 'bg-red-500/90 text-white hover:bg-red-600'
+                                : 'bg-red-500 text-white hover:bg-red-600'
+                            )}
+                          >
+                            <XCircle className="w-3 h-3" />
+                            Remove All
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Image Previews Grid */}
+                      {imagePreviews.length > 0 && (
+                        <div className={cn(
+                          "grid gap-2 mt-2",
+                          imagePreviews.length === 3 ? "grid-cols-3" :
+                          imagePreviews.length === 4 ? "grid-cols-4" :
+                          "grid-cols-5"
+                        )}>
+                          {imagePreviews.map((preview, index) => (
+                            <div
+                              key={index}
+                              className={cn(
+                                'relative group rounded-lg overflow-hidden border',
+                                isDarkMode ? 'border-slate-700' : 'border-slate-200'
+                              )}
+                            >
+                              <img
+                                src={preview}
+                                alt={`Package ${index + 1}`}
+                                className="h-24 w-full object-cover"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  const newFiles = bookingState.uploadData.packageImages.filter((_, i) => i !== index);
+                                  bookingState.setUploadData((prev) => ({
+                                    ...prev,
+                                    packageImages: newFiles
+                                  }));
+                                }}
+                                className={cn(
+                                  'absolute top-1 right-1 p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity',
+                                  isDarkMode
+                                    ? 'bg-red-500/80 text-white hover:bg-red-600'
+                                    : 'bg-red-500 text-white hover:bg-red-600'
+                                )}
+                              >
+                                <XCircle className="w-3 h-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setEditingSection(null)}
+                        className={cn(
+                          isDarkMode
+                            ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                            : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                        )}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => setEditingSection(null)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Navigation Buttons */}
+                <div className="flex flex-row gap-2 pt-2 justify-between">
+                  <Button
+                    onClick={bookingState.previousStep}
+                    className={cn(
+                      'w-auto px-6',
+                      isDarkMode
+                        ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                        : 'bg-blue-500 hover:bg-blue-600 text-white'
+                    )}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Back
+                  </Button>
+                  <Button
+                    onClick={handleReviewNext}
+                    className={cn(
+                      'w-auto px-6',
+                      isDarkMode
+                        ? 'bg-green-500 hover:bg-green-600 text-white'
+                        : 'bg-green-500 hover:bg-green-600 text-white'
+                    )}
+                  >
+                    Next
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          );
+        })();
+      
+      case 7: // Bill
         return (
           <BillStep
             data={bookingState.billData}
@@ -1586,7 +2688,7 @@ const OfficeBookingPanel: React.FC = () => {
           />
         );
       
-      case 7: // Details
+      case 8: // Details
         return (
           <DetailsStep
             data={bookingState.detailsData}
@@ -1603,7 +2705,7 @@ const OfficeBookingPanel: React.FC = () => {
           />
         );
       
-      case 8: // Payment
+      case 9: // Payment
         return (
           <PaymentStep
             data={bookingState.paymentData}
@@ -1617,7 +2719,7 @@ const OfficeBookingPanel: React.FC = () => {
           />
         );
       
-      case 9: // Success
+      case 10: // Success
         return (
           <div className={`p-4 sm:p-6 lg:p-8 space-y-6 ${isDarkMode ? 'text-slate-100' : ''}`}>
             {/* Success Header */}
@@ -1788,25 +2890,44 @@ const OfficeBookingPanel: React.FC = () => {
     }
   };
 
+  // Calculate progress percentage
+  const totalSteps = bookingState.steps.length;
+  const progressPercentage = totalSteps > 1 
+    ? Math.round((bookingState.currentStep / (totalSteps - 1)) * 100) 
+    : 0;
+
   return (
     <div 
-      className={`w-full min-h-screen ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'}`}
+      className={`w-full min-h-screen ${isDarkMode ? 'bg-slate-900' : 'bg-gray-50'} relative`}
       style={{ 
         fontFamily: 'Calibri, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important'
       }}
     >
       <div className="max-w-6xl mx-auto p-6">
-
-        {/* Stepper */}
-        <div className={`mb-8 ${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-6 shadow-sm`}>
-          <Stepper
-            currentStep={bookingState.currentStep}
-            steps={[...bookingState.steps]}
-            completedSteps={bookingState.completedSteps}
-            isDarkMode={isDarkMode}
-          />
+        {/* Progress Bar */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-4">
+              <span className={`text-base font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+                Booking Progress
+              </span>
+              <span className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+                Step {bookingState.currentStep + 1} of {totalSteps}
+              </span>
+            </div>
+            <span className={`text-lg font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+              {progressPercentage}%
+            </span>
+          </div>
+          <div className={`w-full h-3 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-700' : 'bg-gray-200'}`}>
+            <motion.div
+              className={`h-full rounded-full ${isDarkMode ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-gradient-to-r from-blue-500 to-cyan-600'}`}
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercentage}%` }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+            />
+          </div>
         </div>
-
         {/* Step Content */}
         <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-8 shadow-sm`}>
           {renderCurrentStep()}
@@ -1905,7 +3026,7 @@ const OfficeBookingPanel: React.FC = () => {
                           Invoice Details
                         </p>
                         <p>Invoice No.: {getInvoiceNumber()}</p>
-                        <p>Created: {formatShortDate(new Date().toISOString())}</p>
+                        <p>Created: {formatDateWithTime(new Date().toISOString())}</p>
                       </div>
                       <div className="space-y-0.5 sm:text-right">
                         <p>

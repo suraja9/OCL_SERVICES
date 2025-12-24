@@ -75,6 +75,9 @@ const packageTypeOptions = [
   'Stationery Items',
   'Sweets',
   'Toys',
+  'Wooden Box',
+  'Carton Box',
+  'Gunny bag',
   'Others'
 ];
 

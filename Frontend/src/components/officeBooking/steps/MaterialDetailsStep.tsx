@@ -8,7 +8,7 @@ import {
   Package, Info, FileText, Ruler, Scale, Eye, XCircle, 
   Cog, Book, FileCheck, Candy, Shirt, Monitor, Gift, CreditCard,
   Apple, Home, Laptop, Luggage, Heart, Pill, BookOpen, HardDrive,
-  Dumbbell, PenTool, Gamepad2
+  Dumbbell, PenTool, Gamepad2, Box
 } from 'lucide-react';
 import { UploadData } from '../types';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
@@ -42,6 +42,9 @@ const packageTypeOptions = [
   { value: 'Stationery Items', icon: PenTool },
   { value: 'Sweets', icon: Candy },
   { value: 'Toys', icon: Gamepad2 },
+  { value: 'Wooden Box', icon: Box },
+  { value: 'Carton Box', icon: Box },
+  { value: 'Gunny bag', icon: Package },
   { value: 'Others', icon: Package }
 ];
 

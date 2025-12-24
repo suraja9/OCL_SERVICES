@@ -12,6 +12,7 @@ export const BOOKING_STEPS = [
   'Shipment Details',
   'Material Details',
   'Upload',
+  'Review & Edit',
   'Bill',
   'Details',
   'Mode of Payment',
@@ -94,7 +95,8 @@ export const DEFAULT_PAYMENT_DATA = {
   paymentType: '' as const,
   modeOfPayment: '',
   amount: '',
-  currentStatus: 'booked' as const
+  currentStatus: undefined as 'booked' | 'picked' | undefined,
+  courierBoyId: undefined as string | undefined
 };
 
 export const DEFAULT_BILL_DATA = {

@@ -2770,4 +2770,31 @@ router.post('/update-permissions', async (req, res) => {
   }
 });
 
+// Get all OCL courier boys (for pickup assignment)
+router.get('/courier-boys/ocl', authenticateOfficeUser, async (req, res) => {
+  try {
+    const CourierBoy = (await import('../models/CourierBoy.js')).default;
+    
+    const courierBoys = await CourierBoy.find({ 
+      type: 'OCL',
+      status: 'approved' 
+    })
+      .select('_id fullName email phone area pincode locality building vehicleType licenseNumber')
+      .sort({ fullName: 1 })
+      .lean();
+
+    res.json({
+      success: true,
+      data: courierBoys
+    });
+  } catch (error) {
+    console.error('Error fetching OCL courier boys:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch OCL courier boys',
+      message: error.message
+    });
+  }
+});
+
 export default router;

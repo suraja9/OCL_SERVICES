@@ -88,6 +88,7 @@ export interface PaymentData {
   modeOfPayment?: string; // 'Cash' or 'To Pay'
   amount?: string;
   currentStatus?: 'booked' | 'picked'; // Current status selection
+  courierBoyId?: string; // ID of courier boy who did the pickup (when currentStatus is 'picked')
 }
 
 // Bill Data Types

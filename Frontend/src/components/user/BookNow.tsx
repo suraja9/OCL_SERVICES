@@ -66,7 +66,8 @@ import {
   Download,
   Printer,
   Globe,
-  Weight
+  Weight,
+  Box
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -110,6 +111,9 @@ const packageTypeOptions = [
   { value: 'Stationery Items', icon: PenTool },
   { value: 'Sweets', icon: Candy },
   { value: 'Toys', icon: Gamepad2 },
+  { value: 'Wooden Box', icon: Box },
+  { value: 'Carton Box', icon: Box },
+  { value: 'Gunny bag', icon: Package },
   { value: 'Others', icon: Package }
 ];
 
