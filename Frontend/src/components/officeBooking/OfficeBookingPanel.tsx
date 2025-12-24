@@ -1277,8 +1277,8 @@ const OfficeBookingPanel: React.FC = () => {
 
   // GST validation function - validates and formats input
   const validateGSTFormat = (value: string): string => {
-    // Remove any non-alphanumeric characters and convert to uppercase
-    let cleanValue = value.replace(/[^A-Z0-9]/g, '').toUpperCase();
+    // Convert to uppercase first, then remove any non-alphanumeric characters
+    let cleanValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     
     // Limit to 15 characters
     cleanValue = cleanValue.slice(0, 15);

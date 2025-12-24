@@ -82,9 +82,59 @@ const BillStep: React.FC<BillStepProps> = ({
     }
   };
 
+  // GST validation function - validates and formats input
   const validateGSTFormat = (value: string): string => {
-    // Allow alphanumeric, uppercase only
-    return value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 15);
+    // Convert to uppercase first, then remove any non-alphanumeric characters
+    let cleanValue = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    
+    // Limit to 15 characters
+    cleanValue = cleanValue.slice(0, 15);
+    
+    // Apply GST format rules - filter characters based on position
+    let formattedValue = '';
+    
+    for (let i = 0; i < cleanValue.length; i++) {
+      const char = cleanValue[i];
+      
+      if (i < 2) {
+        // First 2 positions: State code (numbers only)
+        if (/[0-9]/.test(char)) {
+          formattedValue += char;
+        }
+      } else if (i < 7) {
+        // Positions 2-6: First part of PAN (letters only)
+        if (/[A-Z]/.test(char)) {
+          formattedValue += char;
+        }
+      } else if (i < 11) {
+        // Positions 7-10: Second part of PAN (numbers only)
+        if (/[0-9]/.test(char)) {
+          formattedValue += char;
+        }
+      } else if (i === 11) {
+        // Position 11: Third part of PAN (letter only)
+        if (/[A-Z]/.test(char)) {
+          formattedValue += char;
+        }
+      } else if (i === 12) {
+        // Position 12: Registration number (1-9 or A-Z)
+        if (/[1-9A-Z]/.test(char)) {
+          formattedValue += char;
+        }
+      } else if (i === 13) {
+        // Position 13: Default letter (always Z)
+        if (char === 'Z') {
+          formattedValue += char;
+        }
+      } else if (i === 14) {
+        // Position 14: Checksum (number or letter)
+        if (/[0-9A-Z]/.test(char)) {
+          formattedValue += char;
+        }
+      }
+    }
+    
+    return formattedValue;
   };
 
   const handleGSTChange = (value: string) => {
