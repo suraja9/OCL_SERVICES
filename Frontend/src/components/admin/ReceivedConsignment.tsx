@@ -8,7 +8,8 @@ import {
   Check,
   X,
   Scan,
-  List
+  List,
+  Save
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +24,14 @@ import {
   TableHeader,
   TableRow
 } from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 
 type OrderSource = 'addressForm' | 'tracking' | 'customerBooking';
@@ -268,6 +277,10 @@ const ReceivedConsignment = () => {
   const [newWeight, setNewWeight] = useState('');
   const [showAlreadyScannedPopup, setShowAlreadyScannedPopup] = useState(false);
   const [error, setError] = useState('');
+  const [selectedOrder, setSelectedOrder] = useState<AddressFormData | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [editingOrder, setEditingOrder] = useState<AddressFormData | null>(null);
+  const [saving, setSaving] = useState(false);
   const { toast } = useToast();
 
   // Fetch received consignments
@@ -757,6 +770,157 @@ const ReceivedConsignment = () => {
     });
   };
 
+  // Handle opening details modal
+  const handleOpenDetails = (order: AddressFormData) => {
+    setSelectedOrder(order);
+    setEditingOrder({
+      ...order,
+      originData: order.originData ? { ...order.originData } : undefined,
+      destinationData: order.destinationData ? { ...order.destinationData } : undefined,
+      shipmentData: order.shipmentData ? { ...order.shipmentData } : undefined
+    });
+    setIsDetailsModalOpen(true);
+  };
+
+  // Handle updating order details
+  const handleUpdateOrderDetails = async () => {
+    if (!editingOrder) return;
+
+    try {
+      setSaving(true);
+      const token = localStorage.getItem('adminToken');
+      const headers = {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      };
+
+      if (editingOrder.source === 'tracking') {
+        // Update tracking record
+        const trackingIdentifier = editingOrder.trackingRecord?.consignmentNumber ?? editingOrder.consignmentNumber;
+        const response = await fetch('/api/admin/tracking/update-details', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            consignmentNumber: trackingIdentifier,
+            originData: editingOrder.originData,
+            destinationData: editingOrder.destinationData,
+            shipmentData: editingOrder.shipmentData
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.error || 'Failed to update tracking details');
+        }
+
+        const result = await response.json();
+        const updatedOrder = convertTrackingToAddressFormData(result.data);
+        
+        setScannedOrders(prev =>
+          prev.map(item => (item._id === updatedOrder._id ? updatedOrder : item))
+        );
+        setReceivedOrders(prev =>
+          prev.map(item => (item._id === updatedOrder._id ? updatedOrder : item))
+        );
+      } else if (editingOrder.source === 'customerBooking') {
+        // Update customer booking
+        const response = await fetch('/api/admin/customerbookings/update-details', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            consignmentNumber: editingOrder.consignmentNumber,
+            origin: editingOrder.originData ? {
+              name: editingOrder.originData.name,
+              city: editingOrder.originData.city,
+              state: editingOrder.originData.state,
+              pincode: editingOrder.originData.pincode,
+              flatBuilding: editingOrder.originData.flatBuilding,
+              locality: editingOrder.originData.locality,
+              landmark: editingOrder.originData.landmark,
+              area: editingOrder.originData.area,
+              district: editingOrder.originData.district
+            } : undefined,
+            destination: editingOrder.destinationData ? {
+              name: editingOrder.destinationData.name,
+              city: editingOrder.destinationData.city,
+              state: editingOrder.destinationData.state,
+              pincode: editingOrder.destinationData.pincode,
+              flatBuilding: editingOrder.destinationData.flatBuilding,
+              locality: editingOrder.destinationData.locality,
+              landmark: editingOrder.destinationData.landmark,
+              area: editingOrder.destinationData.area,
+              district: editingOrder.destinationData.district
+            } : undefined,
+            shipment: editingOrder.shipmentData ? {
+              weight: editingOrder.shipmentData.actualWeight?.toString(),
+              packagesCount: editingOrder.shipmentData.totalPackages,
+              natureOfConsignment: editingOrder.shipmentData.natureOfConsignment
+            } : undefined,
+            actualWeight: editingOrder.shipmentData?.actualWeight
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.error || 'Failed to update customer booking details');
+        }
+
+        const result = await response.json();
+        const updatedOrder = convertCustomerBookingToAddressFormData(result.data);
+        
+        setScannedOrders(prev =>
+          prev.map(item => (item._id === updatedOrder._id ? updatedOrder : item))
+        );
+        setReceivedOrders(prev =>
+          prev.map(item => (item._id === updatedOrder._id ? updatedOrder : item))
+        );
+      } else {
+        // Update address form
+        const response = await fetch('/api/admin/addressforms/update-details', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({
+            orderId: editingOrder._id,
+            originData: editingOrder.originData,
+            destinationData: editingOrder.destinationData,
+            shipmentData: editingOrder.shipmentData
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+          throw new Error(errorData?.error || 'Failed to update address form details');
+        }
+
+        const result = await response.json();
+        const updatedOrder = { ...result.data, source: 'addressForm' as OrderSource };
+        
+        setScannedOrders(prev =>
+          prev.map(item => (item._id === updatedOrder._id ? updatedOrder : item))
+        );
+        setReceivedOrders(prev =>
+          prev.map(item => (item._id === updatedOrder._id ? updatedOrder : item))
+        );
+      }
+
+      setSelectedOrder(editingOrder);
+      setIsDetailsModalOpen(false);
+      toast({
+        title: "Success",
+        description: "Consignment details updated successfully",
+      });
+    } catch (error: any) {
+      console.error('Error updating order details:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update consignment details",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'receivedList') {
       fetchReceivedOrders();
@@ -894,7 +1058,12 @@ const ReceivedConsignment = () => {
                           <TableCell className="py-3 px-4">
                             <div className="flex items-center gap-2">
                               <Package className="h-4 w-4 text-blue-500" />
-                              <span className="font-medium text-blue-600">{order.consignmentNumber}</span>
+                              <button
+                                onClick={() => handleOpenDetails(order)}
+                                className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                              >
+                                {order.consignmentNumber}
+                              </button>
                             </div>
                           </TableCell>
                           <TableCell className="py-3 px-4">
@@ -1022,7 +1191,12 @@ const ReceivedConsignment = () => {
                         <TableCell className="py-3 px-4">
                           <div className="flex items-center gap-2">
                             <Package className="h-4 w-4 text-blue-500" />
-                            <span className="font-medium text-blue-600">{order.consignmentNumber}</span>
+                            <button
+                              onClick={() => handleOpenDetails(order)}
+                              className="font-medium text-blue-600 hover:text-blue-800 hover:underline cursor-pointer"
+                            >
+                              {order.consignmentNumber}
+                            </button>
                           </div>
                         </TableCell>
                         <TableCell className="py-3 px-4">
@@ -1057,6 +1231,352 @@ const ReceivedConsignment = () => {
             </div>
           </div>
         )}
+
+        {/* Consignment Details Modal */}
+        <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
+          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-4">
+            <DialogHeader className="pb-2">
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <Package className="h-4 w-4 text-blue-600" />
+                Consignment {editingOrder?.consignmentNumber}
+              </DialogTitle>
+            </DialogHeader>
+
+            {editingOrder && (
+              <div className="space-y-3 py-2">
+                {/* Origin Details */}
+                <Card className="border">
+                  <CardHeader className="pb-2 pt-3 px-3">
+                    <CardTitle className="text-sm flex items-center gap-1.5 font-semibold">
+                      <MapPin className="h-3.5 w-3.5 text-green-600" />
+                      Origin
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-3 pb-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Name</label>
+                        <Input
+                          value={editingOrder.originData?.name || editingOrder.senderName || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), name: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">City</label>
+                        <Input
+                          value={editingOrder.originData?.city || editingOrder.senderCity || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), city: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">State</label>
+                        <Input
+                          value={editingOrder.originData?.state || editingOrder.senderState || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), state: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Pincode</label>
+                        <Input
+                          value={editingOrder.originData?.pincode || editingOrder.senderPincode || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), pincode: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Flat/Building</label>
+                        <Input
+                          value={editingOrder.originData?.flatBuilding || editingOrder.senderAddressLine1 || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), flatBuilding: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Locality</label>
+                        <Input
+                          value={editingOrder.originData?.locality || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), locality: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Landmark</label>
+                        <Input
+                          value={editingOrder.originData?.landmark || editingOrder.senderLandmark || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), landmark: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Area</label>
+                        <Input
+                          value={editingOrder.originData?.area || editingOrder.senderArea || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), area: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">District</label>
+                        <Input
+                          value={editingOrder.originData?.district || editingOrder.senderDistrict || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), district: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Destination Details */}
+                <Card className="border">
+                  <CardHeader className="pb-2 pt-3 px-3">
+                    <CardTitle className="text-sm flex items-center gap-1.5 font-semibold">
+                      <MapPin className="h-3.5 w-3.5 text-red-600" />
+                      Destination
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-3 pb-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Name</label>
+                        <Input
+                          value={editingOrder.destinationData?.name || editingOrder.receiverName || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), name: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">City</label>
+                        <Input
+                          value={editingOrder.destinationData?.city || editingOrder.receiverCity || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), city: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">State</label>
+                        <Input
+                          value={editingOrder.destinationData?.state || editingOrder.receiverState || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), state: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Pincode</label>
+                        <Input
+                          value={editingOrder.destinationData?.pincode || editingOrder.receiverPincode || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), pincode: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Flat/Building</label>
+                        <Input
+                          value={editingOrder.destinationData?.flatBuilding || editingOrder.receiverAddressLine1 || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), flatBuilding: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Locality</label>
+                        <Input
+                          value={editingOrder.destinationData?.locality || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), locality: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Landmark</label>
+                        <Input
+                          value={editingOrder.destinationData?.landmark || editingOrder.receiverLandmark || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), landmark: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Area</label>
+                        <Input
+                          value={editingOrder.destinationData?.area || editingOrder.receiverArea || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), area: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">District</label>
+                        <Input
+                          value={editingOrder.destinationData?.district || editingOrder.receiverDistrict || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), district: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Shipment Details */}
+                <Card className="border">
+                  <CardHeader className="pb-2 pt-3 px-3">
+                    <CardTitle className="text-sm flex items-center gap-1.5 font-semibold">
+                      <Weight className="h-3.5 w-3.5 text-orange-600" />
+                      Shipment
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="px-3 pb-3">
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Weight (kg)</label>
+                        <Input
+                          type="number"
+                          step="0.1"
+                          value={editingOrder.shipmentData?.actualWeight || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: {
+                              ...(editingOrder.shipmentData || {}),
+                              actualWeight: e.target.value ? parseFloat(e.target.value) : undefined
+                            }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Packages</label>
+                        <Input
+                          value={editingOrder.shipmentData?.totalPackages || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: {
+                              ...(editingOrder.shipmentData || {}),
+                              totalPackages: e.target.value
+                            }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Nature</label>
+                        <Input
+                          value={editingOrder.shipmentData?.natureOfConsignment || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: {
+                              ...(editingOrder.shipmentData || {}),
+                              natureOfConsignment: e.target.value
+                            }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Additional Info */}
+                <div className="flex items-center gap-4 text-xs px-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium text-gray-600">Source:</span>
+                    <Badge variant="outline" className="text-xs py-0 px-1.5">{editingOrder.source || 'N/A'}</Badge>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium text-gray-600">Status:</span>
+                    <Badge className="bg-green-100 text-green-800 text-xs py-0 px-1.5">Received</Badge>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium text-gray-600">At:</span>
+                    <span className="text-gray-600">{formatDate(editingOrder.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <DialogFooter className="pt-2 pb-0">
+              <Button
+                variant="outline"
+                onClick={() => setIsDetailsModalOpen(false)}
+                disabled={saving}
+                size="sm"
+                className="h-8 text-xs"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleUpdateOrderDetails}
+                disabled={saving}
+                size="sm"
+                className="bg-blue-600 hover:bg-blue-700 h-8 text-xs"
+              >
+                {saving ? (
+                  <>
+                    <RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-3 w-3 mr-1.5" />
+                    Save
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

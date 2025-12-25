@@ -14,7 +14,7 @@ import { API_BASE } from './utils/constants';
 import type { AddressData } from './types';
 import { Dialog, DialogContent, DialogTitle, DialogHeader } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Phone, Pencil, X, Building, MapPin, Mail, Loader2, CheckCircle, Package, ArrowRight, Truck, FileText, DollarSign, Download, Printer, Eye, Image, ArrowLeft, XCircle } from 'lucide-react';
+import { Phone, Pencil, X, Building, MapPin, Mail, Loader2, CheckCircle, Package, ArrowRight, Truck, FileText, DollarSign, Download, Printer, Eye, Image, ArrowLeft, XCircle, Receipt, CreditCard } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FloatingInput, FloatingSelect } from './shared';
 import html2canvas from 'html2canvas';
@@ -1150,7 +1150,7 @@ const OfficeBookingPanel: React.FC = () => {
       
       // Mark booking as submitted and move to success step
       bookingState.setSubmitSuccess(true);
-      bookingState.setCurrentStep(10);
+      bookingState.setCurrentStep(11);
       bookingState.setCompletedSteps(Array(bookingState.steps.length).fill(true));
       
       // Record consignment usage (non-blocking) if we have a consignment number and officeToken
@@ -1204,8 +1204,13 @@ const OfficeBookingPanel: React.FC = () => {
     }
   };
 
-  const handlePaymentSubmit = async () => {
+  const handlePaymentNext = () => {
     bookingState.markStepComplete(9);
+    bookingState.nextStep();
+  };
+
+  const handleFinalReviewSubmit = async () => {
+    bookingState.markStepComplete(10);
     await submitBooking();
   };
 
@@ -2710,16 +2715,343 @@ const OfficeBookingPanel: React.FC = () => {
           <PaymentStep
             data={bookingState.paymentData}
             onChange={bookingState.setPaymentData}
-            onNext={handlePaymentSubmit}
+            onNext={handlePaymentNext}
             onPrevious={bookingState.previousStep}
-            onSubmit={handlePaymentSubmit}
-            isSubmitting={bookingState.isSubmitting}
-            submitError={bookingState.submitError}
+            onSubmit={handlePaymentNext}
+            isSubmitting={false}
+            submitError={null}
             isDarkMode={isDarkMode}
           />
         );
       
-      case 10: // Success
+      case 10: // Final Review (Preview of Bill, Details, Payment)
+        return (() => {
+          // Format currency values
+          const formatCurrency = (value: string | number | undefined): string => {
+            if (!value) return '₹0.00';
+            const num = typeof value === 'string' ? parseFloat(value.replace(/[^\d.]/g, '')) : value;
+            if (isNaN(num)) return '₹0.00';
+            return `₹${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          };
+
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className={cn(
+                'mb-6 pb-4 border-b',
+                isDarkMode ? 'border-slate-700' : 'border-slate-200'
+              )}>
+                <h2 className={cn(
+                  'text-2xl font-bold',
+                  isDarkMode ? 'text-slate-100' : 'text-gray-900'
+                )}>
+                  Final Review
+                </h2>
+                <p className={cn(
+                  'text-sm mt-1',
+                  isDarkMode ? 'text-slate-400' : 'text-gray-600'
+                )}>
+                  Please review all billing and payment details before completing the booking
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                {/* Bill Information */}
+                <div className={cn(
+                  'rounded-lg border p-4 transition-all duration-200',
+                  isDarkMode
+                    ? 'border-slate-800/50 bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-800/80'
+                    : 'border-slate-200/60 bg-gradient-to-br from-slate-100/90 via-blue-50/70 to-slate-100/90'
+                )}>
+                  <h3 className={cn(
+                    'text-lg font-semibold mb-3 flex items-center gap-2',
+                    isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                  )}>
+                    <FileText className="h-5 w-5" />
+                    Billing Information
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Party Type:</span>
+                        <p className={cn('mt-1', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {bookingState.billData.partyType || '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Bill Type:</span>
+                        <p className={cn('mt-1', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {bookingState.billData.billType || '—'}
+                        </p>
+                      </div>
+                    </div>
+                    {bookingState.billData.partyType === 'other' && (
+                      <div className="mt-3 pt-3 border-t border-slate-700/50">
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Other Party Details:</span>
+                        <div className="mt-2 space-y-1">
+                          <p className={cn('text-sm', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                            {bookingState.billData.otherPartyDetails.concernName || bookingState.billData.otherPartyDetails.companyName || '—'}
+                          </p>
+                          <p className={cn('text-sm', isDarkMode ? 'text-slate-300' : 'text-slate-600')}>
+                            {bookingState.billData.otherPartyDetails.phoneNumber || '—'}
+                          </p>
+                          <p className={cn('text-sm', isDarkMode ? 'text-slate-300' : 'text-slate-600')}>
+                            {[
+                              bookingState.billData.otherPartyDetails.flatBuilding,
+                              bookingState.billData.otherPartyDetails.locality,
+                              bookingState.billData.otherPartyDetails.area,
+                              bookingState.billData.otherPartyDetails.city,
+                              bookingState.billData.otherPartyDetails.state,
+                              bookingState.billData.otherPartyDetails.pincode
+                            ].filter(Boolean).join(', ') || '—'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Details (Pricing) */}
+                <div className={cn(
+                  'rounded-lg border p-4 transition-all duration-200',
+                  isDarkMode
+                    ? 'border-slate-800/50 bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-800/80'
+                    : 'border-slate-200/60 bg-gradient-to-br from-slate-100/90 via-blue-50/70 to-slate-100/90'
+                )}>
+                  <h3 className={cn(
+                    'text-lg font-semibold mb-3 flex items-center gap-2',
+                    isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                  )}>
+                    <Receipt className="h-5 w-5" />
+                    Pricing Details
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Freight Charge:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.freightCharge)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>AWB Charge:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.awbCharge)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Pickup Charge:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.pickupCharge)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Local Collection:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.localCollection)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Door Delivery:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.doorDelivery)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Loading/Unloading:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.loadingUnloading)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Demurrage Charge:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.demurrageCharge)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>DDA Charge:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.ddaCharge)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Hamali Charge:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.hamaliCharge)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Packing Charge:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.packingCharge)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Other Charge:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.otherCharge)}
+                        </span>
+                      </div>
+                    </div>
+                    <div className={cn('pt-2 mt-2 border-t', isDarkMode ? 'border-slate-700' : 'border-slate-300')}>
+                      <div className="flex justify-between">
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Total:</span>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {formatCurrency(bookingState.detailsData.total)}
+                        </span>
+                      </div>
+                      {bookingState.detailsData.fuelCharge && (
+                        <div className="flex justify-between mt-1">
+                          <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>
+                            Fuel Charge ({bookingState.detailsData.fuelChargeType === 'percentage' ? '%' : 'Fixed'}):
+                          </span>
+                          <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                            {formatCurrency(bookingState.detailsData.fuelCharge)}
+                          </span>
+                        </div>
+                      )}
+                      {(bookingState.detailsData.sgstAmount || bookingState.detailsData.cgstAmount || bookingState.detailsData.igstAmount) && (
+                        <>
+                          {bookingState.detailsData.sgstAmount && (
+                            <div className="flex justify-between mt-1">
+                              <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>SGST:</span>
+                              <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                                {formatCurrency(bookingState.detailsData.sgstAmount)}
+                              </span>
+                            </div>
+                          )}
+                          {bookingState.detailsData.cgstAmount && (
+                            <div className="flex justify-between mt-1">
+                              <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>CGST:</span>
+                              <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                                {formatCurrency(bookingState.detailsData.cgstAmount)}
+                              </span>
+                            </div>
+                          )}
+                          {bookingState.detailsData.igstAmount && (
+                            <div className="flex justify-between mt-1">
+                              <span className={cn(isDarkMode ? 'text-slate-400' : 'text-gray-600')}>IGST:</span>
+                              <span className={cn('font-medium', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                                {formatCurrency(bookingState.detailsData.igstAmount)}
+                              </span>
+                            </div>
+                          )}
+                        </>
+                      )}
+                      <div className={cn('flex justify-between mt-3 pt-2 border-t-2 font-bold text-lg', isDarkMode ? 'border-slate-600 text-blue-400' : 'border-blue-300 text-blue-600')}>
+                        <span>Grand Total:</span>
+                        <span>{formatCurrency(bookingState.detailsData.grandTotal)}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Payment Information */}
+                <div className={cn(
+                  'rounded-lg border p-4 transition-all duration-200',
+                  isDarkMode
+                    ? 'border-slate-800/50 bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-800/80'
+                    : 'border-slate-200/60 bg-gradient-to-br from-slate-100/90 via-blue-50/70 to-slate-100/90'
+                )}>
+                  <h3 className={cn(
+                    'text-lg font-semibold mb-3 flex items-center gap-2',
+                    isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                  )}>
+                    <CreditCard className="h-5 w-5" />
+                    Payment Information
+                  </h3>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Payment Type:</span>
+                        <p className={cn('mt-1', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {bookingState.paymentData.paymentType || '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className={cn('font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Mode of Payment:</span>
+                        <p className={cn('mt-1', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                          {bookingState.paymentData.modeOfPayment || '—'}
+                        </p>
+                      </div>
+                      {bookingState.paymentData.amount && (
+                        <div>
+                          <span className={cn('font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Amount:</span>
+                          <p className={cn('mt-1', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                            {formatCurrency(bookingState.paymentData.amount)}
+                          </p>
+                        </div>
+                      )}
+                      {bookingState.paymentData.currentStatus && (
+                        <div>
+                          <span className={cn('font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Current Status:</span>
+                          <p className={cn('mt-1 capitalize', isDarkMode ? 'text-slate-200' : 'text-slate-800')}>
+                            {bookingState.paymentData.currentStatus}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-between items-center pt-4 mt-6 border-t border-slate-300">
+                <Button
+                  onClick={bookingState.previousStep}
+                  variant="outline"
+                  className={cn(
+                    'w-auto px-6',
+                    isDarkMode
+                      ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                      : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                  )}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Back
+                </Button>
+                <Button
+                  onClick={handleFinalReviewSubmit}
+                  disabled={bookingState.isSubmitting}
+                  className={cn(
+                    'w-auto px-6',
+                    isDarkMode
+                      ? 'bg-green-500 hover:bg-green-600 text-white'
+                      : 'bg-green-500 hover:bg-green-600 text-white'
+                  )}
+                >
+                  {bookingState.isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Completing Booking...
+                    </>
+                  ) : (
+                    <>
+                      Complete Booking
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Error Message */}
+              {bookingState.submitError && (
+                <div className={cn(
+                  'p-3 rounded-lg text-sm',
+                  isDarkMode ? 'bg-red-900/30 text-red-300 border border-red-800' : 'bg-red-50 text-red-600 border border-red-200'
+                )}>
+                  {bookingState.submitError}
+                </div>
+              )}
+            </motion.div>
+          );
+        })();
+      
+      case 11: // Success
         return (
           <div className={`p-4 sm:p-6 lg:p-8 space-y-6 ${isDarkMode ? 'text-slate-100' : ''}`}>
             {/* Success Header */}

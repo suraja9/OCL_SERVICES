@@ -2361,6 +2361,82 @@ router.post('/tracking/update-status', authenticateAdmin, async (req, res) => {
   }
 });
 
+// Update tracking details
+router.post('/tracking/update-details', authenticateAdmin, async (req, res) => {
+  if (!req.admin.hasPermission('addressForms')) {
+    return res.status(403).json({
+      error: 'Access denied. Address forms permission required.'
+    });
+  }
+
+  try {
+    const { consignmentNumber, originData, destinationData, shipmentData } = req.body;
+
+    if (!consignmentNumber) {
+      return res.status(400).json({ error: 'consignmentNumber is required.' });
+    }
+
+    const numericConsignment = Number(consignmentNumber);
+    const tracking = await Tracking.findOne(Number.isNaN(numericConsignment)
+      ? { consignmentNumber: consignmentNumber }
+      : {
+        $or: [
+          { consignmentNumber: numericConsignment },
+          { consignmentNumber: consignmentNumber }
+        ]
+      }
+    );
+
+    if (!tracking) {
+      return res.status(404).json({ error: 'Tracking record not found for consignment number.' });
+    }
+
+    const bookingIndex = tracking.booked && tracking.booked.length > 0
+      ? tracking.booked.length - 1
+      : -1;
+
+    if (bookingIndex === -1) {
+      return res.status(400).json({ error: 'Tracking record does not contain booking data to update.' });
+    }
+
+    // Update origin data
+    if (originData) {
+      tracking.booked[bookingIndex].originData = {
+        ...tracking.booked[bookingIndex].originData,
+        ...originData
+      };
+    }
+
+    // Update destination data
+    if (destinationData) {
+      tracking.booked[bookingIndex].destinationData = {
+        ...tracking.booked[bookingIndex].destinationData,
+        ...destinationData
+      };
+    }
+
+    // Update shipment data
+    if (shipmentData) {
+      tracking.booked[bookingIndex].shipmentData = {
+        ...tracking.booked[bookingIndex].shipmentData,
+        ...shipmentData
+      };
+    }
+
+    tracking.markModified(`booked.${bookingIndex}`);
+    await tracking.save();
+
+    res.json({
+      success: true,
+      message: 'Tracking details updated successfully.',
+      data: tracking.toObject()
+    });
+  } catch (error) {
+    console.error('Tracking details update error:', error);
+    res.status(500).json({ error: 'Failed to update tracking details.' });
+  }
+});
+
 // Get CustomerBooking by consignment number
 router.get('/customerbookings/consignment/:consignmentNumber', authenticateAdmin, async (req, res) => {
   if (!req.admin.hasPermission('addressForms')) {
@@ -2457,6 +2533,78 @@ router.post('/customerbookings/scan', authenticateAdmin, async (req, res) => {
   }
 });
 
+// Update customer booking details
+router.post('/customerbookings/update-details', authenticateAdmin, async (req, res) => {
+  if (!req.admin.hasPermission('addressForms')) {
+    return res.status(403).json({
+      error: 'Access denied. Address forms permission required.'
+    });
+  }
+
+  try {
+    const { consignmentNumber, origin, destination, shipment, actualWeight } = req.body;
+
+    if (!consignmentNumber) {
+      return res.status(400).json({ error: 'consignmentNumber is required.' });
+    }
+
+    const numericConsignment = Number(consignmentNumber);
+    const booking = await CustomerBooking.findOne(Number.isNaN(numericConsignment)
+      ? { consignmentNumber: consignmentNumber }
+      : {
+        $or: [
+          { consignmentNumber: numericConsignment },
+          { consignmentNumber: consignmentNumber }
+        ]
+      }
+    );
+
+    if (!booking) {
+      return res.status(404).json({ error: 'Customer booking not found for consignment number.' });
+    }
+
+    // Update origin
+    if (origin) {
+      booking.origin = {
+        ...booking.origin,
+        ...origin
+      };
+    }
+
+    // Update destination
+    if (destination) {
+      booking.destination = {
+        ...booking.destination,
+        ...destination
+      };
+    }
+
+    // Update shipment
+    if (shipment) {
+      booking.shipment = {
+        ...booking.shipment,
+        ...shipment
+      };
+    }
+
+    // Update actual weight
+    if (actualWeight !== undefined) {
+      booking.actualWeight = actualWeight;
+    }
+
+    await booking.save();
+
+    res.json({
+      success: true,
+      message: 'Customer booking details updated successfully.',
+      data: booking.toObject()
+    });
+  } catch (error) {
+    console.error('Customer booking details update error:', error);
+    res.status(500).json({ error: 'Failed to update customer booking details.' });
+  }
+});
+
 // Mark order as received (optionally update weight)
 router.post('/mark-order-received', authenticateAdmin, async (req, res) => {
   // Check permission
@@ -2490,6 +2638,82 @@ router.post('/mark-order-received', authenticateAdmin, async (req, res) => {
   } catch (error) {
     console.error('Mark order received error:', error);
     res.status(500).json({ error: 'Failed to mark order as received.' });
+  }
+});
+
+// Update address form details
+router.post('/addressforms/update-details', authenticateAdmin, async (req, res) => {
+  if (!req.admin.hasPermission('addressForms')) {
+    return res.status(403).json({
+      error: 'Access denied. Address forms permission required.'
+    });
+  }
+
+  try {
+    const { orderId, originData, destinationData, shipmentData } = req.body;
+
+    if (!orderId) {
+      return res.status(400).json({ error: 'orderId is required.' });
+    }
+
+    const form = await FormData.findById(orderId);
+
+    if (!form) {
+      return res.status(404).json({ error: 'Address form not found.' });
+    }
+
+    // Update origin data
+    if (originData) {
+      form.originData = {
+        ...form.originData,
+        ...originData
+      };
+      // Also update legacy sender fields for compatibility
+      if (originData.name) form.senderName = originData.name;
+      if (originData.city) form.senderCity = originData.city;
+      if (originData.state) form.senderState = originData.state;
+      if (originData.pincode) form.senderPincode = originData.pincode;
+      if (originData.flatBuilding) form.senderAddressLine1 = originData.flatBuilding;
+      if (originData.landmark) form.senderLandmark = originData.landmark;
+      if (originData.area) form.senderArea = originData.area;
+      if (originData.district) form.senderDistrict = originData.district;
+    }
+
+    // Update destination data
+    if (destinationData) {
+      form.destinationData = {
+        ...form.destinationData,
+        ...destinationData
+      };
+      // Also update legacy receiver fields for compatibility
+      if (destinationData.name) form.receiverName = destinationData.name;
+      if (destinationData.city) form.receiverCity = destinationData.city;
+      if (destinationData.state) form.receiverState = destinationData.state;
+      if (destinationData.pincode) form.receiverPincode = destinationData.pincode;
+      if (destinationData.flatBuilding) form.receiverAddressLine1 = destinationData.flatBuilding;
+      if (destinationData.landmark) form.receiverLandmark = destinationData.landmark;
+      if (destinationData.area) form.receiverArea = destinationData.area;
+      if (destinationData.district) form.receiverDistrict = destinationData.district;
+    }
+
+    // Update shipment data
+    if (shipmentData) {
+      form.shipmentData = {
+        ...form.shipmentData,
+        ...shipmentData
+      };
+    }
+
+    await form.save();
+
+    res.json({
+      success: true,
+      message: 'Address form details updated successfully.',
+      data: form.toObject()
+    });
+  } catch (error) {
+    console.error('Address form details update error:', error);
+    res.status(500).json({ error: 'Failed to update address form details.' });
   }
 });
 

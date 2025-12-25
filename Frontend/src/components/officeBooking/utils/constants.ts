@@ -16,6 +16,7 @@ export const BOOKING_STEPS = [
   'Bill',
   'Details',
   'Mode of Payment',
+  'Final Review',
   'Successful'
 ] as const;
 

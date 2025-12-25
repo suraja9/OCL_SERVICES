@@ -41,7 +41,7 @@ class WhatsAppService {
    * Send WhatsApp message using MSG91 template
    * @param {Object} options - Message options
    * @param {string} options.phoneNumber - Recipient phone number (10 digits)
-   * @param {string} options.templateName - Template name (e.g., 'booked')
+   * @param {string} options.templateName - Template name (e.g., 'ocl_booked')
    * @param {Object} options.templateParams - Template parameters
    * @param {string} options.templateParams.consignmentNumber - Consignment number for body_1
    * @param {string} options.templateParams.trackingUrl - Tracking URL for button_1
@@ -142,7 +142,7 @@ class WhatsAppService {
 
       return await this.sendTemplateMessage({
         phoneNumber,
-        templateName: 'booked',
+        templateName: 'ocl_booked',
         templateParams: {
           consignmentNumber: consignmentNumber.toString(),
           trackingUrl: defaultTrackingUrl
