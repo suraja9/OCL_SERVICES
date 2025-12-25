@@ -2771,7 +2771,7 @@ router.post('/update-permissions', async (req, res) => {
 });
 
 // Get all OCL courier boys (for pickup assignment)
-router.get('/courier-boys/ocl', authenticateOfficeUser, async (req, res) => {
+router.get('/courier-boys/ocl', authenticateAdminOrOfficeAdmin, async (req, res) => {
   try {
     const CourierBoy = (await import('../models/CourierBoy.js')).default;
     

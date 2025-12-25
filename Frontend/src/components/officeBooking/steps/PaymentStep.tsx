@@ -3,7 +3,7 @@
  * Seventh step of the office booking flow - Select payment method and delivery type
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { CreditCard, DollarSign, Truck, Building, CheckCircle, Check, ArrowLeft, ArrowRight, Package, PackageCheck, User, Phone, MapPin, X, Loader2 } from 'lucide-react';
 import { PaymentData } from '../types';
@@ -48,22 +48,48 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const [showCourierBoyDialog, setShowCourierBoyDialog] = useState(false);
   const [courierBoys, setCourierBoys] = useState<CourierBoy[]>([]);
   const [loadingCourierBoys, setLoadingCourierBoys] = useState(false);
+  const [courierBoysError, setCourierBoysError] = useState<string | null>(null);
   const [selectedCourierBoyId, setSelectedCourierBoyId] = useState<string | null>(data.courierBoyId || null);
+  const fetchingRef = useRef(false);
 
   // Fetch OCL courier boys when dialog opens
   useEffect(() => {
-    if (showCourierBoyDialog && courierBoys.length === 0) {
+    if (showCourierBoyDialog && !fetchingRef.current) {
       fetchOCLCourierBoys();
+    } else if (!showCourierBoyDialog) {
+      // Reset fetching ref when dialog closes
+      fetchingRef.current = false;
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showCourierBoyDialog]);
 
   const fetchOCLCourierBoys = async () => {
+    // Prevent multiple simultaneous fetches
+    if (fetchingRef.current) {
+      return;
+    }
+
     try {
+      fetchingRef.current = true;
       setLoadingCourierBoys(true);
+      setCourierBoysError(null);
+      
+      // Check for both admin and office tokens
+      const adminToken = localStorage.getItem('adminToken');
       const officeToken = localStorage.getItem('officeToken');
+      const token = adminToken || officeToken;
+      
+      if (!token) {
+        const errorMsg = 'No authentication token found. Please login again.';
+        console.error(errorMsg);
+        setCourierBoysError(errorMsg);
+        setCourierBoys([]);
+        return;
+      }
+
       const response = await fetch(`${API_BASE}/api/office/courier-boys/ocl`, {
         headers: {
-          'Authorization': `Bearer ${officeToken}`,
+          'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
       });
@@ -72,14 +98,28 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         const result = await response.json();
         if (result.success) {
           setCourierBoys(result.data || []);
+          console.log('Fetched courier boys:', result.data?.length || 0);
+        } else {
+          const errorMsg = result.error || 'Failed to fetch courier boys';
+          console.error('API returned success:false', result);
+          setCourierBoysError(errorMsg);
+          setCourierBoys([]);
         }
       } else {
-        console.error('Failed to fetch OCL courier boys');
+        const errorData = await response.json().catch(() => ({}));
+        const errorMsg = errorData.error || `Failed to fetch courier boys (${response.status})`;
+        console.error('Failed to fetch OCL courier boys:', response.status, errorData);
+        setCourierBoysError(errorMsg);
+        setCourierBoys([]);
       }
     } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Network error while fetching courier boys';
       console.error('Error fetching OCL courier boys:', error);
+      setCourierBoysError(errorMsg);
+      setCourierBoys([]);
     } finally {
       setLoadingCourierBoys(false);
+      fetchingRef.current = false;
     }
   };
 
@@ -401,6 +441,21 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             {loadingCourierBoys ? (
               <div className="flex items-center justify-center py-8">
                 <Loader2 className="h-6 w-6 animate-spin text-blue-500" />
+              </div>
+            ) : courierBoysError ? (
+              <div className={cn('text-center py-8 space-y-3', isDarkMode ? 'text-slate-400' : 'text-slate-600')}>
+                <p className="text-sm">{courierBoysError}</p>
+                <button
+                  onClick={fetchOCLCourierBoys}
+                  className={cn(
+                    'px-4 py-2 rounded-lg text-sm font-medium transition-colors',
+                    isDarkMode
+                      ? 'bg-blue-500 hover:bg-blue-600 text-white'
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  )}
+                >
+                  Retry
+                </button>
               </div>
             ) : courierBoys.length === 0 ? (
               <div className={cn('text-center py-8 text-sm', isDarkMode ? 'text-slate-400' : 'text-slate-600')}>
