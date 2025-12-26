@@ -1372,30 +1372,62 @@ const OfficeBookingPanel: React.FC = () => {
   };
 
   // Review step state
-  const [editingSection, setEditingSection] = useState<'origin' | 'destination' | 'shipment' | 'package' | 'bill' | 'details' | 'payment' | null>(null);
+  const [editingSection, setEditingSection] = useState<'origin' | 'destination' | 'shipment' | 'package' | 'bill' | 'details' | 'payment' | 'invoice' | null>(null);
   const [documentPreviewUrl, setDocumentPreviewUrl] = useState<string | null>(null);
   const [documentPreviewOpen, setDocumentPreviewOpen] = useState(false);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [invoiceImagePreviews, setInvoiceImagePreviews] = useState<string[]>([]);
+  const [panImagePreviews, setPanImagePreviews] = useState<string[]>([]);
+  const [declarationImagePreviews, setDeclarationImagePreviews] = useState<string[]>([]);
+
+  // Helper function to generate image previews
+  const generateImagePreviews = (files: File[], setPreviews: (previews: string[]) => void) => {
+    if (files.length === 0) {
+      setPreviews([]);
+      return;
+    }
+    const newPreviews: string[] = [];
+    let loadedCount = 0;
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        newPreviews.push(reader.result as string);
+        loadedCount++;
+        if (loadedCount === files.length) {
+          setPreviews(newPreviews);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+  };
 
   // Update image previews when packageImages change
   useEffect(() => {
     if (bookingState.currentStep === 6) {
-      const newPreviews: string[] = [];
-      bookingState.uploadData.packageImages.forEach((file) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          newPreviews.push(reader.result as string);
-          if (newPreviews.length === bookingState.uploadData.packageImages.length) {
-            setImagePreviews(newPreviews);
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-      if (bookingState.uploadData.packageImages.length === 0) {
-        setImagePreviews([]);
-      }
+      generateImagePreviews(bookingState.uploadData.packageImages, setImagePreviews);
     }
   }, [bookingState.uploadData.packageImages, bookingState.currentStep]);
+
+  // Update invoice image previews
+  useEffect(() => {
+    if (bookingState.currentStep === 6) {
+      generateImagePreviews(bookingState.uploadData.invoiceImages, setInvoiceImagePreviews);
+    }
+  }, [bookingState.uploadData.invoiceImages, bookingState.currentStep]);
+
+  // Update PAN image previews
+  useEffect(() => {
+    if (bookingState.currentStep === 6) {
+      generateImagePreviews(bookingState.uploadData.panImages, setPanImagePreviews);
+    }
+  }, [bookingState.uploadData.panImages, bookingState.currentStep]);
+
+  // Update declaration image previews
+  useEffect(() => {
+    if (bookingState.currentStep === 6) {
+      generateImagePreviews(bookingState.uploadData.declarationImages, setDeclarationImagePreviews);
+    }
+  }, [bookingState.uploadData.declarationImages, bookingState.currentStep]);
 
   // Review step options
   const addressTypeOptions = ['Home', 'Office', 'Others'];
@@ -2363,6 +2395,281 @@ const OfficeBookingPanel: React.FC = () => {
                   </div>
                 )}
 
+                {/* Invoice Information */}
+                <div className={cn(
+                  'rounded-lg border p-2.5 transition-all duration-200',
+                  isDarkMode
+                    ? 'border-slate-800/50 bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-800/80 hover:border-blue-500/30'
+                    : 'border-slate-200/60 bg-gradient-to-br from-slate-100/90 via-blue-50/70 to-slate-100/90 hover:border-blue-400/50'
+                )}>
+                  <div className={cn(
+                    'flex items-center justify-between mb-2',
+                    isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                  )}>
+                    <h4 className={cn(
+                      'text-sm font-semibold flex items-center gap-1.5',
+                      isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                    )}>
+                      <FileText className="h-3.5 w-3.5" />
+                      Invoice Information :
+                    </h4>
+                    <button
+                      onClick={() => setEditingSection(editingSection === 'invoice' ? null : 'invoice')}
+                      className={cn(
+                        'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors',
+                        isDarkMode
+                          ? 'text-blue-300 hover:bg-blue-500/20'
+                          : 'text-blue-600 hover:bg-blue-50'
+                      )}
+                    >
+                      <Pencil className="h-3 w-3" />
+                      Edit
+                    </button>
+                  </div>
+                  <div className="space-y-2 text-sm">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      <div>
+                        <span className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Invoice Number:</span>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                          {bookingState.uploadData.invoiceNumber || '—'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Declared Value:</span>
+                        <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                          {bookingState.uploadData.invoiceValue ? `₹${parseFloat(bookingState.uploadData.invoiceValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—'}
+                        </p>
+                      </div>
+                    </div>
+                    {bookingState.uploadData.eWaybillDigits && bookingState.uploadData.eWaybillDigits.some(d => d.trim() !== '') && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div>
+                          <span className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>E-Waybill:</span>
+                          <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
+                            {bookingState.uploadData.eWaybillDigits.join('') || '—'}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    {invoiceImagePreviews.length > 0 && (
+                      <div className="mt-2">
+                        <span className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium block mb-1', isDarkMode ? 'text-slate-400' : 'text-gray-600')}>Invoice Images:</span>
+                        <div className={cn(
+                          "grid gap-2",
+                          invoiceImagePreviews.length === 1 ? "grid-cols-1" :
+                          invoiceImagePreviews.length === 2 ? "grid-cols-2" :
+                          invoiceImagePreviews.length === 3 ? "grid-cols-3" :
+                          invoiceImagePreviews.length <= 5 ? "grid-cols-4" :
+                          "grid-cols-5"
+                        )}>
+                          {invoiceImagePreviews.map((preview, index) => (
+                            <div
+                              key={index}
+                              className={cn(
+                                'relative group overflow-hidden rounded border cursor-pointer',
+                                isDarkMode ? 'border-slate-700' : 'border-slate-200'
+                              )}
+                              onClick={() => {
+                                setDocumentPreviewUrl(preview);
+                                setDocumentPreviewOpen(true);
+                              }}
+                            >
+                              <img
+                                src={preview}
+                                alt={`Invoice ${index + 1}`}
+                                className="h-16 w-full object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* PAN Card Images */}
+                {panImagePreviews.length > 0 && (
+                  <div className={cn(
+                    'rounded-lg border p-2.5 transition-all duration-200',
+                    isDarkMode
+                      ? 'border-slate-800/50 bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-800/80 hover:border-blue-500/30'
+                      : 'border-slate-200/60 bg-gradient-to-br from-slate-100/90 via-blue-50/70 to-slate-100/90 hover:border-blue-400/50'
+                  )}>
+                    <div className={cn(
+                      'flex items-center justify-between mb-2',
+                      isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                    )}>
+                      <h4 className={cn(
+                        'text-sm font-semibold flex items-center gap-1.5',
+                        isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                      )}>
+                        <FileText className="h-3.5 w-3.5" />
+                        PAN Card :
+                      </h4>
+                    </div>
+                    <div className={cn(
+                      "grid gap-2",
+                      panImagePreviews.length === 1 ? "grid-cols-1" :
+                      panImagePreviews.length === 2 ? "grid-cols-2" :
+                      panImagePreviews.length === 3 ? "grid-cols-3" :
+                      panImagePreviews.length <= 5 ? "grid-cols-4" :
+                      "grid-cols-5"
+                    )}>
+                      {panImagePreviews.map((preview, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            'relative group overflow-hidden rounded border cursor-pointer',
+                            isDarkMode ? 'border-slate-700' : 'border-slate-200'
+                          )}
+                          onClick={() => {
+                            setDocumentPreviewUrl(preview);
+                            setDocumentPreviewOpen(true);
+                          }}
+                        >
+                          <img
+                            src={preview}
+                            alt={`PAN Card ${index + 1}`}
+                            className="h-16 w-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Declaration Form Images */}
+                {declarationImagePreviews.length > 0 && (
+                  <div className={cn(
+                    'rounded-lg border p-2.5 transition-all duration-200',
+                    isDarkMode
+                      ? 'border-slate-800/50 bg-gradient-to-br from-slate-800/80 via-slate-800/70 to-slate-800/80 hover:border-blue-500/30'
+                      : 'border-slate-200/60 bg-gradient-to-br from-slate-100/90 via-blue-50/70 to-slate-100/90 hover:border-blue-400/50'
+                  )}>
+                    <div className={cn(
+                      'flex items-center justify-between mb-2',
+                      isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                    )}>
+                      <h4 className={cn(
+                        'text-sm font-semibold flex items-center gap-1.5',
+                        isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                      )}>
+                        <FileText className="h-3.5 w-3.5" />
+                        Declaration Form :
+                      </h4>
+                    </div>
+                    <div className={cn(
+                      "grid gap-2",
+                      declarationImagePreviews.length === 1 ? "grid-cols-1" :
+                      declarationImagePreviews.length === 2 ? "grid-cols-2" :
+                      declarationImagePreviews.length === 3 ? "grid-cols-3" :
+                      declarationImagePreviews.length <= 5 ? "grid-cols-4" :
+                      "grid-cols-5"
+                    )}>
+                      {declarationImagePreviews.map((preview, index) => (
+                        <div
+                          key={index}
+                          className={cn(
+                            'relative group overflow-hidden rounded border cursor-pointer',
+                            isDarkMode ? 'border-slate-700' : 'border-slate-200'
+                          )}
+                          onClick={() => {
+                            setDocumentPreviewUrl(preview);
+                            setDocumentPreviewOpen(true);
+                          }}
+                        >
+                          <img
+                            src={preview}
+                            alt={`Declaration Form ${index + 1}`}
+                            className="h-16 w-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Invoice Information Edit Dialog */}
+                <Dialog open={editingSection === 'invoice'} onOpenChange={(open) => !open && setEditingSection(null)}>
+                  <DialogContent className={cn(
+                    'max-w-2xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]',
+                    isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+                  )}>
+                    <DialogHeader>
+                      <DialogTitle className={cn(isDarkMode ? 'text-slate-100' : 'text-slate-900')}>
+                        Edit Invoice Information
+                      </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FloatingInput
+                          label="Invoice Number"
+                          value={bookingState.uploadData.invoiceNumber}
+                          onChange={(value) => bookingState.setUploadData((prev) => ({ ...prev, invoiceNumber: value }))}
+                          required
+                          isDarkMode={isDarkMode}
+                          icon={<FileText className="h-4 w-4" />}
+                        />
+                        <FloatingInput
+                          label="Declared Value (₹)"
+                          value={bookingState.uploadData.invoiceValue}
+                          onChange={(value) => bookingState.setUploadData((prev) => ({ ...prev, invoiceValue: sanitizeDecimal(value) }))}
+                          required
+                          isDarkMode={isDarkMode}
+                          icon={<DollarSign className="h-4 w-4" />}
+                        />
+                        {parseFloat(bookingState.uploadData.invoiceValue || '0') >= 50000 && (
+                          <div className="md:col-span-2">
+                            <label className={cn('block text-sm font-medium mb-2', isDarkMode ? 'text-slate-200' : 'text-slate-700')}>
+                              E-Waybill (12 digits)
+                            </label>
+                            <div className="flex gap-1 flex-wrap">
+                              {(bookingState.uploadData.eWaybillDigits || Array(12).fill('')).map((digit, index) => (
+                                <input
+                                  key={index}
+                                  type="text"
+                                  value={digit}
+                                  onChange={(e) => {
+                                    const newDigits = [...(bookingState.uploadData.eWaybillDigits || Array(12).fill(''))];
+                                    newDigits[index] = e.target.value.slice(0, 1);
+                                    bookingState.setUploadData((prev) => ({ ...prev, eWaybillDigits: newDigits }));
+                                  }}
+                                  className={cn(
+                                    'w-10 h-10 text-center text-sm font-semibold border-2 rounded-xl transition-all duration-200',
+                                    isDarkMode
+                                      ? 'bg-slate-800 border-yellow-500/50 text-slate-100 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30'
+                                      : 'bg-white border-yellow-300 text-gray-800 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-400/30'
+                                  )}
+                                  maxLength={1}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-2 mt-6">
+                      <Button
+                        variant="outline"
+                        onClick={() => setEditingSection(null)}
+                        className={cn(
+                          isDarkMode
+                            ? 'border-slate-700 text-slate-300 hover:bg-slate-800'
+                            : 'border-slate-300 text-slate-700 hover:bg-slate-50'
+                        )}
+                      >
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={() => setEditingSection(null)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white"
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
                 {/* Shipment Details Edit Dialog */}
                 <Dialog open={editingSection === 'shipment'} onOpenChange={(open) => !open && setEditingSection(null)}>
                   <DialogContent className={cn(
@@ -3214,6 +3521,30 @@ const OfficeBookingPanel: React.FC = () => {
                     )}
                   </div>
                 </div>
+
+                {/* Invoice Information */}
+                <div className={`rounded-xl p-4 ${
+                  isDarkMode ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-100'
+                }`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <FileText className={`w-4 h-4 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
+                    <h4 className={`font-semibold ${isDarkMode ? 'text-amber-300' : 'text-amber-800'}`}>Invoice Information</h4>
+                  </div>
+                  <div className={`space-y-1 text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                    <p><span className="font-medium">Invoice No.:</span> {bookingState.uploadData.invoiceNumber || 'N/A'}</p>
+                    <p><span className="font-medium">Declared Value:</span> {
+                      bookingState.uploadData.invoiceValue 
+                        ? `₹${parseFloat(bookingState.uploadData.invoiceValue).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                        : 'N/A'
+                    }</p>
+                    {bookingState.uploadData.eWaybillDigits && bookingState.uploadData.eWaybillDigits.some(d => d.trim() !== '') && (
+                      <p><span className="font-medium">E-Waybill:</span> {bookingState.uploadData.eWaybillDigits.join('')}</p>
+                    )}
+                    {bookingState.uploadData.invoiceImages && bookingState.uploadData.invoiceImages.length > 0 && (
+                      <p><span className="font-medium">Images:</span> {bookingState.uploadData.invoiceImages.length} uploaded</p>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -3652,6 +3983,55 @@ const OfficeBookingPanel: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Document Preview Modal */}
+      {documentPreviewOpen && documentPreviewUrl && (
+        <Dialog open={documentPreviewOpen} onOpenChange={setDocumentPreviewOpen}>
+          <DialogContent className={cn(
+            'max-w-4xl max-h-[90vh] overflow-y-auto',
+            isDarkMode ? 'bg-slate-900 border-slate-800' : 'bg-white border-slate-200'
+          )}>
+            <DialogHeader>
+              <DialogTitle className={cn(isDarkMode ? 'text-slate-100' : 'text-slate-900')}>
+                Document Preview
+              </DialogTitle>
+            </DialogHeader>
+            <div className="mt-4 flex items-center justify-center">
+              {documentPreviewUrl.endsWith('.pdf') || documentPreviewUrl.includes('application/pdf') ? (
+                <iframe
+                  src={documentPreviewUrl}
+                  className="w-full h-[70vh] border rounded"
+                  title="Document Preview"
+                />
+              ) : (
+                <img
+                  src={documentPreviewUrl}
+                  alt="Document Preview"
+                  className="max-w-full max-h-[70vh] object-contain rounded"
+                />
+              )}
+            </div>
+            <div className="flex justify-end mt-4">
+              <Button
+                onClick={() => {
+                  if (documentPreviewUrl) {
+                    URL.revokeObjectURL(documentPreviewUrl);
+                    setDocumentPreviewUrl(null);
+                  }
+                  setDocumentPreviewOpen(false);
+                }}
+                className={cn(
+                  isDarkMode
+                    ? 'bg-slate-800 text-slate-200 hover:bg-slate-700'
+                    : 'bg-slate-200 text-slate-800 hover:bg-slate-300'
+                )}
+              >
+                Close
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

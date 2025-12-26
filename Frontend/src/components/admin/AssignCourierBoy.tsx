@@ -1198,8 +1198,9 @@ const AssignCourierBoy = () => {
   const totalColoaderShipments = coloaderGroups.reduce((sum, group) => sum + group.shipments.length + group.bookings.length, 0);
 
   // Format date
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-IN', {
+  const formatDate = (dateString: string | Date) => {
+    const date = typeof dateString === 'string' ? new Date(dateString) : dateString;
+    return date.toLocaleDateString('en-IN', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',

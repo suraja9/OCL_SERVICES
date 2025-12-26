@@ -9,7 +9,11 @@ import {
   X,
   Scan,
   List,
-  Save
+  Save,
+  Building,
+  FileText,
+  CreditCard,
+  Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,32 +36,112 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
 type OrderSource = 'addressForm' | 'tracking' | 'customerBooking';
 
 interface TrackingAddressData {
+  useCurrentAddress?: boolean;
+  mobileNumber?: string;
   name?: string;
-  city?: string;
-  state?: string;
-  pincode?: string;
+  email?: string;
+  companyName?: string;
   flatBuilding?: string;
   locality?: string;
   landmark?: string;
+  pincode?: string;
   area?: string;
+  city?: string;
   district?: string;
+  state?: string;
+  gstNumber?: string;
+  alternateNumbers?: string[];
+  addressType?: string;
+  birthday?: string;
+  anniversary?: string;
+  website?: string;
+  otherAlternateNumber?: string;
+  showOtherAlternateNumber?: boolean;
+}
+
+interface TrackingDimension {
+  length?: string;
+  breadth?: string;
+  height?: string;
+  unit?: string;
 }
 
 interface TrackingShipmentData {
-  actualWeight?: number;
-  totalPackages?: string;
   natureOfConsignment?: string;
+  services?: string;
+  mode?: string;
+  insurance?: string;
+  riskCoverage?: string;
+  packagesCount?: string;
+  packageType?: string;
+  others?: string;
+  contentDescription?: string;
+  declaredValue?: string;
+  dimensions?: TrackingDimension[];
+  actualWeight?: string;
+  volumetricWeight?: number;
+  chargeableWeight?: number;
+  totalPackages?: string;
+  materials?: string;
+  packageImages?: any[];
+  uploadedFiles?: any[];
+  description?: string;
+  specialInstructions?: string;
+  perKgWeight?: string;
+}
+
+interface TrackingCorporateInfo {
+  corporateId?: string;
+  companyName?: string;
+  email?: string;
+  contactNumber?: string;
+}
+
+interface TrackingInvoiceData {
+  billingAddress?: string;
+  paymentMethod?: string;
+  terms?: string;
+  calculatedPrice?: number;
+  gst?: number;
+  finalPrice?: number;
+  serviceType?: string;
+  location?: string;
+  transportMode?: string;
+  chargeableWeight?: number;
+}
+
+interface TrackingPaymentData {
+  paymentType?: string;
+  modeOfPayment?: string;
+  amount?: number;
+  currentStatus?: string;
 }
 
 interface TrackingBookingData {
+  corporateId?: string;
+  corporateInfo?: TrackingCorporateInfo;
   originData?: TrackingAddressData;
   destinationData?: TrackingAddressData;
   shipmentData?: TrackingShipmentData;
+  invoiceData?: TrackingInvoiceData;
+  paymentData?: TrackingPaymentData;
+  consignmentNumber?: number;
+  bookingReference?: string;
+  bookingDate?: string;
+  status?: string;
+  paymentStatus?: string;
 }
 
 interface TrackingReceivedEvent {
@@ -84,32 +168,94 @@ interface CustomerBookingData {
   currentStatus: string;
   origin: {
     name: string;
-    city: string;
-    state: string;
+    mobileNumber: string;
+    email: string;
+    companyName: string;
+    flatBuilding: string;
+    locality: string;
+    landmark: string;
     pincode: string;
-    flatBuilding?: string;
-    locality?: string;
-    landmark?: string;
-    area?: string;
-    district?: string;
+    area: string;
+    city: string;
+    district: string;
+    state: string;
+    gstNumber: string;
+    alternateNumbers: string[];
+    addressType: string;
+    birthday: string;
+    anniversary: string;
+    website: string;
+    otherAlternateNumber: string;
   };
   destination: {
     name: string;
-    city: string;
-    state: string;
+    mobileNumber: string;
+    email: string;
+    companyName: string;
+    flatBuilding: string;
+    locality: string;
+    landmark: string;
     pincode: string;
-    flatBuilding?: string;
-    locality?: string;
-    landmark?: string;
-    area?: string;
-    district?: string;
+    area: string;
+    city: string;
+    district: string;
+    state: string;
+    gstNumber: string;
+    alternateNumbers: string[];
+    addressType: string;
+    birthday: string;
+    anniversary: string;
+    website: string;
+    otherAlternateNumber: string;
   };
-  shipment?: {
-    weight?: string;
-    packagesCount?: string;
-    natureOfConsignment?: string;
+  shipment: {
+    natureOfConsignment: string;
+    insurance: string;
+    riskCoverage: string;
+    packagesCount: string;
+    materials: string;
+    others: string;
+    description: string;
+    declaredValue: string;
+    weight: string;
+    length: string;
+    width: string;
+    height: string;
+    insuranceCompanyName: string;
+    insurancePolicyNumber: string;
+    insurancePolicyDate: string;
+    insuranceValidUpto: string;
+    insurancePremiumAmount: string;
+    insuranceDocumentName: string;
+    insuranceDocument: string;
+    declarationDocumentName: string;
+    declarationDocument: string;
   };
-  actualWeight?: number;
+  packageImages: string[];
+  shippingMode: string;
+  serviceType: string;
+  calculatedPrice: number;
+  basePrice: number;
+  gstAmount: number;
+  pickupCharge: number;
+  totalAmount: number;
+  actualWeight: number;
+  volumetricWeight: number;
+  chargeableWeight: number;
+  originServiceable: boolean;
+  destinationServiceable: boolean;
+  originAddressInfo: string;
+  destinationAddressInfo: string;
+  status: string;
+  currentStatus: string;
+  BookedAt: string;
+  paymentStatus: string;
+  paymentMethod: string;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+  paidAt: string;
+  bookingReference: string;
   ReceivedAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -118,33 +264,119 @@ interface CustomerBookingData {
 interface AddressFormData {
   _id: string;
   consignmentNumber?: number | string;
+  bookingReference?: string;
   originData?: {
+    useCurrentAddress?: boolean;
+    mobileNumber?: string;
     name: string;
-    city: string;
-    state: string;
-    pincode: string;
+    email?: string;
+    companyName?: string;
     flatBuilding?: string;
     locality?: string;
     landmark?: string;
+    pincode: string;
     area?: string;
+    city: string;
     district?: string;
+    state: string;
+    gstNumber?: string;
+    alternateNumbers?: string[];
+    addressType?: string;
+    birthday?: string;
+    anniversary?: string;
+    website?: string;
+    otherAlternateNumber?: string;
+    showOtherAlternateNumber?: boolean;
   };
   destinationData?: {
+    mobileNumber?: string;
     name: string;
-    city: string;
-    state: string;
-    pincode: string;
+    email?: string;
+    companyName?: string;
     flatBuilding?: string;
     locality?: string;
     landmark?: string;
+    pincode: string;
     area?: string;
+    city: string;
     district?: string;
+    state: string;
+    gstNumber?: string;
+    alternateNumbers?: string[];
+    addressType?: string;
+    birthday?: string;
+    anniversary?: string;
+    website?: string;
+    otherAlternateNumber?: string;
   };
   shipmentData?: {
-    actualWeight?: number;
-    totalPackages?: string;
     natureOfConsignment?: string;
+    services?: string;
+    mode?: string;
+    insurance?: string;
+    riskCoverage?: string;
+    packagesCount?: string;
+    packageType?: string;
+    others?: string;
+    contentDescription?: string;
+    declaredValue?: string;
+    dimensions?: Array<{
+      length?: string;
+      breadth?: string;
+      height?: string;
+      unit?: string;
+    }>;
+    actualWeight?: string | number;
+    volumetricWeight?: number;
+    chargeableWeight?: number;
+    totalPackages?: string;
+    materials?: string;
+    packageImages?: string[] | any[];
+    uploadedFiles?: any[];
+    description?: string;
+    specialInstructions?: string;
+    perKgWeight?: string;
+    weight?: string;
+    length?: string;
+    width?: string;
+    height?: string;
+    insuranceCompanyName?: string;
+    insurancePolicyNumber?: string;
+    insurancePolicyDate?: string;
+    insuranceValidUpto?: string;
+    insurancePremiumAmount?: string;
+    insuranceDocumentName?: string;
+    insuranceDocument?: string;
+    declarationDocumentName?: string;
+    declarationDocument?: string;
   };
+  corporateInfo?: {
+    corporateId?: string;
+    companyName?: string;
+    email?: string;
+    contactNumber?: string;
+  };
+  invoiceData?: {
+    billingAddress?: string;
+    paymentMethod?: string;
+    terms?: string;
+    calculatedPrice?: number;
+    gst?: number;
+    finalPrice?: number;
+    serviceType?: string;
+    location?: string;
+    transportMode?: string;
+    chargeableWeight?: number;
+  };
+  paymentData?: {
+    paymentType?: string;
+    modeOfPayment?: string;
+    amount?: number;
+    currentStatus?: string;
+  };
+  bookingDate?: string;
+  status?: string;
+  paymentStatus?: string;
   senderName?: string;
   senderCity?: string;
   senderState?: string;
@@ -204,15 +436,100 @@ const convertTrackingToAddressFormData = (tracking: TrackingRecord): AddressForm
   return {
     _id: tracking._id,
     consignmentNumber: Number.isNaN(numericConsignment) ? tracking.consignmentNumber : numericConsignment,
-    originData: bookingData?.originData as AddressFormData['originData'],
-    destinationData: bookingData?.destinationData as AddressFormData['destinationData'],
-    shipmentData: bookingData?.shipmentData
-      ? {
-          actualWeight: bookingData.shipmentData.actualWeight,
-          totalPackages: bookingData.shipmentData.totalPackages,
-          natureOfConsignment: bookingData.shipmentData.natureOfConsignment
-        }
-      : undefined,
+    bookingReference: bookingData?.bookingReference || String(tracking.consignmentNumber),
+    originData: bookingData?.originData ? {
+      useCurrentAddress: bookingData.originData.useCurrentAddress,
+      mobileNumber: bookingData.originData.mobileNumber,
+      name: bookingData.originData.name || '',
+      email: bookingData.originData.email,
+      companyName: bookingData.originData.companyName,
+      flatBuilding: bookingData.originData.flatBuilding,
+      locality: bookingData.originData.locality,
+      landmark: bookingData.originData.landmark,
+      pincode: bookingData.originData.pincode || '',
+      area: bookingData.originData.area,
+      city: bookingData.originData.city || '',
+      district: bookingData.originData.district,
+      state: bookingData.originData.state || '',
+      gstNumber: bookingData.originData.gstNumber,
+      alternateNumbers: bookingData.originData.alternateNumbers,
+      addressType: bookingData.originData.addressType,
+      birthday: bookingData.originData.birthday,
+      anniversary: bookingData.originData.anniversary,
+      website: bookingData.originData.website,
+      otherAlternateNumber: bookingData.originData.otherAlternateNumber,
+      showOtherAlternateNumber: bookingData.originData.showOtherAlternateNumber
+    } : undefined,
+    destinationData: bookingData?.destinationData ? {
+      mobileNumber: bookingData.destinationData.mobileNumber,
+      name: bookingData.destinationData.name || '',
+      email: bookingData.destinationData.email,
+      companyName: bookingData.destinationData.companyName,
+      flatBuilding: bookingData.destinationData.flatBuilding,
+      locality: bookingData.destinationData.locality,
+      landmark: bookingData.destinationData.landmark,
+      pincode: bookingData.destinationData.pincode || '',
+      area: bookingData.destinationData.area,
+      city: bookingData.destinationData.city || '',
+      district: bookingData.destinationData.district,
+      state: bookingData.destinationData.state || '',
+      gstNumber: bookingData.destinationData.gstNumber,
+      alternateNumbers: bookingData.destinationData.alternateNumbers,
+      addressType: bookingData.destinationData.addressType,
+      birthday: bookingData.destinationData.birthday,
+      anniversary: bookingData.destinationData.anniversary,
+      website: bookingData.destinationData.website
+    } : undefined,
+    shipmentData: bookingData?.shipmentData ? {
+      natureOfConsignment: bookingData.shipmentData.natureOfConsignment,
+      services: bookingData.shipmentData.services,
+      mode: bookingData.shipmentData.mode,
+      insurance: bookingData.shipmentData.insurance,
+      riskCoverage: bookingData.shipmentData.riskCoverage,
+      packagesCount: bookingData.shipmentData.packagesCount,
+      packageType: bookingData.shipmentData.packageType,
+      others: bookingData.shipmentData.others,
+      contentDescription: bookingData.shipmentData.contentDescription,
+      declaredValue: bookingData.shipmentData.declaredValue,
+      dimensions: bookingData.shipmentData.dimensions,
+      actualWeight: bookingData.shipmentData.actualWeight,
+      volumetricWeight: bookingData.shipmentData.volumetricWeight,
+      chargeableWeight: bookingData.shipmentData.chargeableWeight,
+      totalPackages: bookingData.shipmentData.totalPackages,
+      materials: bookingData.shipmentData.materials,
+      packageImages: bookingData.shipmentData.packageImages,
+      uploadedFiles: bookingData.shipmentData.uploadedFiles,
+      description: bookingData.shipmentData.description,
+      specialInstructions: bookingData.shipmentData.specialInstructions,
+      perKgWeight: bookingData.shipmentData.perKgWeight
+    } : undefined,
+    corporateInfo: bookingData?.corporateInfo ? {
+      corporateId: bookingData.corporateInfo.corporateId,
+      companyName: bookingData.corporateInfo.companyName,
+      email: bookingData.corporateInfo.email,
+      contactNumber: bookingData.corporateInfo.contactNumber
+    } : undefined,
+    invoiceData: bookingData?.invoiceData ? {
+      billingAddress: bookingData.invoiceData.billingAddress,
+      paymentMethod: bookingData.invoiceData.paymentMethod,
+      terms: bookingData.invoiceData.terms,
+      calculatedPrice: bookingData.invoiceData.calculatedPrice,
+      gst: bookingData.invoiceData.gst,
+      finalPrice: bookingData.invoiceData.finalPrice,
+      serviceType: bookingData.invoiceData.serviceType,
+      location: bookingData.invoiceData.location,
+      transportMode: bookingData.invoiceData.transportMode,
+      chargeableWeight: bookingData.invoiceData.chargeableWeight
+    } : undefined,
+    paymentData: bookingData?.paymentData ? {
+      paymentType: bookingData.paymentData.paymentType,
+      modeOfPayment: bookingData.paymentData.modeOfPayment,
+      amount: bookingData.paymentData.amount,
+      currentStatus: bookingData.paymentData.currentStatus
+    } : undefined,
+    bookingDate: bookingData?.bookingDate,
+    status: bookingData?.status,
+    paymentStatus: bookingData?.paymentStatus,
     formCompleted: true,
     createdAt: getTrackingTimestamp(tracking),
     assignmentData: {
@@ -231,39 +548,85 @@ const convertCustomerBookingToAddressFormData = (booking: CustomerBookingData): 
   return {
     _id: booking._id,
     consignmentNumber: Number.isNaN(numericConsignment) ? booking.consignmentNumber : numericConsignment,
+    bookingReference: booking.bookingReference || String(booking.consignmentNumber),
     originData: {
+      mobileNumber: booking.origin.mobileNumber,
       name: booking.origin.name,
-      city: booking.origin.city,
-      state: booking.origin.state,
-      pincode: booking.origin.pincode,
+      email: booking.origin.email,
+      companyName: booking.origin.companyName,
       flatBuilding: booking.origin.flatBuilding,
       locality: booking.origin.locality,
       landmark: booking.origin.landmark,
+      pincode: booking.origin.pincode,
       area: booking.origin.area,
-      district: booking.origin.district
+      city: booking.origin.city,
+      district: booking.origin.district,
+      state: booking.origin.state,
+      gstNumber: booking.origin.gstNumber,
+      alternateNumbers: booking.origin.alternateNumbers,
+      addressType: booking.origin.addressType,
+      birthday: booking.origin.birthday,
+      anniversary: booking.origin.anniversary,
+      website: booking.origin.website,
+      otherAlternateNumber: booking.origin.otherAlternateNumber
     },
     destinationData: {
+      mobileNumber: booking.destination.mobileNumber,
       name: booking.destination.name,
-      city: booking.destination.city,
-      state: booking.destination.state,
-      pincode: booking.destination.pincode,
+      email: booking.destination.email,
+      companyName: booking.destination.companyName,
       flatBuilding: booking.destination.flatBuilding,
       locality: booking.destination.locality,
       landmark: booking.destination.landmark,
+      pincode: booking.destination.pincode,
       area: booking.destination.area,
-      district: booking.destination.district
+      city: booking.destination.city,
+      district: booking.destination.district,
+      state: booking.destination.state,
+      gstNumber: booking.destination.gstNumber,
+      alternateNumbers: booking.destination.alternateNumbers,
+      addressType: booking.destination.addressType,
+      birthday: booking.destination.birthday,
+      anniversary: booking.destination.anniversary,
+      website: booking.destination.website,
+      otherAlternateNumber: booking.destination.otherAlternateNumber
     },
     shipmentData: {
-      actualWeight: booking.actualWeight || (booking.shipment?.weight ? Number(booking.shipment.weight) : undefined),
-      totalPackages: booking.shipment?.packagesCount,
-      natureOfConsignment: booking.shipment?.natureOfConsignment
+      natureOfConsignment: booking.shipment.natureOfConsignment,
+      insurance: booking.shipment.insurance,
+      riskCoverage: booking.shipment.riskCoverage,
+      packagesCount: booking.shipment.packagesCount,
+      materials: booking.shipment.materials,
+      others: booking.shipment.others,
+      description: booking.shipment.description,
+      declaredValue: booking.shipment.declaredValue,
+      weight: booking.shipment.weight,
+      length: booking.shipment.length,
+      width: booking.shipment.width,
+      height: booking.shipment.height,
+      insuranceCompanyName: booking.shipment.insuranceCompanyName,
+      insurancePolicyNumber: booking.shipment.insurancePolicyNumber,
+      insurancePolicyDate: booking.shipment.insurancePolicyDate,
+      insuranceValidUpto: booking.shipment.insuranceValidUpto,
+      insurancePremiumAmount: booking.shipment.insurancePremiumAmount,
+      insuranceDocumentName: booking.shipment.insuranceDocumentName,
+      insuranceDocument: booking.shipment.insuranceDocument,
+      declarationDocumentName: booking.shipment.declarationDocumentName,
+      declarationDocument: booking.shipment.declarationDocument,
+      actualWeight: booking.actualWeight,
+      volumetricWeight: booking.volumetricWeight,
+      chargeableWeight: booking.chargeableWeight,
+      totalPackages: booking.shipment.packagesCount,
+      packageImages: booking.packageImages
     },
     formCompleted: true,
     createdAt: booking.ReceivedAt || booking.updatedAt || booking.createdAt,
     assignmentData: {
       status: booking.currentStatus === 'received' ? 'received' : undefined
     },
-    source: 'customerBooking'
+    source: 'customerBooking',
+    status: booking.status,
+    paymentStatus: booking.paymentStatus
   };
 };
 
@@ -777,7 +1140,10 @@ const ReceivedConsignment = () => {
       ...order,
       originData: order.originData ? { ...order.originData } : undefined,
       destinationData: order.destinationData ? { ...order.destinationData } : undefined,
-      shipmentData: order.shipmentData ? { ...order.shipmentData } : undefined
+      shipmentData: order.shipmentData ? { ...order.shipmentData } : undefined,
+      corporateInfo: order.corporateInfo ? { ...order.corporateInfo } : undefined,
+      invoiceData: order.invoiceData ? { ...order.invoiceData } : undefined,
+      paymentData: order.paymentData ? { ...order.paymentData } : undefined
     });
     setIsDetailsModalOpen(true);
   };
@@ -804,7 +1170,10 @@ const ReceivedConsignment = () => {
             consignmentNumber: trackingIdentifier,
             originData: editingOrder.originData,
             destinationData: editingOrder.destinationData,
-            shipmentData: editingOrder.shipmentData
+            shipmentData: editingOrder.shipmentData,
+            corporateInfo: editingOrder.corporateInfo,
+            invoiceData: editingOrder.invoiceData,
+            paymentData: editingOrder.paymentData
           })
         });
 
@@ -831,32 +1200,73 @@ const ReceivedConsignment = () => {
             consignmentNumber: editingOrder.consignmentNumber,
             origin: editingOrder.originData ? {
               name: editingOrder.originData.name,
-              city: editingOrder.originData.city,
-              state: editingOrder.originData.state,
-              pincode: editingOrder.originData.pincode,
+              mobileNumber: editingOrder.originData.mobileNumber,
+              email: editingOrder.originData.email,
+              companyName: editingOrder.originData.companyName,
               flatBuilding: editingOrder.originData.flatBuilding,
               locality: editingOrder.originData.locality,
               landmark: editingOrder.originData.landmark,
+              pincode: editingOrder.originData.pincode,
               area: editingOrder.originData.area,
-              district: editingOrder.originData.district
+              city: editingOrder.originData.city,
+              district: editingOrder.originData.district,
+              state: editingOrder.originData.state,
+              gstNumber: editingOrder.originData.gstNumber,
+              alternateNumbers: editingOrder.originData.alternateNumbers,
+              addressType: editingOrder.originData.addressType,
+              birthday: editingOrder.originData.birthday,
+              anniversary: editingOrder.originData.anniversary,
+              website: editingOrder.originData.website,
+              otherAlternateNumber: editingOrder.originData.otherAlternateNumber
             } : undefined,
             destination: editingOrder.destinationData ? {
               name: editingOrder.destinationData.name,
-              city: editingOrder.destinationData.city,
-              state: editingOrder.destinationData.state,
-              pincode: editingOrder.destinationData.pincode,
+              mobileNumber: editingOrder.destinationData.mobileNumber,
+              email: editingOrder.destinationData.email,
+              companyName: editingOrder.destinationData.companyName,
               flatBuilding: editingOrder.destinationData.flatBuilding,
               locality: editingOrder.destinationData.locality,
               landmark: editingOrder.destinationData.landmark,
+              pincode: editingOrder.destinationData.pincode,
               area: editingOrder.destinationData.area,
-              district: editingOrder.destinationData.district
+              city: editingOrder.destinationData.city,
+              district: editingOrder.destinationData.district,
+              state: editingOrder.destinationData.state,
+              gstNumber: editingOrder.destinationData.gstNumber,
+              alternateNumbers: editingOrder.destinationData.alternateNumbers,
+              addressType: editingOrder.destinationData.addressType,
+              birthday: editingOrder.destinationData.birthday,
+              anniversary: editingOrder.destinationData.anniversary,
+              website: editingOrder.destinationData.website,
+              otherAlternateNumber: editingOrder.destinationData.otherAlternateNumber
             } : undefined,
             shipment: editingOrder.shipmentData ? {
-              weight: editingOrder.shipmentData.actualWeight?.toString(),
-              packagesCount: editingOrder.shipmentData.totalPackages,
-              natureOfConsignment: editingOrder.shipmentData.natureOfConsignment
+              natureOfConsignment: editingOrder.shipmentData.natureOfConsignment,
+              insurance: editingOrder.shipmentData.insurance,
+              riskCoverage: editingOrder.shipmentData.riskCoverage,
+              packagesCount: editingOrder.shipmentData.packagesCount || editingOrder.shipmentData.totalPackages,
+              materials: editingOrder.shipmentData.materials,
+              others: editingOrder.shipmentData.others,
+              description: editingOrder.shipmentData.description || editingOrder.shipmentData.contentDescription,
+              declaredValue: editingOrder.shipmentData.declaredValue,
+              weight: editingOrder.shipmentData.weight || editingOrder.shipmentData.actualWeight?.toString(),
+              length: editingOrder.shipmentData.length || editingOrder.shipmentData.dimensions?.[0]?.length,
+              width: editingOrder.shipmentData.width || editingOrder.shipmentData.dimensions?.[0]?.breadth,
+              height: editingOrder.shipmentData.height || editingOrder.shipmentData.dimensions?.[0]?.height,
+              insuranceCompanyName: editingOrder.shipmentData.insuranceCompanyName,
+              insurancePolicyNumber: editingOrder.shipmentData.insurancePolicyNumber,
+              insurancePolicyDate: editingOrder.shipmentData.insurancePolicyDate,
+              insuranceValidUpto: editingOrder.shipmentData.insuranceValidUpto,
+              insurancePremiumAmount: editingOrder.shipmentData.insurancePremiumAmount,
+              insuranceDocumentName: editingOrder.shipmentData.insuranceDocumentName,
+              insuranceDocument: editingOrder.shipmentData.insuranceDocument,
+              declarationDocumentName: editingOrder.shipmentData.declarationDocumentName,
+              declarationDocument: editingOrder.shipmentData.declarationDocument
             } : undefined,
-            actualWeight: editingOrder.shipmentData?.actualWeight
+            actualWeight: editingOrder.shipmentData?.actualWeight || (editingOrder.shipmentData?.weight ? parseFloat(editingOrder.shipmentData.weight) : undefined),
+            volumetricWeight: editingOrder.shipmentData?.volumetricWeight,
+            chargeableWeight: editingOrder.shipmentData?.chargeableWeight,
+            packageImages: editingOrder.shipmentData?.packageImages
           })
         });
 
@@ -1234,7 +1644,7 @@ const ReceivedConsignment = () => {
 
         {/* Consignment Details Modal */}
         <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-          <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto p-4">
+          <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto p-4">
             <DialogHeader className="pb-2">
               <DialogTitle className="flex items-center gap-2 text-base">
                 <Package className="h-4 w-4 text-blue-600" />
@@ -1255,12 +1665,47 @@ const ReceivedConsignment = () => {
                   <CardContent className="px-3 pb-3">
                     <div className="grid grid-cols-3 gap-2">
                       <div>
+                        <label className="text-xs font-medium text-gray-600">Mobile Number</label>
+                        <Input
+                          value={editingOrder.originData?.mobileNumber || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), mobileNumber: e.target.value.replace(/\D/g, '').slice(0, 10) } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                          maxLength={10}
+                        />
+                      </div>
+                      <div>
                         <label className="text-xs font-medium text-gray-600">Name</label>
                         <Input
                           value={editingOrder.originData?.name || editingOrder.senderName || ''}
                           onChange={(e) => setEditingOrder({
                             ...editingOrder,
                             originData: { ...(editingOrder.originData || {}), name: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Email</label>
+                        <Input
+                          type="email"
+                          value={editingOrder.originData?.email || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), email: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Company Name</label>
+                        <Input
+                          value={editingOrder.originData?.companyName || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), companyName: e.target.value } as AddressFormData['originData']
                           })}
                           className="mt-0.5 h-8 text-xs"
                         />
@@ -1293,9 +1738,10 @@ const ReceivedConsignment = () => {
                           value={editingOrder.originData?.pincode || editingOrder.senderPincode || ''}
                           onChange={(e) => setEditingOrder({
                             ...editingOrder,
-                            originData: { ...(editingOrder.originData || {}), pincode: e.target.value } as AddressFormData['originData']
+                            originData: { ...(editingOrder.originData || {}), pincode: e.target.value.replace(/\D/g, '').slice(0, 6) } as AddressFormData['originData']
                           })}
                           className="mt-0.5 h-8 text-xs"
+                          maxLength={6}
                         />
                       </div>
                       <div>
@@ -1353,6 +1799,98 @@ const ReceivedConsignment = () => {
                           className="mt-0.5 h-8 text-xs"
                         />
                       </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">GST Number</label>
+                        <Input
+                          value={editingOrder.originData?.gstNumber || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), gstNumber: e.target.value.toUpperCase() } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                          maxLength={15}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Address Type</label>
+                        <Select
+                          value={editingOrder.originData?.addressType || ''}
+                          onValueChange={(value) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), addressType: value } as AddressFormData['originData']
+                          })}
+                        >
+                          <SelectTrigger className="mt-0.5 h-8 text-xs">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Home">Home</SelectItem>
+                            <SelectItem value="Office">Office</SelectItem>
+                            <SelectItem value="Corporate">Corporate</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Website</label>
+                        <Input
+                          type="url"
+                          value={editingOrder.originData?.website || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), website: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Birthday</label>
+                        <Input
+                          type="date"
+                          value={editingOrder.originData?.birthday || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), birthday: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Anniversary</label>
+                        <Input
+                          type="date"
+                          value={editingOrder.originData?.anniversary || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            originData: { ...(editingOrder.originData || {}), anniversary: e.target.value } as AddressFormData['originData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      {editingOrder.originData?.alternateNumbers && editingOrder.originData.alternateNumbers.length > 0 && (
+                        <div className="col-span-3">
+                          <label className="text-xs font-medium text-gray-600">Alternate Numbers</label>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {editingOrder.originData.alternateNumbers.map((num, idx) => (
+                              <Input
+                                key={idx}
+                                value={num}
+                                onChange={(e) => {
+                                  const newNums = [...(editingOrder.originData?.alternateNumbers || [])];
+                                  newNums[idx] = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                  setEditingOrder({
+                                    ...editingOrder,
+                                    originData: { ...(editingOrder.originData || {}), alternateNumbers: newNums } as AddressFormData['originData']
+                                  });
+                                }}
+                                className="h-8 text-xs w-32"
+                                maxLength={10}
+                                placeholder="Alt number"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -1368,12 +1906,47 @@ const ReceivedConsignment = () => {
                   <CardContent className="px-3 pb-3">
                     <div className="grid grid-cols-3 gap-2">
                       <div>
+                        <label className="text-xs font-medium text-gray-600">Mobile Number</label>
+                        <Input
+                          value={editingOrder.destinationData?.mobileNumber || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), mobileNumber: e.target.value.replace(/\D/g, '').slice(0, 10) } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                          maxLength={10}
+                        />
+                      </div>
+                      <div>
                         <label className="text-xs font-medium text-gray-600">Name</label>
                         <Input
                           value={editingOrder.destinationData?.name || editingOrder.receiverName || ''}
                           onChange={(e) => setEditingOrder({
                             ...editingOrder,
                             destinationData: { ...(editingOrder.destinationData || {}), name: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Email</label>
+                        <Input
+                          type="email"
+                          value={editingOrder.destinationData?.email || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), email: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Company Name</label>
+                        <Input
+                          value={editingOrder.destinationData?.companyName || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), companyName: e.target.value } as AddressFormData['destinationData']
                           })}
                           className="mt-0.5 h-8 text-xs"
                         />
@@ -1406,9 +1979,10 @@ const ReceivedConsignment = () => {
                           value={editingOrder.destinationData?.pincode || editingOrder.receiverPincode || ''}
                           onChange={(e) => setEditingOrder({
                             ...editingOrder,
-                            destinationData: { ...(editingOrder.destinationData || {}), pincode: e.target.value } as AddressFormData['destinationData']
+                            destinationData: { ...(editingOrder.destinationData || {}), pincode: e.target.value.replace(/\D/g, '').slice(0, 6) } as AddressFormData['destinationData']
                           })}
                           className="mt-0.5 h-8 text-xs"
+                          maxLength={6}
                         />
                       </div>
                       <div>
@@ -1466,6 +2040,98 @@ const ReceivedConsignment = () => {
                           className="mt-0.5 h-8 text-xs"
                         />
                       </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">GST Number</label>
+                        <Input
+                          value={editingOrder.destinationData?.gstNumber || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), gstNumber: e.target.value.toUpperCase() } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                          maxLength={15}
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Address Type</label>
+                        <Select
+                          value={editingOrder.destinationData?.addressType || ''}
+                          onValueChange={(value) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), addressType: value } as AddressFormData['destinationData']
+                          })}
+                        >
+                          <SelectTrigger className="mt-0.5 h-8 text-xs">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Home">Home</SelectItem>
+                            <SelectItem value="Office">Office</SelectItem>
+                            <SelectItem value="Corporate">Corporate</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Website</label>
+                        <Input
+                          type="url"
+                          value={editingOrder.destinationData?.website || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), website: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Birthday</label>
+                        <Input
+                          type="date"
+                          value={editingOrder.destinationData?.birthday || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), birthday: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Anniversary</label>
+                        <Input
+                          type="date"
+                          value={editingOrder.destinationData?.anniversary || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            destinationData: { ...(editingOrder.destinationData || {}), anniversary: e.target.value } as AddressFormData['destinationData']
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      {editingOrder.destinationData?.alternateNumbers && editingOrder.destinationData.alternateNumbers.length > 0 && (
+                        <div className="col-span-3">
+                          <label className="text-xs font-medium text-gray-600">Alternate Numbers</label>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {editingOrder.destinationData.alternateNumbers.map((num, idx) => (
+                              <Input
+                                key={idx}
+                                value={num}
+                                onChange={(e) => {
+                                  const newNums = [...(editingOrder.destinationData?.alternateNumbers || [])];
+                                  newNums[idx] = e.target.value.replace(/\D/g, '').slice(0, 10);
+                                  setEditingOrder({
+                                    ...editingOrder,
+                                    destinationData: { ...(editingOrder.destinationData || {}), alternateNumbers: newNums } as AddressFormData['destinationData']
+                                  });
+                                }}
+                                className="h-8 text-xs w-32"
+                                maxLength={10}
+                                placeholder="Alt number"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -1481,45 +2147,261 @@ const ReceivedConsignment = () => {
                   <CardContent className="px-3 pb-3">
                     <div className="grid grid-cols-3 gap-2">
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Weight (kg)</label>
+                        <label className="text-xs font-medium text-gray-600">Nature of Consignment</label>
+                        <Select
+                          value={editingOrder.shipmentData?.natureOfConsignment || ''}
+                          onValueChange={(value) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), natureOfConsignment: value }
+                          })}
+                        >
+                          <SelectTrigger className="mt-0.5 h-8 text-xs">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="DOX">DOX</SelectItem>
+                            <SelectItem value="NON-DOX">NON-DOX</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Services</label>
+                        <Select
+                          value={editingOrder.shipmentData?.services || ''}
+                          onValueChange={(value) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), services: value }
+                          })}
+                        >
+                          <SelectTrigger className="mt-0.5 h-8 text-xs">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Standard">Standard</SelectItem>
+                            <SelectItem value="Priority">Priority</SelectItem>
+                            <SelectItem value="Express">Express</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Mode</label>
+                        <Select
+                          value={editingOrder.shipmentData?.mode || ''}
+                          onValueChange={(value) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), mode: value }
+                          })}
+                        >
+                          <SelectTrigger className="mt-0.5 h-8 text-xs">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Road">Road</SelectItem>
+                            <SelectItem value="Air">Air</SelectItem>
+                            <SelectItem value="Rail">Rail</SelectItem>
+                            <SelectItem value="Sea">Sea</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Insurance</label>
+                        <Select
+                          value={editingOrder.shipmentData?.insurance || ''}
+                          onValueChange={(value) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), insurance: value }
+                          })}
+                        >
+                          <SelectTrigger className="mt-0.5 h-8 text-xs">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="With insurance">With insurance</SelectItem>
+                            <SelectItem value="Without insurance">Without insurance</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Risk Coverage</label>
+                        <Select
+                          value={editingOrder.shipmentData?.riskCoverage || ''}
+                          onValueChange={(value) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), riskCoverage: value }
+                          })}
+                        >
+                          <SelectTrigger className="mt-0.5 h-8 text-xs">
+                            <SelectValue placeholder="Select" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Owner">Owner</SelectItem>
+                            <SelectItem value="Carrier">Carrier</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Package Type</label>
+                        <Input
+                          value={editingOrder.shipmentData?.packageType || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), packageType: e.target.value }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Packages Count</label>
+                        <Input
+                          value={editingOrder.shipmentData?.packagesCount || editingOrder.shipmentData?.totalPackages || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), packagesCount: e.target.value, totalPackages: e.target.value }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Materials</label>
+                        <Input
+                          value={editingOrder.shipmentData?.materials || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), materials: e.target.value }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Declared Value</label>
+                        <Input
+                          type="number"
+                          value={editingOrder.shipmentData?.declaredValue || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), declaredValue: e.target.value }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Actual Weight (kg)</label>
                         <Input
                           type="number"
                           step="0.1"
-                          value={editingOrder.shipmentData?.actualWeight || ''}
+                          value={editingOrder.shipmentData?.actualWeight || editingOrder.shipmentData?.weight || ''}
                           onChange={(e) => setEditingOrder({
                             ...editingOrder,
                             shipmentData: {
                               ...(editingOrder.shipmentData || {}),
-                              actualWeight: e.target.value ? parseFloat(e.target.value) : undefined
+                              actualWeight: e.target.value ? (typeof e.target.value === 'string' ? parseFloat(e.target.value) : e.target.value) : undefined,
+                              weight: e.target.value
                             }
                           })}
                           className="mt-0.5 h-8 text-xs"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Packages</label>
+                        <label className="text-xs font-medium text-gray-600">Volumetric Weight</label>
                         <Input
-                          value={editingOrder.shipmentData?.totalPackages || ''}
+                          type="number"
+                          step="0.01"
+                          value={editingOrder.shipmentData?.volumetricWeight || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), volumetricWeight: e.target.value ? parseFloat(e.target.value) : undefined }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Chargeable Weight</label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={editingOrder.shipmentData?.chargeableWeight || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), chargeableWeight: e.target.value ? parseFloat(e.target.value) : undefined }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Length (cm)</label>
+                        <Input
+                          type="number"
+                          value={editingOrder.shipmentData?.length || editingOrder.shipmentData?.dimensions?.[0]?.length || ''}
                           onChange={(e) => setEditingOrder({
                             ...editingOrder,
                             shipmentData: {
                               ...(editingOrder.shipmentData || {}),
-                              totalPackages: e.target.value
+                              length: e.target.value,
+                              dimensions: editingOrder.shipmentData?.dimensions ? [{
+                                ...editingOrder.shipmentData.dimensions[0],
+                                length: e.target.value
+                              }] : [{ length: e.target.value, breadth: '', height: '', unit: 'cm' }]
                             }
                           })}
                           className="mt-0.5 h-8 text-xs"
                         />
                       </div>
                       <div>
-                        <label className="text-xs font-medium text-gray-600">Nature</label>
+                        <label className="text-xs font-medium text-gray-600">Width (cm)</label>
                         <Input
-                          value={editingOrder.shipmentData?.natureOfConsignment || ''}
+                          type="number"
+                          value={editingOrder.shipmentData?.width || editingOrder.shipmentData?.dimensions?.[0]?.breadth || ''}
                           onChange={(e) => setEditingOrder({
                             ...editingOrder,
                             shipmentData: {
                               ...(editingOrder.shipmentData || {}),
-                              natureOfConsignment: e.target.value
+                              width: e.target.value,
+                              dimensions: editingOrder.shipmentData?.dimensions ? [{
+                                ...editingOrder.shipmentData.dimensions[0],
+                                breadth: e.target.value
+                              }] : [{ length: '', breadth: e.target.value, height: '', unit: 'cm' }]
                             }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-medium text-gray-600">Height (cm)</label>
+                        <Input
+                          type="number"
+                          value={editingOrder.shipmentData?.height || editingOrder.shipmentData?.dimensions?.[0]?.height || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: {
+                              ...(editingOrder.shipmentData || {}),
+                              height: e.target.value,
+                              dimensions: editingOrder.shipmentData?.dimensions ? [{
+                                ...editingOrder.shipmentData.dimensions[0],
+                                height: e.target.value
+                              }] : [{ length: '', breadth: '', height: e.target.value, unit: 'cm' }]
+                            }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <label className="text-xs font-medium text-gray-600">Content Description</label>
+                        <Input
+                          value={editingOrder.shipmentData?.contentDescription || editingOrder.shipmentData?.description || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), contentDescription: e.target.value, description: e.target.value }
+                          })}
+                          className="mt-0.5 h-8 text-xs"
+                        />
+                      </div>
+                      <div className="col-span-3">
+                        <label className="text-xs font-medium text-gray-600">Special Instructions</label>
+                        <Input
+                          value={editingOrder.shipmentData?.specialInstructions || ''}
+                          onChange={(e) => setEditingOrder({
+                            ...editingOrder,
+                            shipmentData: { ...(editingOrder.shipmentData || {}), specialInstructions: e.target.value }
                           })}
                           className="mt-0.5 h-8 text-xs"
                         />
@@ -1527,6 +2409,299 @@ const ReceivedConsignment = () => {
                     </div>
                   </CardContent>
                 </Card>
+
+                {/* Package Images */}
+                {(editingOrder.shipmentData?.packageImages && editingOrder.shipmentData.packageImages.length > 0) && (
+                  <Card className="border">
+                    <CardHeader className="pb-2 pt-3 px-3">
+                      <CardTitle className="text-sm flex items-center gap-1.5 font-semibold">
+                        <ImageIcon className="h-3.5 w-3.5 text-purple-600" />
+                        Package Images
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-3 pb-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        {editingOrder.shipmentData.packageImages.map((img, idx) => (
+                          <div key={idx} className="relative">
+                            <img
+                              src={typeof img === 'string' ? img : img.url || img}
+                              alt={`Package ${idx + 1}`}
+                              className="w-full h-24 object-cover rounded border"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Corporate Info (for trackings) */}
+                {editingOrder.corporateInfo && (
+                  <Card className="border">
+                    <CardHeader className="pb-2 pt-3 px-3">
+                      <CardTitle className="text-sm flex items-center gap-1.5 font-semibold">
+                        <Building className="h-3.5 w-3.5 text-blue-600" />
+                        Corporate Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-3 pb-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Corporate ID</label>
+                          <Input
+                            value={editingOrder.corporateInfo.corporateId || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              corporateInfo: { ...(editingOrder.corporateInfo || {}), corporateId: e.target.value }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Company Name</label>
+                          <Input
+                            value={editingOrder.corporateInfo.companyName || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              corporateInfo: { ...(editingOrder.corporateInfo || {}), companyName: e.target.value }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Email</label>
+                          <Input
+                            type="email"
+                            value={editingOrder.corporateInfo.email || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              corporateInfo: { ...(editingOrder.corporateInfo || {}), email: e.target.value }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Contact Number</label>
+                          <Input
+                            value={editingOrder.corporateInfo.contactNumber || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              corporateInfo: { ...(editingOrder.corporateInfo || {}), contactNumber: e.target.value.replace(/\D/g, '').slice(0, 10) }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                            maxLength={10}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Invoice Data (for trackings) */}
+                {editingOrder.invoiceData && (
+                  <Card className="border">
+                    <CardHeader className="pb-2 pt-3 px-3">
+                      <CardTitle className="text-sm flex items-center gap-1.5 font-semibold">
+                        <FileText className="h-3.5 w-3.5 text-green-600" />
+                        Invoice Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-3 pb-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Payment Method</label>
+                          <Input
+                            value={editingOrder.invoiceData.paymentMethod || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              invoiceData: { ...(editingOrder.invoiceData || {}), paymentMethod: e.target.value }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Calculated Price</label>
+                          <Input
+                            type="number"
+                            value={editingOrder.invoiceData.calculatedPrice || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              invoiceData: { ...(editingOrder.invoiceData || {}), calculatedPrice: e.target.value ? parseFloat(e.target.value) : undefined }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">GST</label>
+                          <Input
+                            type="number"
+                            value={editingOrder.invoiceData.gst || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              invoiceData: { ...(editingOrder.invoiceData || {}), gst: e.target.value ? parseFloat(e.target.value) : undefined }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Final Price</label>
+                          <Input
+                            type="number"
+                            value={editingOrder.invoiceData.finalPrice || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              invoiceData: { ...(editingOrder.invoiceData || {}), finalPrice: e.target.value ? parseFloat(e.target.value) : undefined }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Service Type</label>
+                          <Input
+                            value={editingOrder.invoiceData.serviceType || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              invoiceData: { ...(editingOrder.invoiceData || {}), serviceType: e.target.value }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Location</label>
+                          <Input
+                            value={editingOrder.invoiceData.location || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              invoiceData: { ...(editingOrder.invoiceData || {}), location: e.target.value }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Transport Mode</label>
+                          <Input
+                            value={editingOrder.invoiceData.transportMode || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              invoiceData: { ...(editingOrder.invoiceData || {}), transportMode: e.target.value }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Chargeable Weight</label>
+                          <Input
+                            type="number"
+                            value={editingOrder.invoiceData.chargeableWeight || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              invoiceData: { ...(editingOrder.invoiceData || {}), chargeableWeight: e.target.value ? parseFloat(e.target.value) : undefined }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <label className="text-xs font-medium text-gray-600">Billing Address</label>
+                          <Input
+                            value={editingOrder.invoiceData.billingAddress || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              invoiceData: { ...(editingOrder.invoiceData || {}), billingAddress: e.target.value }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <label className="text-xs font-medium text-gray-600">Terms</label>
+                          <Input
+                            value={editingOrder.invoiceData.terms || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              invoiceData: { ...(editingOrder.invoiceData || {}), terms: e.target.value }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Payment Data (for trackings) */}
+                {editingOrder.paymentData && (
+                  <Card className="border">
+                    <CardHeader className="pb-2 pt-3 px-3">
+                      <CardTitle className="text-sm flex items-center gap-1.5 font-semibold">
+                        <CreditCard className="h-3.5 w-3.5 text-indigo-600" />
+                        Payment Information
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="px-3 pb-3">
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Payment Type</label>
+                          <Select
+                            value={editingOrder.paymentData.paymentType || ''}
+                            onValueChange={(value) => setEditingOrder({
+                              ...editingOrder,
+                              paymentData: { ...(editingOrder.paymentData || {}), paymentType: value }
+                            })}
+                          >
+                            <SelectTrigger className="mt-0.5 h-8 text-xs">
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="TP">To Pay</SelectItem>
+                              <SelectItem value="FP">Fully Paid</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Mode of Payment</label>
+                          <Select
+                            value={editingOrder.paymentData.modeOfPayment || ''}
+                            onValueChange={(value) => setEditingOrder({
+                              ...editingOrder,
+                              paymentData: { ...(editingOrder.paymentData || {}), modeOfPayment: value }
+                            })}
+                          >
+                            <SelectTrigger className="mt-0.5 h-8 text-xs">
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="Cash">Cash</SelectItem>
+                              <SelectItem value="To Pay">To Pay</SelectItem>
+                              <SelectItem value="Corporate Credit">Corporate Credit</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Amount</label>
+                          <Input
+                            type="number"
+                            value={editingOrder.paymentData.amount || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              paymentData: { ...(editingOrder.paymentData || {}), amount: e.target.value ? parseFloat(e.target.value) : undefined }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-medium text-gray-600">Status</label>
+                          <Input
+                            value={editingOrder.paymentData.currentStatus || ''}
+                            onChange={(e) => setEditingOrder({
+                              ...editingOrder,
+                              paymentData: { ...(editingOrder.paymentData || {}), currentStatus: e.target.value }
+                            })}
+                            className="mt-0.5 h-8 text-xs"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Additional Info */}
                 <div className="flex items-center gap-4 text-xs px-1">
