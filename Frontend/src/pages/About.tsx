@@ -71,16 +71,16 @@ const About = () => {
                             transition={{ duration: 0.8 }}
                         >
                             <h2
-                                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight"
+                                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight text-center"
                                 style={{ color: darkNavy }}
                             >
                                 Delivering Excellence in <span style={{ color: orange }}>Logistics</span>
                             </h2>
-                            <div className="space-y-4 text-sm sm:text-base md:text-lg leading-relaxed text-justify" style={{ color: "#4A5568" }}>
+                            <div className="space-y-4 text-sm sm:text-base md:text-lg leading-relaxed text-center" style={{ color: "#4A5568" }}>
                                 <p>
                                     OCL Services moves heavy construction machinery, industrial equipment, machine parts, and bulk cargo across India with a simple focus - safe handling and reliable delivery.
                                 </p>
-                                <p>
+                                <p className="hidden md:block">
                                     The Image reflects how we work: consistent service that builds long-term relationships with our clients. Whether it's large machines or critical components, our job is to get them from one location to the next smoothly, efficiently, and without complications.
                                 </p>
                             </div>
@@ -88,13 +88,13 @@ const About = () => {
 
                         {/* Image - Right */}
                         <motion.div
-                            className="relative overflow-hidden rounded-lg"
+                            className="relative overflow-hidden rounded-lg flex justify-center"
                             initial={{ opacity: 0, x: 30 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ duration: 0.8 }}
                         >
-                            <div className="aspect-[4/3] relative">
+                            <div className="aspect-[4/3] relative w-full max-w-md">
                                 <img
                                     src={about1Img}
                                     alt="OCL Logistics Services"
@@ -116,13 +116,13 @@ const About = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
                         {/* Image - Left */}
                         <motion.div
-                            className="relative overflow-hidden rounded-lg order-2 lg:order-1"
+                            className="relative overflow-hidden rounded-lg order-2 lg:order-1 flex justify-center"
                             initial={{ opacity: 0, x: -30 }}
                             whileInView={{ opacity: 1, x: 0 }}
                             viewport={{ once: true, margin: "-100px" }}
                             transition={{ duration: 0.8 }}
                         >
-                            <div className="aspect-[4/3] relative">
+                            <div className="aspect-[4/3] relative w-full max-w-md">
                                 <img
                                     src={about2Img}
                                     alt="OCL Team"
@@ -141,7 +141,7 @@ const About = () => {
                             transition={{ duration: 0.8 }}
                         >
                             <h2
-                                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight"
+                                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 leading-tight text-center"
                                 style={{ color: "#FFFFFF" }}
                             >
                                 Making <span style={{ color: orange }}>Logistics</span> Simple & Stress-Free
@@ -198,7 +198,7 @@ const About = () => {
                         <div className="w-24 h-1 mx-auto" style={{ backgroundColor: orange }} />
                     </motion.div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 md:gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3 md:gap-4 max-w-4xl mx-auto">
                         {[
                             { 
                                 text: "Domestic Courier & Logistics Services", 
@@ -223,38 +223,33 @@ const About = () => {
                         ].map((item, index) => (
                             <motion.div
                                 key={index}
-                                className="bg-white border-2 rounded-lg p-6 md:p-8"
+                                className="bg-white rounded-lg p-3 md:p-4"
                                 style={{ 
-                                    borderColor: "#E2E8F0",
-                                    boxShadow: "rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px",
+                                    border: "1px solid #E2E8F0",
+                                    boxShadow: "rgba(50, 50, 93, 0.25) 0px 6px 12px -2px, rgba(0, 0, 0, 0.3) 0px 3px 7px -3px",
                                 }}
                                 initial={{ opacity: 0, y: 30 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 viewport={{ once: true, margin: "-50px" }}
                                 transition={{ duration: 0.6, delay: index * 0.1 }}
                             >
-                                <div className="flex items-start gap-4">
-                                    <div 
-                                        className="flex-shrink-0 p-3 rounded-lg transition-colors duration-300"
-                                        style={{ 
-                                            backgroundColor: `${orange}15`,
-                                        }}
-                                    >
+                                <div className="flex items-start gap-2.5">
+                                    <div className="flex-shrink-0 specialize-icon-align">
                                         <item.icon 
-                                            className="w-6 h-6" 
+                                            className="w-4 h-4 md:w-5 md:h-5"
                                             style={{ color: orange }}
                                             strokeWidth={2}
                                         />
                                     </div>
                                     <div className="flex-1">
                                         <h3 
-                                            className="text-lg md:text-xl font-bold mb-2"
+                                            className="text-sm md:text-base font-bold mb-1"
                                             style={{ color: darkNavy }}
                                         >
                                             {item.text}
                                         </h3>
                                         <p 
-                                            className="text-sm md:text-base leading-relaxed"
+                                            className="text-xs leading-relaxed"
                                             style={{ color: "#64748B" }}
                                         >
                                             {item.description}
@@ -286,7 +281,7 @@ const About = () => {
                         <div className="w-24 h-1 mx-auto" style={{ backgroundColor: orange }} />
                     </motion.div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 md:gap-10">
+                    <div className="grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 md:gap-8 lg:gap-10">
                         {[
                             {
                                 image: dedicatedSupportImg,
@@ -306,7 +301,7 @@ const About = () => {
                         ].map((card, index) => (
                             <motion.div
                                 key={index}
-                                className="rounded-lg p-8 text-center"
+                                className="rounded-lg p-4 md:p-8 text-center"
                                 style={{
                                     backgroundColor: "#FAF2E7",
                                     boxShadow: "rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px",
@@ -317,10 +312,10 @@ const About = () => {
                                 transition={{ duration: 0.6, delay: index * 0.15 }}
                             >
                                 <div 
-                                    className="inline-flex items-center justify-center mb-6"
+                                    className="inline-flex items-center justify-center mb-3 md:mb-6 mx-auto"
                                     style={{ 
-                                        width: "80px",
-                                        height: "80px",
+                                        width: "60px",
+                                        height: "60px",
                                         borderRadius: "50%",
                                         backgroundColor: `${orange}15`,
                                         overflow: "hidden",
@@ -334,13 +329,13 @@ const About = () => {
                                     />
                                 </div>
                                 <h3
-                                    className="text-xl md:text-2xl font-bold mb-3"
+                                    className="text-xs md:text-xl lg:text-2xl font-bold mb-2 md:mb-3"
                                     style={{ color: darkNavy }}
                                 >
                                     {card.title}
                                 </h3>
                                 <p 
-                                    className="text-base leading-relaxed"
+                                    className="hidden md:block text-base leading-relaxed"
                                     style={{ color: "#64748B" }}
                                 >
                                     {card.description}
@@ -353,7 +348,7 @@ const About = () => {
 
             {/* Growth/Impact Section with Gradient Background */}
             <section 
-                className="py-16 md:py-24 relative overflow-hidden"
+                className="py-12 md:py-24 relative overflow-hidden growth-impact-section"
                 style={{
                     background: `linear-gradient(135deg, ${darkNavy} 0%, #1A2332 50%, ${darkNavy} 100%)`
                 }}
@@ -379,13 +374,13 @@ const About = () => {
                         transition={{ duration: 0.8 }}
                     >
                         <h2
-                            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 leading-tight px-4"
+                            className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-6 sm:mb-8 md:mb-10 leading-tight px-8"
                             style={{ color: "#FFFFFF" }}
                         >
                             <span style={{ color: orange }}>We</span> Help Businesses Grow Faster and Bigger
                         </h2>
                         <p 
-                            className="text-base sm:text-lg md:text-xl font-light max-w-3xl mx-auto leading-relaxed mb-8 sm:mb-10 px-4"
+                            className="text-base sm:text-lg md:text-xl font-light max-w-3xl mx-auto leading-relaxed mb-0 px-2 mt-2 sm:mt-8 md:mt-8"
                             style={{ color: "#FFFFFF" }}
                         >
                             Partner with OCL Services to streamline your logistics operations and scale your business with confidence.
@@ -395,7 +390,7 @@ const About = () => {
             </section>
 
             {/* Strong CTA Footer Section */}
-            <section className="py-16 md:py-20 bg-white border-t-2" style={{ borderColor: "#E2E8F0" }}>
+            <section className="hidden md:block py-16 md:py-20 bg-white border-t-2" style={{ borderColor: "#E2E8F0" }}>
                 <div className="container mx-auto px-4 md:px-6 lg:px-8 max-w-4xl">
                     <motion.div
                         className="text-center"
@@ -450,6 +445,34 @@ const About = () => {
             </section>
 
             <Footer />
+            
+            <style>{`
+                /* Mobile: Align icons with titles by moving them down slightly */
+                @media (max-width: 767px) {
+                    .specialize-icon-align {
+                        margin-top: 3px;
+                    }
+                    /* Remove bottom border/line on mobile for Growth Impact section */
+                    .growth-impact-section {
+                        border-bottom: none !important;
+                        border: none !important;
+                    }
+                    .growth-impact-section::after {
+                        display: none !important;
+                        content: none !important;
+                        border: none !important;
+                    }
+                    .growth-impact-section::before {
+                        display: none !important;
+                        content: none !important;
+                        border: none !important;
+                    }
+                    /* Also check if footer border is showing through */
+                    footer.bg-black.border-t-2 {
+                        border-top: none !important;
+                    }
+                }
+            `}</style>
         </div>
     );
 };

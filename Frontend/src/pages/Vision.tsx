@@ -169,7 +169,7 @@ const Vision = () => {
           {showDividers && <div className="flex justify-center mb-3"><DecorativeDivider /></div>}
 
           <div className="text-center">
-            <h2 className="text-[40px] font-bold text-gray-900 mb-3 relative inline-block">
+            <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-3 relative inline-block">
               {title.startsWith("Our ") ? (
                 <>
                   <span style={{ color: "#FFA019" }}>Our</span> {title.substring(4)}
@@ -270,10 +270,10 @@ const Vision = () => {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-1.5">
+                      <h3 className="text-sm md:text-xl lg:text-2xl font-bold text-gray-900 mb-1.5">
                         {point.title}
                       </h3>
-                      <p className="text-gray-700 leading-relaxed text-base md:text-lg">
+                      <p className="text-gray-700 leading-relaxed text-xs md:text-base lg:text-lg">
                         {point.description}
                     </p>
                   </div>
@@ -285,7 +285,7 @@ const Vision = () => {
 
             {/* Right Column - Single Large Diamond Box */}
           <motion.div
-              className={`${reverse ? "lg:order-1" : "lg:order-2"} flex items-start ${reverse ? "justify-start lg:mr-4" : "justify-end lg:ml-4"}`}
+              className={`hidden md:flex ${reverse ? "lg:order-1" : "lg:order-2"} items-start ${reverse ? "justify-start lg:mr-4" : "justify-end lg:ml-4"}`}
               initial={{ opacity: 0, x: reverse ? -30 : 30 }}
               whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-100px" }}
@@ -305,12 +305,9 @@ const Vision = () => {
 
       {/* Title Block */}
       <motion.section
-        className="relative w-full h-[70vh] md:h-[80vh] flex items-center justify-center overflow-hidden"
+        className="relative w-full h-[45vh] md:h-[80vh] flex items-center justify-center overflow-hidden vision-hero-section"
         style={{
           backgroundImage: `url(${vmImg})`,
-          backgroundAttachment: "fixed",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
           backgroundRepeat: "no-repeat"
         }}
         initial={{ opacity: 0, y: 20 }}
@@ -351,65 +348,65 @@ const Vision = () => {
       />
 
       {/* Section 3 - Core Values */}
-      <section className="pt-12 pb-20 bg-black">
+      <section className="pt-6 pb-10 md:pt-12 md:pb-20 bg-black">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
         >
-          <div className="text-center mb-12 max-w-screen-xl mx-auto px-4 md:px-6">
-            <h2 className="text-3xl md:text-4xl font-semibold text-white mb-4">
+          <div className="text-center mb-6 md:mb-12 max-w-screen-xl mx-auto px-4 md:px-6">
+            <h2 className="text-3xl md:text-4xl font-semibold text-white mb-3 md:mb-4">
               <span style={{ color: "#FFA019" }}>Our</span> Core Values
             </h2>
             
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 max-w-screen-xl mx-auto px-4 md:px-6">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 lg:gap-8 max-w-screen-xl mx-auto px-4 md:px-6">
             {/* Value 1 - Reliability */}
             <div 
-              className="px-6 md:px-8 py-8 text-center rounded-xl"
+              className="px-3 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 text-center rounded-xl"
               style={{
                 backgroundColor: "#EFF6FF",
-                boxShadow: "rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px"
+                boxShadow: "rgba(255, 255, 255, 0.3) 4px 4px 8px, rgba(255, 255, 255, 0.2) 2px 2px 4px"
               }}
             >
-              <h3 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg md:text-2xl lg:text-3xl font-semibold text-gray-900 mb-2 md:mb-4">
                 Reliability
               </h3>
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-xs md:text-base text-gray-700 leading-relaxed">
                 We work with clarity, discipline, and predictable processes.
               </p>
             </div>
                     
             {/* Value 2 - Responsibility */}
             <div 
-              className="px-6 md:px-8 py-8 text-center rounded-xl"
+              className="px-3 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 text-center rounded-xl"
               style={{
                 backgroundColor: "#F0FDFA",
-                boxShadow: "rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px"
+                boxShadow: "rgba(255, 255, 255, 0.3) 4px 4px 8px, rgba(255, 255, 255, 0.2) 2px 2px 4px"
               }}
             >
-              <h3 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg md:text-2xl lg:text-3xl font-semibold text-gray-900 mb-2 md:mb-4">
                 Responsibility
               </h3>
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-xs md:text-base text-gray-700 leading-relaxed">
                 We treat every client's shipment like an obligation, not a task.
               </p>
             </div>
 
             {/* Value 3 - Innovation */}
             <div 
-              className="px-6 md:px-8 py-8 text-center rounded-xl"
+              className="col-span-2 md:col-span-1 innovation-card-mobile px-3 md:px-6 lg:px-8 py-4 md:py-6 lg:py-8 text-center rounded-xl mx-auto md:mx-0"
               style={{
                 backgroundColor: "#FFF7ED",
-                boxShadow: "rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px"
+                boxShadow: "rgba(255, 255, 255, 0.3) 4px 4px 8px, rgba(255, 255, 255, 0.2) 2px 2px 4px"
               }}
             >
-              <h3 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-4">
+              <h3 className="text-lg md:text-2xl lg:text-3xl font-semibold text-gray-900 mb-2 md:mb-4">
                 Innovation
               </h3>
-              <p className="text-gray-700 leading-relaxed">
+              <p className="text-xs md:text-base text-gray-700 leading-relaxed">
                 Technology enhances every part of our logistics workflow.
               </p>
             </div>
@@ -418,7 +415,7 @@ const Vision = () => {
       </section>
 
       {/* Section 4 - Commitment Statement */}
-      <section className="pt-12 pb-20" style={{ backgroundColor: "#F9FAFB" }}>
+      <section className="pt-6 pb-10 md:pt-12 md:pb-20" style={{ backgroundColor: "#F9FAFB" }}>
         <motion.div
           className="max-w-[850px] mx-auto text-center px-4 md:px-6"
           initial={{ opacity: 0, y: 30 }}
@@ -426,35 +423,35 @@ const Vision = () => {
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
         >
-          <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-8">
+          <h2 className="text-3xl md:text-4xl font-semibold text-gray-900 mb-6 md:mb-8">
             <span style={{ color: "#FFA019" }}>Our</span> Commitment
               </h2>
           
           {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            <div className="text-center border-t md:border-t-0 md:border-r border-gray-300 pt-8 md:pt-0 md:pr-8">
-              <div className="text-4xl md:text-5xl font-semibold mb-2 gradient-number">
+          <div className="grid grid-cols-3 gap-4 md:gap-8 mb-8 md:mb-16">
+            <div className="text-center border-r border-gray-300 pr-4 md:pr-8">
+              <div className="text-2xl md:text-4xl lg:text-5xl font-semibold mb-2 gradient-number">
                 99.9%
               </div>
-              <div className="text-gray-700 text-sm md:text-base">
+              <div className="text-gray-700 text-xs md:text-sm lg:text-base">
                 On-Time Delivery
               </div>
             </div>
 
-            <div className="text-center border-t md:border-t-0 md:border-r border-gray-300 pt-8 md:pt-0 md:pr-8">
-              <div className="text-4xl md:text-5xl font-semibold mb-2 gradient-number">
+            <div className="text-center border-r border-gray-300 pr-4 md:pr-8">
+              <div className="text-2xl md:text-4xl lg:text-5xl font-semibold mb-2 gradient-number">
                 24/7
               </div>
-              <div className="text-gray-700 text-sm md:text-base">
+              <div className="text-gray-700 text-xs md:text-sm lg:text-base">
                 Customer Support
               </div>
             </div>
 
-            <div className="text-center border-t md:border-t-0 border-gray-300 pt-8 md:pt-0">
-              <div className="text-4xl md:text-5xl font-semibold mb-2 gradient-number">
+            <div className="text-center">
+              <div className="text-2xl md:text-4xl lg:text-5xl font-semibold mb-2 gradient-number">
                 100%
               </div>
-              <div className="text-gray-700 text-sm md:text-base">
+              <div className="text-gray-700 text-xs md:text-sm lg:text-base">
                 Shipment Tracking
               </div>
             </div>

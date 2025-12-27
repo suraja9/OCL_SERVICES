@@ -35,6 +35,17 @@ const ShippingRates = () => {
   const [chargeableWeight, setChargeableWeight] = useState<number | null>(null);
   const [calculation, setCalculation] = useState<RateCalculation | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
   const [showSuccess, setShowSuccess] = useState(false);
   const [selectedServiceType, setSelectedServiceType] = useState<string>("standard");
   const [focusedField, setFocusedField] = useState<string | null>(null);
@@ -253,7 +264,7 @@ const ShippingRates = () => {
         .floating-input:focus {
           outline: none;
           border-color: #FDA11E;
-          box-shadow: 0px 0px 0px 3px rgba(253, 161, 30, 0.08);
+          box-shadow: none;
           background: #FFFFFF;
         }
 
@@ -494,6 +505,81 @@ const ShippingRates = () => {
           box-shadow: 0 4px 4px 0 rgb(60 64 67 / 30%), 0 8px 12px 6px rgb(60 64 67 / 15%);
           outline: none;
         }
+
+        /* Hide refresh button on desktop */
+        @media (min-width: 768px) {
+          .refresh-button-mobile {
+            display: none !important;
+          }
+        }
+
+        /* Reduce service selector size on mobile */
+        @media (max-width: 767px) {
+          .service-selector-container {
+            min-height: 32px !important;
+            padding: 3px !important;
+          }
+          .service-selector-button {
+            padding: 4px 6px !important;
+          }
+          .service-selector-text {
+            font-size: 11px !important;
+            line-height: 1.1 !important;
+          }
+        }
+
+        /* Style buttons for mobile view */
+        @media (max-width: 767px) {
+          .refresh-button-mobile.button-17,
+          .button-17[type="submit"] {
+            width: auto !important;
+            padding-left: 32px !important;
+            padding-right: 32px !important;
+            min-width: 120px;
+          }
+
+          /* Rate breakdown card - remove horizontal offset on mobile */
+          .rate-breakdown-card {
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+        }
+
+        /* Fix rate breakdown card positioning on mobile */
+        @media (max-width: 767px) {
+          /* Remove form card horizontal shift on mobile */
+          .form-card {
+            transform: translateX(0) !important;
+            x: 0 !important;
+          }
+          
+          /* Remove horizontal slide animation from rate breakdown card on mobile */
+          #rate-breakdown {
+            transform: translateX(0) !important;
+            x: 0 !important;
+          }
+          
+          /* Ensure the parent flex container stacks vertically on mobile */
+          .flex.gap-6 {
+            flex-direction: column !important;
+            align-items: center !important;
+          }
+
+          /* Reduce size and center service type header box on mobile */
+          .service-type-header-box {
+            width: fit-content !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            padding-left: 24px !important;
+            padding-right: 24px !important;
+            padding-top: 8px !important;
+            padding-bottom: 8px !important;
+          }
+
+          .service-type-header-box span {
+            font-size: 12px !important;
+          }
+        }
       `}</style>
       <div 
         className="min-h-screen flex flex-col"
@@ -510,19 +596,19 @@ const ShippingRates = () => {
               animate={{ 
                 opacity: 1, 
                 y: 0,
-                x: calculation ? "-15%" : 0
+                x: calculation && !isMobile ? "-15%" : 0
               }}
               transition={{ duration: 0.5, ease: "easeInOut" }}
-              className={`bg-white rounded-2xl p-6 overflow-hidden ${calculation ? 'w-full md:w-[55%]' : 'w-full max-w-[950px]'}`}
+              className={`bg-white rounded-2xl p-6 overflow-hidden form-card ${calculation ? 'w-full md:w-[55%]' : 'w-full max-w-[950px]'}`}
               style={{
                 boxShadow: "rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px",
               }}
             >
           {/* Header */}
           <div 
-            className="flex items-start justify-between p-6 rounded-t-2xl mb-6"
+            className="flex items-center justify-between p-6 rounded-t-2xl mb-6"
             style={{
-              background: "linear-gradient(to bottom, #0B2E4E, #FFFFFF)",
+              background: "#FFFFFF",
               marginLeft: "-24px",
               marginRight: "-24px",
               marginTop: "-24px",
@@ -530,63 +616,21 @@ const ShippingRates = () => {
               paddingBottom: "24px",
             }}
           >
-            <div className="flex items-center gap-3 flex-1">
-              <div 
-                className="w-12 h-12 rounded-full flex items-center justify-center relative"
-                style={{ 
-                  background: "#FFD700",
-                  boxShadow: "0px 4px 12px rgba(255, 215, 0, 0.4), 0px 2px 6px rgba(0, 0, 0, 0.1)"
-                }}
-              >
-                <div 
-                  className="w-8 h-8 rounded-lg relative z-10"
-                  style={{ 
-                    background: "#FFD700"
-                  }}
-                >
-                  <svg 
-                    className="w-8 h-8" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    {/* Top-left quadrant - Green with Plus */}
-                    <rect x="0" y="0" width="12" height="12" rx="2" fill="#4CAF50"/>
-                    <path d="M6 3 L6 9 M3 6 L9 6" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round"/>
-                    
-                    {/* Top-right quadrant - Yellow with Minus */}
-                    <rect x="12" y="0" width="12" height="12" rx="2" fill="#FFD700"/>
-                    <line x1="15" y1="6" x2="21" y2="6" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round"/>
-                    
-                    {/* Bottom-left quadrant - Blue with Multiplication */}
-                    <rect x="0" y="12" width="12" height="12" rx="2" fill="#2196F3"/>
-                    <path d="M3 15 L9 21 M9 15 L3 21" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round"/>
-                    
-                    {/* Bottom-right quadrant - Dark Gray with Division */}
-                    <rect x="12" y="12" width="12" height="12" rx="2" fill="#607D8B"/>
-                    <line x1="15" y1="15" x2="21" y2="21" stroke="#FFFFFF" strokeWidth="2.5" strokeLinecap="round"/>
-                  </svg>
-                </div>
-              </div>
-                    <div>
-                <h1 
-                  className="text-2xl font-semibold"
-                  style={{ 
-                    fontFamily: "'Value Serif Pro Bold', serif",
-                    fontWeight: 600,
-                    color: "#000000"
-                  }}
-                >
-                  Calculate Shipping Price:
-                </h1>
-                
-              </div>
-            </div>
+            <h1 
+              className="text-2xl font-semibold flex-1"
+              style={{ 
+                fontFamily: "'Value Serif Pro Bold', serif",
+                fontWeight: 600,
+                color: "#000000"
+              }}
+            >
+              Calculate Shipping Price:
+            </h1>
             <button
               onClick={handleRefresh}
-              className="p-2 rounded-lg transition-all duration-200 hover:bg-white/50"
+              className="p-2 rounded-lg transition-all duration-200 hover:bg-gray-100 flex-shrink-0 refresh-button-header hidden md:block"
               style={{
-                color: "#FFFFFF",
+                color: "#4a4a4a",
               }}
               title="Refresh form"
             >
@@ -597,7 +641,7 @@ const ShippingRates = () => {
           {/* Form */}
           <form onSubmit={handleCalculate} className="mt-8 space-y-4">
             {/* From/To Pincode Row */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
               <div className={`floating-label-wrapper ${focusedField === "fromPincode" ? "focused" : ""} ${formData.fromPincode ? "has-value" : ""}`}>
                 <label className="floating-label">From Pincode</label>
                 <Input
@@ -631,13 +675,13 @@ const ShippingRates = () => {
             </div>
 
             {/* Dimensions Row: Length, Breadth, Height */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 md:grid-cols-3 gap-4">
               <div className={`floating-label-wrapper ${focusedField === "length" ? "focused" : ""} ${formData.length ? "has-value" : ""}`}>
-                <label className="floating-label">Length (cm)</label>
+                <label className="floating-label"><span className="md:hidden">L (cm)</span><span className="hidden md:inline">Length (cm)</span></label>
                 <Input
                   id="length"
                   type="number"
-                  placeholder="Length (cm)"
+                  placeholder="L (cm)"
                   value={formData.length}
                   onChange={(e) => handleInputChange("length")(e.target.value)}
                   min="0"
@@ -649,11 +693,11 @@ const ShippingRates = () => {
                 />
               </div>
               <div className={`floating-label-wrapper ${focusedField === "breadth" ? "focused" : ""} ${formData.breadth ? "has-value" : ""}`}>
-                <label className="floating-label">Breadth (cm)</label>
+                <label className="floating-label"><span className="md:hidden">B (cm)</span><span className="hidden md:inline">Breadth (cm)</span></label>
                 <Input
                   id="breadth"
                   type="number"
-                  placeholder="Breadth (cm)"
+                  placeholder="B (cm)"
                   value={formData.breadth}
                   onChange={(e) => handleInputChange("breadth")(e.target.value)}
                   min="0"
@@ -665,11 +709,11 @@ const ShippingRates = () => {
                 />
               </div>
               <div className={`floating-label-wrapper ${focusedField === "height" ? "focused" : ""} ${formData.height ? "has-value" : ""}`}>
-                <label className="floating-label">Height (cm)</label>
+                <label className="floating-label"><span className="md:hidden">H (cm)</span><span className="hidden md:inline">Height (cm)</span></label>
                 <Input
                   id="height"
                   type="number"
-                  placeholder="Height (cm)"
+                  placeholder="H (cm)"
                   value={formData.height}
                   onChange={(e) => handleInputChange("height")(e.target.value)}
                   min="0"
@@ -682,18 +726,8 @@ const ShippingRates = () => {
               </div>
             </div>
 
-            {/* Weight Row: Volumetric Weight, Actual Weight, Chargeable Weight */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className={`floating-label-wrapper ${volumetricWeight !== null ? "has-value" : ""}`}>
-                <label className="floating-label">Volumetric Weight (kg)</label>
-                <Input
-                  type="text"
-                  value={volumetricWeight !== null ? volumetricWeight.toFixed(2) : ""}
-                  className="floating-input"
-                  readOnly
-                  placeholder="Volumetric Weight (kg)"
-                />
-              </div>
+            {/* Weight Row: Actual Weight, Volumetric Weight, Chargeable Weight */}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className={`floating-label-wrapper ${focusedField === "actualWeight" ? "focused" : ""} ${formData.actualWeight ? "has-value" : ""}`}>
                 <label className="floating-label">Actual Weight (kg)</label>
                 <Input
@@ -710,7 +744,17 @@ const ShippingRates = () => {
                   onBlur={() => setFocusedField(null)}
                 />
               </div>
-              <div className={`floating-label-wrapper ${chargeableWeight !== null ? "has-value" : ""}`}>
+              <div className={`floating-label-wrapper ${volumetricWeight !== null ? "has-value" : ""}`}>
+                <label className="floating-label"><span className="md:hidden">Vol. Weight (kg)</span><span className="hidden md:inline">Volumetric Weight (kg)</span></label>
+                <Input
+                  type="text"
+                  value={volumetricWeight !== null ? volumetricWeight.toFixed(2) : ""}
+                  className="floating-input"
+                  readOnly
+                  placeholder="Vol. Weight (kg)"
+                />
+              </div>
+              <div className={`floating-label-wrapper ${chargeableWeight !== null ? "has-value" : ""} col-span-2 md:col-span-1`}>
                 <label className="floating-label">Chargeable Weight (kg)</label>
                 <Input
                   type="text"
@@ -724,7 +768,7 @@ const ShippingRates = () => {
 
             {/* Service Type Selector */}
             <div 
-              className="relative flex mb-4 p-1 rounded-full"
+              className="relative flex mb-4 p-1 rounded-full service-selector-container"
               style={{ 
                 backgroundColor: "#E5E7EB",
                 minHeight: "48px",
@@ -741,13 +785,14 @@ const ShippingRates = () => {
                       key={key}
                       type="button"
                       onClick={() => handleInputChange("serviceType")(key)}
-                      className="flex-1 relative z-10 py-2 px-4 rounded-full transition-all duration-200"
+                      className="flex-1 relative z-10 py-2 px-4 rounded-full transition-all duration-200 service-selector-button"
                       style={{
                         fontFamily: "'Value Serif Pro Bold', serif",
                       }}
                     >
                       <span className="flex items-center justify-center">
                         <span
+                          className="service-selector-text"
                           style={{
                             fontSize: "16px",
                             fontWeight: isSelected ? "600" : "400",
@@ -795,25 +840,36 @@ const ShippingRates = () => {
               })()}
                   </div>
 
-            <div className="flex justify-center">
-                  <Button
-                    type="submit"
-                    disabled={loading}
+            <div className="flex justify-center md:justify-center gap-3 flex-row">
+              <button
+                type="button"
+                onClick={handleRefresh}
+                className="button-17 refresh-button-mobile"
+                style={{
+                  backgroundColor: "#6B7280",
+                  color: "#FFFFFF",
+                }}
+              >
+                Refresh
+              </button>
+              <Button
+                type="submit"
+                disabled={loading}
                 className="button-17"
                 style={{
                   backgroundColor: "#FDA21F",
                   color: "#FFFFFF",
                 }}
               >
-              {loading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Calculating...
-                </span>
-              ) : (
-                "Calculate"
-              )}
-                  </Button>
+                {loading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Calculating...
+                  </span>
+                ) : (
+                  "Calculate"
+                )}
+              </Button>
             </div>
                 </form>
           </motion.div>
@@ -823,9 +879,10 @@ const ShippingRates = () => {
             {calculation && (
               <motion.div
                   id="rate-breakdown"
-                  initial={{ opacity: 0, x: 50 }}
+                  initial={{ opacity: 0, y: 20, x: isMobile ? 0 : 50 }}
                   animate={{ 
                     opacity: 1, 
+                    y: 0,
                     x: 0,
                     scale: [0.95, 1],
                     boxShadow: [
@@ -834,7 +891,7 @@ const ShippingRates = () => {
                       "rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px"
                     ]
                   }}
-                  exit={{ opacity: 0, x: 50 }}
+                  exit={{ opacity: 0, y: 20, x: isMobile ? 0 : 50 }}
                   transition={{ 
                     duration: 0.5, 
                     ease: "easeInOut",
@@ -847,7 +904,7 @@ const ShippingRates = () => {
                       duration: 0.6
                     }
                   }}
-                  className="bg-white rounded-2xl w-full md:w-[40%]"
+                  className="bg-white rounded-2xl w-full md:w-[40%] rate-breakdown-card"
                   style={{
                     boxShadow: "rgba(50, 50, 93, 0.25) 0px 13px 27px -5px, rgba(0, 0, 0, 0.3) 0px 8px 16px -8px",
                     padding: "16px 20px",
@@ -860,10 +917,10 @@ const ShippingRates = () => {
                 transition={{ delay: 0.05 }}
                 className="mb-4"
               >
-                <div 
-                  className="w-full py-3 px-4 rounded-full text-center"
-                  style={{ 
-                    backgroundColor: "#0B2E4E",
+                  <div 
+                    className="w-full py-3 px-4 rounded-full text-center service-type-header-box"
+                    style={{ 
+                      backgroundColor: "#0B2E4E",
                     boxShadow: "0px 2px 8px rgba(11, 46, 78, 0.2)",
                   }}
                 >
@@ -1045,10 +1102,10 @@ const ShippingRates = () => {
                     Want the best rates and faster service?
                     <p>Call us directly and let's get your shipment moving.</p>
                   </p>
-                  <div className="flex justify-between gap-8">
+                  <div className="flex justify-center">
                     <a
                       href="tel:+918453994809"
-                      className="button-17-call flex-1"
+                      className="button-17-call"
                       style={{
                         textDecoration: "none",
                         gap: "6px",
@@ -1057,19 +1114,6 @@ const ShippingRates = () => {
                       <Phone className="w-3.5 h-3.5" />
                       Call Now
                     </a>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        // Trigger the enquiry modal with a smooth delay
-                        window.dispatchEvent(new CustomEvent('openEnquiry'));
-                      }}
-                      className="button-17-contact flex-1"
-                      style={{
-                        gap: "6px",
-                      }}
-                    >
-                      <span>Contact Me</span>
-                    </button>
                   </div>
                 </motion.div>
                 </div>

@@ -644,6 +644,359 @@ router.get('/addressforms', authenticateOfficeUser, async (req, res) => {
   }
 });
 
+// Search consignments by consignment number, phone, or email
+router.get('/consignments/search', authenticateOfficeUser, async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || !query.trim()) {
+      return res.json({
+        success: true,
+        data: [],
+        searchType: null
+      });
+    }
+
+    const searchTerm = query.trim();
+    const allResults = [];
+
+    // Check if search is a consignment number (numeric)
+    const isNumeric = /^\d+$/.test(searchTerm);
+    
+    if (isNumeric) {
+      // Search by consignment number - return single result only
+      const consignmentNumber = parseFloat(searchTerm);
+      
+      const Tracking = (await import('../models/Tracking.js')).default;
+      const CustomerBooking = (await import('../models/CustomerBooking.js')).default;
+      const MedicineBooking = (await import('../models/MedicineBooking.js')).default;
+
+      // Search in Tracking (corporate)
+      const tracking = await Tracking.findOne({
+        $or: [
+          { consignmentNumber: consignmentNumber },
+          { consignmentNumber: consignmentNumber.toString() }
+        ]
+      }).lean();
+
+      if (tracking) {
+        const bookedEntry = tracking.booked?.[0] || {};
+        const originData = bookedEntry.originData || {};
+        const destinationData = bookedEntry.destinationData || {};
+        const invoiceData = bookedEntry.invoiceData || {};
+
+        allResults.push({
+          _id: tracking._id,
+          consignmentNumber: tracking.consignmentNumber,
+          bookingReference: tracking.bookingReference || tracking.consignmentNumber?.toString() || '',
+          source: 'corporate',
+          origin: {
+            name: originData.name || 'N/A',
+            city: originData.city || 'N/A',
+            mobileNumber: originData.mobileNumber || '',
+            email: originData.email || '',
+            pincode: originData.pincode || '',
+            state: originData.state || ''
+          },
+          destination: {
+            name: destinationData.name || 'N/A',
+            city: destinationData.city || 'N/A',
+            mobileNumber: destinationData.mobileNumber || '',
+            email: destinationData.email || '',
+            pincode: destinationData.pincode || '',
+            state: destinationData.state || ''
+          },
+          currentStatus: tracking.currentStatus || 'booked',
+          paymentStatus: bookedEntry.paymentStatus === 'paid' ? 'paid' : 'unpaid',
+          totalAmount: invoiceData.finalPrice ? parseFloat(invoiceData.finalPrice.toString()) : 0,
+          bookingDate: bookedEntry.bookingDate || tracking.createdAt,
+          createdAt: tracking.createdAt,
+          updatedAt: tracking.updatedAt || tracking.createdAt
+        });
+      }
+
+      // Search in CustomerBooking
+      if (allResults.length === 0) {
+        const customerBooking = await CustomerBooking.findOne({
+          $or: [
+            { consignmentNumber: consignmentNumber },
+            { consignmentNumber: consignmentNumber.toString() }
+          ]
+        }).lean();
+
+        if (customerBooking) {
+          allResults.push({
+            _id: customerBooking._id,
+            consignmentNumber: customerBooking.consignmentNumber,
+            bookingReference: customerBooking.bookingReference || customerBooking.consignmentNumber?.toString() || '',
+            source: 'customer',
+            origin: {
+              name: customerBooking.origin?.name || 'N/A',
+              city: customerBooking.origin?.city || 'N/A',
+              mobileNumber: customerBooking.origin?.mobileNumber || '',
+              email: customerBooking.origin?.email || '',
+              pincode: customerBooking.origin?.pincode || '',
+              state: customerBooking.origin?.state || ''
+            },
+            destination: {
+              name: customerBooking.destination?.name || 'N/A',
+              city: customerBooking.destination?.city || 'N/A',
+              mobileNumber: customerBooking.destination?.mobileNumber || '',
+              email: customerBooking.destination?.email || '',
+              pincode: customerBooking.destination?.pincode || '',
+              state: customerBooking.destination?.state || ''
+            },
+            currentStatus: customerBooking.currentStatus || customerBooking.status || 'booked',
+            paymentStatus: customerBooking.paymentStatus === 'paid' ? 'paid' : 'unpaid',
+            totalAmount: customerBooking.totalAmount || 0,
+            bookingDate: customerBooking.bookingDate || customerBooking.createdAt,
+            createdAt: customerBooking.createdAt,
+            updatedAt: customerBooking.updatedAt || customerBooking.createdAt
+          });
+        }
+      }
+
+      // Search in MedicineBooking
+      if (allResults.length === 0) {
+        const medicineBooking = await MedicineBooking.findOne({
+          $or: [
+            { consignmentNumber: consignmentNumber },
+            { consignmentNumber: consignmentNumber.toString() }
+          ]
+        }).lean();
+
+        if (medicineBooking) {
+          allResults.push({
+            _id: medicineBooking._id,
+            consignmentNumber: medicineBooking.consignmentNumber,
+            bookingReference: medicineBooking.bookingReference || medicineBooking.consignmentNumber?.toString() || '',
+            source: 'medicine',
+            origin: {
+              name: medicineBooking.origin?.name || 'N/A',
+              city: medicineBooking.origin?.city || 'N/A',
+              mobileNumber: medicineBooking.origin?.mobileNumber || '',
+              email: medicineBooking.origin?.email || '',
+              pincode: medicineBooking.origin?.pincode || '',
+              state: medicineBooking.origin?.state || ''
+            },
+            destination: {
+              name: medicineBooking.destination?.name || 'N/A',
+              city: medicineBooking.destination?.city || 'N/A',
+              mobileNumber: medicineBooking.destination?.mobileNumber || '',
+              email: medicineBooking.destination?.email || '',
+              pincode: medicineBooking.destination?.pincode || '',
+              state: medicineBooking.destination?.state || ''
+            },
+            currentStatus: medicineBooking.status || 'booked',
+            paymentStatus: medicineBooking.payment?.mode ? 'paid' : 'unpaid',
+            totalAmount: medicineBooking.charges?.grandTotal ? parseFloat(medicineBooking.charges.grandTotal) : 0,
+            bookingDate: medicineBooking.createdAt,
+            createdAt: medicineBooking.createdAt,
+            updatedAt: medicineBooking.updatedAt || medicineBooking.createdAt
+          });
+        }
+      }
+
+      return res.json({
+        success: true,
+        data: allResults,
+        searchType: 'consignment'
+      });
+    }
+
+    // Search by phone or email - return all matching consignments
+    const cleanPhone = searchTerm.replace(/\D/g, '');
+    const isPhone = cleanPhone.length === 10;
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(searchTerm);
+
+    if (!isPhone && !isEmail) {
+      return res.json({
+        success: true,
+        data: [],
+        searchType: null,
+        error: 'Please enter a valid consignment number, 10-digit phone number, or email address'
+      });
+    }
+
+    const Tracking = (await import('../models/Tracking.js')).default;
+    const CustomerBooking = (await import('../models/CustomerBooking.js')).default;
+    const MedicineBooking = (await import('../models/MedicineBooking.js')).default;
+
+    // Build query based on phone or email
+    let trackingQuery = {};
+    let customerQuery = {};
+    let medicineQuery = {};
+
+    if (isPhone) {
+      trackingQuery = {
+        $or: [
+          { 'booked.originData.mobileNumber': cleanPhone },
+          { 'booked.destinationData.mobileNumber': cleanPhone }
+        ]
+      };
+      customerQuery = {
+        $or: [
+          { 'origin.mobileNumber': cleanPhone },
+          { 'destination.mobileNumber': cleanPhone }
+        ]
+      };
+      medicineQuery = {
+        $or: [
+          { 'origin.mobileNumber': cleanPhone },
+          { 'destination.mobileNumber': cleanPhone }
+        ]
+      };
+    } else if (isEmail) {
+      trackingQuery = {
+        $or: [
+          { 'booked.originData.email': new RegExp(searchTerm, 'i') },
+          { 'booked.destinationData.email': new RegExp(searchTerm, 'i') }
+        ]
+      };
+      customerQuery = {
+        $or: [
+          { 'origin.email': new RegExp(searchTerm, 'i') },
+          { 'destination.email': new RegExp(searchTerm, 'i') }
+        ]
+      };
+      medicineQuery = {
+        $or: [
+          { 'origin.email': new RegExp(searchTerm, 'i') },
+          { 'destination.email': new RegExp(searchTerm, 'i') }
+        ]
+      };
+    }
+
+    // Fetch from all sources
+    const [trackings, customerBookings, medicineBookings] = await Promise.all([
+      Tracking.find(trackingQuery).limit(100).lean(),
+      CustomerBooking.find(customerQuery).limit(100).lean(),
+      MedicineBooking.find(medicineQuery).limit(100).lean()
+    ]);
+
+    // Transform Tracking results
+    trackings.forEach(tracking => {
+      const bookedEntry = tracking.booked?.[0] || {};
+      const originData = bookedEntry.originData || {};
+      const destinationData = bookedEntry.destinationData || {};
+      const invoiceData = bookedEntry.invoiceData || {};
+
+      allResults.push({
+        _id: tracking._id,
+        consignmentNumber: tracking.consignmentNumber,
+        bookingReference: tracking.bookingReference || tracking.consignmentNumber?.toString() || '',
+        source: 'corporate',
+        origin: {
+          name: originData.name || 'N/A',
+          city: originData.city || 'N/A',
+          mobileNumber: originData.mobileNumber || '',
+          email: originData.email || '',
+          pincode: originData.pincode || '',
+          state: originData.state || ''
+        },
+        destination: {
+          name: destinationData.name || 'N/A',
+          city: destinationData.city || 'N/A',
+          mobileNumber: destinationData.mobileNumber || '',
+          email: destinationData.email || '',
+          pincode: destinationData.pincode || '',
+          state: destinationData.state || ''
+        },
+        currentStatus: tracking.currentStatus || 'booked',
+        paymentStatus: bookedEntry.paymentStatus === 'paid' ? 'paid' : 'unpaid',
+        totalAmount: invoiceData.finalPrice ? parseFloat(invoiceData.finalPrice.toString()) : 0,
+        bookingDate: bookedEntry.bookingDate || tracking.createdAt,
+        createdAt: tracking.createdAt,
+        updatedAt: tracking.updatedAt || tracking.createdAt
+      });
+    });
+
+    // Transform CustomerBooking results
+    customerBookings.forEach(booking => {
+      allResults.push({
+        _id: booking._id,
+        consignmentNumber: booking.consignmentNumber,
+        bookingReference: booking.bookingReference || booking.consignmentNumber?.toString() || '',
+        source: 'customer',
+        origin: {
+          name: booking.origin?.name || 'N/A',
+          city: booking.origin?.city || 'N/A',
+          mobileNumber: booking.origin?.mobileNumber || '',
+          email: booking.origin?.email || '',
+          pincode: booking.origin?.pincode || '',
+          state: booking.origin?.state || ''
+        },
+        destination: {
+          name: booking.destination?.name || 'N/A',
+          city: booking.destination?.city || 'N/A',
+          mobileNumber: booking.destination?.mobileNumber || '',
+          email: booking.destination?.email || '',
+          pincode: booking.destination?.pincode || '',
+          state: booking.destination?.state || ''
+        },
+        currentStatus: booking.currentStatus || booking.status || 'booked',
+        paymentStatus: booking.paymentStatus === 'paid' ? 'paid' : 'unpaid',
+        totalAmount: booking.totalAmount || 0,
+        bookingDate: booking.bookingDate || booking.createdAt,
+        createdAt: booking.createdAt,
+        updatedAt: booking.updatedAt || booking.createdAt
+      });
+    });
+
+    // Transform MedicineBooking results
+    medicineBookings.forEach(booking => {
+      allResults.push({
+        _id: booking._id,
+        consignmentNumber: booking.consignmentNumber,
+        bookingReference: booking.bookingReference || booking.consignmentNumber?.toString() || '',
+        source: 'medicine',
+        origin: {
+          name: booking.origin?.name || 'N/A',
+          city: booking.origin?.city || 'N/A',
+          mobileNumber: booking.origin?.mobileNumber || '',
+          email: booking.origin?.email || '',
+          pincode: booking.origin?.pincode || '',
+          state: booking.origin?.state || ''
+        },
+        destination: {
+          name: booking.destination?.name || 'N/A',
+          city: booking.destination?.city || 'N/A',
+          mobileNumber: booking.destination?.mobileNumber || '',
+          email: booking.destination?.email || '',
+          pincode: booking.destination?.pincode || '',
+          state: booking.destination?.state || ''
+        },
+        currentStatus: booking.status || 'booked',
+        paymentStatus: booking.payment?.mode ? 'paid' : 'unpaid',
+        totalAmount: booking.charges?.grandTotal ? parseFloat(booking.charges.grandTotal) : 0,
+        bookingDate: booking.createdAt,
+        createdAt: booking.createdAt,
+        updatedAt: booking.updatedAt || booking.createdAt
+      });
+    });
+
+    // Sort by date (newest first)
+    allResults.sort((a, b) => {
+      const dateA = new Date(a.bookingDate || a.createdAt).getTime();
+      const dateB = new Date(b.bookingDate || b.createdAt).getTime();
+      return dateB - dateA;
+    });
+
+    res.json({
+      success: true,
+      data: allResults,
+      searchType: isPhone ? 'phone' : 'email'
+    });
+
+  } catch (error) {
+    console.error('Search consignments error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to search consignments'
+    });
+  }
+});
+
 // Get courier boy payment data (for office users)
 router.get('/courier-boys/payments', authenticateOfficeUser, async (req, res) => {
   try {
@@ -718,6 +1071,113 @@ router.get('/courier-boys/payments', authenticateOfficeUser, async (req, res) =>
     res.status(500).json({ 
       success: false,
       error: 'Failed to fetch courier boy payments.' 
+    });
+  }
+});
+
+// Get unpaid payments (FP and TP) for office dashboard
+router.get('/unpaid-payments', authenticateOfficeUser, async (req, res) => {
+  try {
+    // Check if user has permission to access payment data
+    const hasPermission = req.user.permissions.addressForms || req.user.permissions.consignmentManagement;
+    
+    if (!hasPermission) {
+      return res.status(403).json({
+        success: false,
+        error: 'Access denied. You do not have permission to view payment data.'
+      });
+    }
+
+    const CustomerBooking = (await import('../models/CustomerBooking.js')).default;
+    const Tracking = (await import('../models/Tracking.js')).default;
+    
+    // Get all unpaid orders from CustomerBookings collection
+    // CustomerBooking uses 'pending' for unpaid, or anything that's not 'paid'
+    const fpUnpaidBookings = await CustomerBooking.find({
+      paymentStatus: { $ne: 'paid' }
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    // Get all unpaid TP shipments from Tracking collection only
+    // TP orders are identified by booked[0].paymentData.paymentType === 'TP' and paymentStatus === 'unpaid'
+    const allTrackings = await Tracking.find({
+      'booked.0': { $exists: true }
+    })
+      .select('consignmentNumber bookingReference booked createdAt')
+      .lean();
+
+    // Filter TP unpaid orders from trackings
+    const tpUnpaidTrackings = allTrackings.filter(tracking => {
+      if (!tracking.booked || !Array.isArray(tracking.booked) || tracking.booked.length === 0) return false;
+      
+      const bookedEntry = tracking.booked[0];
+      const paymentData = bookedEntry?.paymentData || {};
+      const paymentType = paymentData.paymentType;
+      const paymentStatus = bookedEntry?.paymentStatus || 'unpaid';
+      
+      // Only include TP orders that are unpaid
+      return paymentType === 'TP' && paymentStatus === 'unpaid';
+    });
+
+    // Format FP orders from CustomerBookings
+    const fpOrders = fpUnpaidBookings.map(booking => {
+      const origin = booking.origin || {};
+      const destination = booking.destination || {};
+      
+      return {
+        consignmentNumber: booking.consignmentNumber,
+        bookingReference: booking.bookingReference || booking.consignmentNumber?.toString() || '',
+        amount: booking.totalAmount || booking.calculatedPrice || 0,
+        receiverName: destination.name || 'N/A',
+        receiverPhone: destination.mobileNumber || 'N/A',
+        route: `${origin.city || 'N/A'} → ${destination.city || 'N/A'}`,
+        bookingDate: booking.bookingDate || booking.createdAt
+      };
+    });
+
+    // Format TP orders from Tracking collection
+    const tpOrders = tpUnpaidTrackings.map(tracking => {
+      const bookedEntry = tracking.booked[0] || {};
+      const destinationData = bookedEntry.destinationData || {};
+      const originData = bookedEntry.originData || {};
+      const invoiceData = bookedEntry.invoiceData || {};
+      
+      return {
+        consignmentNumber: tracking.consignmentNumber,
+        bookingReference: tracking.bookingReference || tracking.consignmentNumber?.toString() || '',
+        amount: invoiceData.finalPrice || invoiceData.totalAmount || 0,
+        receiverName: destinationData.name || 'N/A',
+        receiverPhone: destinationData.mobileNumber || 'N/A',
+        route: `${originData.city || 'N/A'} → ${destinationData.city || 'N/A'}`,
+        bookingDate: bookedEntry.bookingDate || tracking.createdAt
+      };
+    });
+
+    // Calculate totals
+    const fpTotalAmount = fpOrders.reduce((sum, order) => sum + (order.amount || 0), 0);
+    const tpTotalAmount = tpOrders.reduce((sum, order) => sum + (order.amount || 0), 0);
+
+    res.json({
+      success: true,
+      data: {
+        FP: {
+          totalAmount: fpTotalAmount,
+          totalOrders: fpOrders.length,
+          orders: fpOrders
+        },
+        TP: {
+          totalAmount: tpTotalAmount,
+          totalOrders: tpOrders.length,
+          orders: tpOrders
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Get unpaid payments error:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch unpaid payments.' 
     });
   }
 });

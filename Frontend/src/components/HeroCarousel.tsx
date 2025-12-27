@@ -10,19 +10,39 @@ const HeroCarousel = () => {
   const navigate = useNavigate();
 
   return (
-    <section
-      className="relative overflow-hidden min-h-screen md:min-h-[90vh] flex items-center py-8 md:py-0 overflow-x-hidden"
-      style={{ background: "linear-gradient(180deg, #ffffff, #f4ecec)" }}
-    >
-      {/* Background image */}
+    <>
+      <style>{`
+        @media (max-width: 767px) {
+          .hero-section-mobile-height {
+            min-height: 75vh !important;
+          }
+          .tracking-card-mobile {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            backdrop-filter: blur(5px) !important;
+            -webkit-backdrop-filter: blur(5px) !important;
+          }
+          .country-code-card-mobile {
+            margin-right: 8px !important;
+          }
+          .tracking-card-mobile input[type="tel"] {
+            padding-left: 3.5rem !important;
+          }
+        }
+      `}</style>
+      <section
+        className="relative overflow-hidden min-h-screen md:min-h-[90vh] flex items-center py-8 md:py-0 overflow-x-hidden hero-section-mobile-height"
+        style={{ background: "linear-gradient(180deg, #ffffff, #f4ecec)" }}
+      >
+      {/* Background image - fixed so content scrolls over it */}
       <img
-        className="absolute inset-0 w-full h-full object-cover"
+        className="fixed inset-0 w-full h-full object-cover z-0"
         src={homeImage}
         alt="OCL Services - Logistics and Courier"
       />
-      {/* Delhivery-style left-to-right black gradient overlay */}
+      {/* Left-to-right black gradient overlay - fixed with background */}
       <div
-        className="absolute inset-0 z-[1] pointer-events-none"
+        className="hidden md:block fixed inset-0 z-[1] pointer-events-none"
         style={{
           background: "linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.75) 20%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.15) 75%, rgba(0,0,0,0) 100%)",
           animation: "fadeInOverlay 0.5s ease-in"
@@ -40,7 +60,12 @@ const HeroCarousel = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: [0.19, 1, 0.22, 1] }}
                 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-4 md:mb-4 drop-shadow-lg order-1 md:hidden text-left w-full px-2"
-                style={{ fontFamily: 'Value Serif Pro Bold, serif', color: '#00FF76', paddingTop: '0px' }}
+                style={{ 
+                  fontFamily: 'Value Serif Pro Bold, serif', 
+                  color: '#FFFFFF', 
+                  paddingTop: '0px',
+                  textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5)'
+                }}
               >
                 !!! India's Most Reliable Logistics Service Provider !!!
               </motion.h1>
@@ -56,8 +81,10 @@ const HeroCarousel = () => {
               </motion.div>
 
               {/* Tracking Module directly visible on mobile (without outer box) - order-2 on mobile */}
-              <div className="block md:hidden w-full order-2 mb-4 px-2">
-                <TrackingTabs />
+              <div className="block md:hidden w-full order-2 mb-4 px-2 flex justify-start">
+                <div className="w-full max-w-[260px]">
+                  <TrackingTabs />
+                </div>
               </div>
 
               {/* Desktop: Heading + Description together on right side */}
@@ -70,7 +97,11 @@ const HeroCarousel = () => {
               >
                 <h1
                   className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold leading-tight mb-3 md:mb-4 drop-shadow-lg"
-                  style={{ fontFamily: 'Value Serif Pro Bold, serif', color: '#00FF76' }}
+                  style={{ 
+                    fontFamily: 'Value Serif Pro Bold, serif', 
+                    color: '#FFFFFF',
+                    textShadow: '2px 2px 8px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 0, 0, 0.5)'
+                  }}
                 >
                   !!! India's Most Reliable Logistics Service Provider !!!
                 </h1>
@@ -86,10 +117,10 @@ const HeroCarousel = () => {
             >
               <button
                 onClick={() => navigate('/schedule-pickup')}
-                className="button-schedule-pickup flex items-center gap-2 w-full sm:w-auto justify-center min-h-[44px] text-base sm:text-lg"
+                className="button-schedule-pickup flex items-center gap-2 w-auto max-w-xs justify-center min-h-[44px] text-sm sm:text-base md:text-lg px-6"
                 role="button"
               >
-                <Rocket className="w-5 h-5 button-schedule-pickup-icon" />
+                <Rocket className="w-4 h-4 sm:w-5 sm:h-5 button-schedule-pickup-icon" />
                 Schedule a Pickup
               </button>
             </motion.div>
@@ -97,6 +128,7 @@ const HeroCarousel = () => {
         </div>
       </div>
     </section>
+    </>
   );
 };
 
@@ -151,7 +183,7 @@ const TrackingTabs = () => {
 
   return (
     <div
-      className="w-full max-w-md rounded-2xl p-4 sm:p-5 md:p-6 transition-all text-white"
+      className="w-full max-w-[260px] md:max-w-sm rounded-2xl p-3 sm:p-4 md:p-4 transition-all text-white tracking-card-mobile"
       style={{
         background: 'rgba(255, 255, 255, 0.12)',
         border: '1px solid rgba(255, 255, 255, 0.25)',
@@ -160,18 +192,18 @@ const TrackingTabs = () => {
         boxShadow: isMobile
           ? '0 12px 40px rgba(0, 0, 0, 0.6), 0 6px 20px rgba(0, 0, 0, 0.5), 0 3px 10px rgba(0, 0, 0, 0.4)'
           : 'rgba(136, 165, 191, 0.48) 6px 2px 16px 0px',
-        minHeight: '240px',
+        minHeight: isMobile ? 'auto' : '200px',
       }}
     >
       {/* Track Shipment Label */}
-      <div className="mb-2 md:mb-4">
-        <span className="text-lg md:text-xl font-bold text-white drop-shadow-md">
+      <div className="mb-2 md:mb-3">
+        <span className="text-base md:text-lg font-bold text-white drop-shadow-md">
           Track Shipment
         </span>
       </div>
 
       {/* Mini Tabs */}
-      <div className="flex flex-wrap gap-1.5 md:gap-2 mb-3 md:mb-4">
+      <div className="flex flex-wrap gap-1 md:gap-1.5 mb-2 md:mb-3">
         {[
           { key: 'awb', label: 'AWB' },
           { key: 'mobile', label: 'Mobile' },
@@ -179,7 +211,7 @@ const TrackingTabs = () => {
           <button
             key={t.key}
             onClick={() => setMiniTab(t.key)}
-            className={`px-6 py-2 md:px-8 md:py-2 rounded-lg text-sm md:text-sm font-medium transition-all duration-300 min-h-[44px] min-w-[100px] md:min-w-[120px] ${miniTab === t.key
+            className={`px-4 py-1.5 md:px-5 md:py-1.5 rounded-lg text-xs md:text-sm font-medium transition-all duration-300 min-h-[36px] min-w-[80px] md:min-w-[90px] ${miniTab === t.key
                 ? 'bg-[#FD9C13] text-white shadow'
                 : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
@@ -190,14 +222,14 @@ const TrackingTabs = () => {
       </div>
 
       {/* Input + Action */}
-      <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
+      <div className="flex flex-col sm:flex-row gap-1.5 md:gap-2">
         {/* Input for Mobile/AWB/Ref */}
         <div className="relative flex-1 w-full">
           {miniTab === 'mobile' ? (
             <>
               {/* Indian Flag and +91 */}
               <div
-                className="absolute left-2 md:left-3 top-1/2 -translate-y-1/2 z-10 flex items-center px-1 md:px-1.5 py-0.5 md:py-1 rounded-md"
+                className="absolute left-2 md:left-2.5 top-1/2 -translate-y-1/2 z-10 flex items-center px-1 py-0.5 rounded-md country-code-card-mobile"
                 style={{
                   backgroundColor: "#F7F7F7",
                   boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
@@ -206,7 +238,7 @@ const TrackingTabs = () => {
                 <img
                   src={flagIcon}
                   alt="India flag"
-                  className="mr-0.5 md:mr-1 rounded-sm object-cover w-3.5 h-3.5 md:w-4 md:h-4"
+                  className="mr-0.5 rounded-sm object-cover w-3 h-3 md:w-3.5 md:h-3.5"
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                     const fallback = e.currentTarget.nextElementSibling;
@@ -216,7 +248,7 @@ const TrackingTabs = () => {
                   }}
                 />
                 <span className="text-base mr-2 hidden">🇮🇳</span>
-                <span className="text-xs md:text-sm font-normal text-gray-700">+91</span>
+                <span className="text-xs font-normal text-gray-700">+91</span>
               </div>
               <input
                 type="tel"
@@ -229,7 +261,7 @@ const TrackingTabs = () => {
                 }}
                 maxLength={10}
                 placeholder={isMobile ? "Mobile number" : "Enter your mobile num..."}
-                className="w-full rounded-xl border border-gray-300 pl-14 md:pl-20 pr-4 md:pr-5 py-3 md:py-2 text-sm sm:text-base md:text-base outline-none focus:ring-2 focus:ring-[#5a1e1e]/30 min-h-[44px] placeholder:text-gray-700 placeholder:opacity-90"
+                className="w-full rounded-xl border border-gray-300 pl-12 md:pl-14 pr-3 md:pr-4 py-2 md:py-2 text-xs sm:text-sm md:text-sm outline-none focus:ring-2 focus:ring-[#5a1e1e]/30 min-h-[36px] placeholder:text-gray-700 placeholder:opacity-90"
                 style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.65)',
                   color: '#1E1E1E'
@@ -243,7 +275,7 @@ const TrackingTabs = () => {
                 value={awbNumber}
                 onChange={(e) => setAwbNumber(e.target.value)}
                 placeholder="Enter AWB number"
-                className="w-full rounded-xl border border-gray-300 px-3 md:px-4 py-3 md:py-2 text-base md:text-base outline-none focus:ring-2 focus:ring-[#5a1e1e]/30 min-h-[44px] placeholder:text-gray-700 placeholder:opacity-90"
+                className="w-full rounded-xl border border-gray-300 px-2.5 md:px-3 py-2 md:py-2 text-xs sm:text-sm md:text-sm outline-none focus:ring-2 focus:ring-[#5a1e1e]/30 min-h-[36px] placeholder:text-gray-700 placeholder:opacity-90"
                 style={{
                   backgroundColor: 'rgba(255, 255, 255, 0.65)',
                   color: '#1E1E1E'
@@ -253,7 +285,7 @@ const TrackingTabs = () => {
           )}
         </div>
 
-        <Button onClick={handlePrimary} className="rounded-xl bg-[#FD9C13] hover:bg-[#e58f12] text-white px-4 py-3 md:px-5 md:py-3 text-sm md:text-sm shadow transition-all duration-300 w-full sm:w-auto min-h-[44px]">
+        <Button onClick={handlePrimary} className="rounded-xl bg-[#FD9C13] hover:bg-[#e58f12] text-white px-3 py-2 md:px-4 md:py-2 text-xs md:text-sm shadow transition-all duration-300 w-full sm:w-auto min-h-[36px]">
           {miniTab === 'mobile' ? 'Get OTP' : 'Track Now'}
         </Button>
       </div>

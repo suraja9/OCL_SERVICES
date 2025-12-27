@@ -39,10 +39,47 @@ const salesFormSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  // Address fields (structured)
+  locality: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  buildingFlatNo: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  landmark: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  pincode: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  city: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  state: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  area: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  // Keep fullAddress for backward compatibility (will be auto-generated if not provided)
   fullAddress: {
     type: String,
-    required: true,
-    trim: true
+    trim: true,
+    default: ''
   },
 
   // Section 2: Business & Shipment Details

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Menu, X, Phone } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import navData from "@/data/nav.json";
 import oclLogo from "@/assets/ocl-logo.png";
@@ -7,8 +8,9 @@ import oclLogo from "@/assets/ocl-logo.png";
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
 
   // Reset activeDropdown when mobile menu closes
   useEffect(() => {
@@ -17,14 +19,25 @@ const Navbar = () => {
     }
   }, [isOpen]);
 
-  // Track viewport width so we only render the mobile CTA on small screens
+  // Close menu when clicking outside
   useEffect(() => {
-    const mq = window.matchMedia("(max-width: 767px)");
-    const update = () => setIsMobileViewport(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isOpen && menuRef.current && navRef.current) {
+        const target = event.target as Node;
+        if (!menuRef.current.contains(target) && !navRef.current.contains(target)) {
+          setIsOpen(false);
+        }
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const handleMouseEnter = (label: string) => {
     if (timeoutRef.current) {
@@ -42,7 +55,7 @@ const Navbar = () => {
   return (
     <nav className="fixed top-0 left-0 right-0 z-[9999] flex flex-col items-center pointer-events-none">
       {/* Glass container wrapper (90% width, centered, margins) */}
-      <div className="w-[96%] mt-2">
+      <div ref={navRef} className="w-[96%] mt-2">
         <div 
           className="pointer-events-auto flex items-center justify-between h-[48px] rounded-[50px] px-4 sm:px-6 border border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
           style={{
@@ -52,7 +65,7 @@ const Navbar = () => {
           }}
         >
           {/* Left: Logo + Company name */}
-          <a href="/" className="flex items-center space-x-3 hover:opacity-95 transition-opacity duration-300">
+          <Link to="/" className="flex items-center space-x-3 hover:opacity-95 transition-opacity duration-300">
             <img
               src={oclLogo}
               alt="OCL SERVICES"
@@ -62,60 +75,55 @@ const Navbar = () => {
             <div className="leading-tight hidden sm:block">
               
             </div>
-          </a>
+          </Link>
 
           {/* Right Section - Menu Items */}
           <div className="flex items-center gap-2 sm:gap-4">
             {/* Mobile Phone Icon */}
             <a
               href="tel:8453994809"
-              className="lg:hidden p-2 rounded-full text-black hover:bg-white/20 transition-all duration-200"
+              className="lg:hidden p-2 rounded-full text-black hover:bg-white/20 transition-all duration-200 flex items-center justify-center"
+              style={{ marginTop: "2px" }}
               aria-label="Call 8453994809"
             >
               <Phone className="h-5 w-5" />
             </a>
             {/* Mobile Ship Now Button */}
-            {isMobileViewport &&
-              navData.navigation
-                .filter((item) => item.type === "cta")
-                .map((item) => (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    className="md:hidden rounded-full text-white font-semibold text-sm transition-all duration-200 ship-now-btn flex items-center justify-center"
-                    style={{
-                      background: "linear-gradient(90deg, #ff8c00, #ffbb33, #0078ff)",
-                      backgroundSize: "200% auto",
-                      fontWeight: 600,
-                      border: "none",
-                      borderRadius: "30px",
-                      padding: "8px 16px",
-                      marginTop: "4px",
-                      marginBottom: "4px",
-                      cursor: "pointer",
-                      boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
-                      transition: "all 0.3s ease",
-                      animation: "gradientShift 4s ease infinite",
-                      minHeight: "32px",
-                      textAlign: "center",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "scale(1.05)";
-                      e.currentTarget.style.boxShadow = "0 6px 20px rgba(255, 140, 0, 0.4)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "scale(1)";
-                      e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,0,0,0.1)";
-                    }}
-                  >
-                    {item.label}
-                  </a>
-                ))}
+            {navData.navigation
+              .filter((item) => item.type === "cta")
+              .map((item) => (
+                <Link
+                  key={item.label}
+                  to={item.href}
+                  className="lg:hidden rounded-full text-white font-semibold text-xs transition-all duration-200 ship-now-btn flex items-center justify-center"
+                  style={{
+                    background: "linear-gradient(90deg, #ff8c00, #ffbb33, #0078ff)",
+                    backgroundSize: "200% auto",
+                    fontWeight: 600,
+                    border: "none",
+                    borderRadius: "30px",
+                    padding: "6px 12px",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+                    transition: "all 0.3s ease",
+                    animation: "gradientShift 4s ease infinite",
+                    textAlign: "center",
+                    whiteSpace: "nowrap",
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = "scale(1.05)";
+                    e.currentTarget.style.boxShadow = "0 6px 20px rgba(255, 140, 0, 0.4)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = "scale(1)";
+                    e.currentTarget.style.boxShadow = "0 4px 15px rgba(0,0,0,0.1)";
+                  }}
+                >
+                  {item.label}
+                </Link>
+              ))}
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-2 xl:space-x-6">
+            <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
             {navData.navigation.map((item) => (
               <div 
                 key={item.label} 
@@ -125,7 +133,7 @@ const Navbar = () => {
               >
                 {item.type === "dropdown" ? (
                   <>
-                    <button className="flex items-center space-x-1 px-4 py-2 text-black font-medium transition-colors duration-200">
+                    <button className="flex items-center space-x-1 px-3 py-2 text-black font-medium transition-colors duration-200">
                       <span>{item.label}</span>
                       <ChevronDown className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" />
                     </button>
@@ -134,21 +142,21 @@ const Navbar = () => {
                     {activeDropdown === item.label && (
                       <div className="absolute top-full left-0 mt-2 w-64 bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-50">
                         {item.items?.map((subItem) => (
-                          <a
+                          <Link
                             key={subItem.label}
-                            href={subItem.href}
+                            to={subItem.href}
                             className="block px-4 py-3 text-sm text-black hover:bg-gray-50 rounded-lg transition-colors duration-200"
                           >
                             {subItem.label}
-                          </a>
+                          </Link>
                         ))}
                       </div>
                     )}
                   </>
                 ) : (
-                  <a
-                    href={item.href}
-                    className={`px-5 py-2 font-semibold transition-all duration-200 ${
+                  <Link
+                    to={item.href}
+                    className={`px-3.5 py-2 font-semibold transition-all duration-200 ${
                       item.type === "cta" 
                         ? "rounded-full text-white ship-now-btn"
                         : "text-black rounded-full"
@@ -183,7 +191,7 @@ const Navbar = () => {
                     }}
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 )}
               </div>
             ))}
@@ -207,12 +215,13 @@ const Navbar = () => {
       {isOpen && (
         <div className="lg:hidden w-[96%] flex justify-end mt-2 pointer-events-auto animate-menu-slide-down">
           <div 
+            ref={menuRef}
             className="w-[50%] border border-white/20 rounded-3xl px-3 py-2.5 space-y-0 animate-menu-fade-in"
             style={{
               background: "rgba(255, 255, 255, 0.4)",
               backdropFilter: "blur(8px)",
               WebkitBackdropFilter: "blur(8px)",
-              boxShadow: "rgba(136, 165, 191, 0.48) 6px 2px 16px 0px, rgba(255, 255, 255, 0.8) -6px -2px 16px 0px",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
             }}
           >
             {navData.navigation
@@ -241,9 +250,9 @@ const Navbar = () => {
                     {activeDropdown === item.label && (
                       <div className="mt-1 ml-2 space-y-1 border-l-2 border-white/20 pl-2.5 animate-dropdown-expand">
                         {item.items?.map((subItem, subIndex) => (
-                          <a
+                          <Link
                             key={subItem.label}
-                            href={subItem.href}
+                            to={subItem.href}
                             className="block px-3 py-1.5 text-sm text-black hover:bg-white/10 rounded-lg transition-colors duration-200 animate-dropdown-item-fade-in"
                             style={{
                               animationDelay: `${subIndex * 0.03}s`,
@@ -252,14 +261,14 @@ const Navbar = () => {
                             onClick={() => setIsOpen(false)}
                           >
                             {subItem.label}
-                          </a>
+                          </Link>
                         ))}
                       </div>
                     )}
                   </div>
                 ) : (
-                  <a
-                    href={item.href}
+                  <Link
+                    to={item.href}
                     className={`block px-3 py-2 rounded-full font-medium transition-all duration-200 ${
                       item.type === "cta" 
                         ? "text-white text-center ship-now-btn"
@@ -296,7 +305,7 @@ const Navbar = () => {
                     }}
                   >
                     {item.label}
-                  </a>
+                  </Link>
                 )}
               </div>
             ))}

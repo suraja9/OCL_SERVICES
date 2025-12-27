@@ -11,7 +11,6 @@ import {
   Briefcase, 
   Upload, 
   X,
-  CheckCircle,
   AlertCircle,
   Eye,
   MapPin
@@ -19,6 +18,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 // Floating Label Input Component
 interface FloatingLabelInputProps {
@@ -357,6 +358,8 @@ interface FormData {
 
 const SalesForm = () => {
   const { toast } = useToast();
+  const API_BASE: string = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
+  
   const [formData, setFormData] = useState<FormData>({
     companyName: '',
     concernPersonName: '',
@@ -453,7 +456,6 @@ const SalesForm = () => {
 
     setIsLoadingPincode(true);
     try {
-      const API_BASE: string = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
       const response = await fetch(`${API_BASE}/api/pincode/${pincode}/simple`);
       if (response.ok) {
         const data = await response.json();
@@ -583,8 +585,6 @@ const SalesForm = () => {
     setIsSubmitting(true);
 
     try {
-      const API_BASE: string = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
-      
       // Create FormData for file upload
       const submitFormData = new FormData();
       
@@ -606,7 +606,7 @@ const SalesForm = () => {
       submitFormData.append('state', formData.state.trim());
       submitFormData.append('area', formData.area?.trim() || '');
       
-      // Also send fullAddress for backward compatibility
+      // Also send fullAddress for backward compatibility (backend will generate if not provided)
       const fullAddressParts = [
         formData.locality.trim(),
         formData.buildingFlatNo.trim(),
@@ -618,7 +618,6 @@ const SalesForm = () => {
       ].filter(part => part.length > 0);
       const fullAddress = fullAddressParts.join(', ');
       submitFormData.append('fullAddress', fullAddress);
-      
       submitFormData.append('typeOfBusiness', formData.typeOfBusiness.trim());
       submitFormData.append('typeOfShipments', formData.typeOfShipments.trim());
       submitFormData.append('averageShipmentVolume', formData.averageShipmentVolume.trim());
@@ -682,10 +681,11 @@ const SalesForm = () => {
       setAvailableAreas([]);
       setImagePreview(null);
       setErrors({});
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Error submitting sales form:', error);
       toast({
         title: "Error",
-        description: "Failed to submit form. Please try again.",
+        description: error.message || "Failed to submit form. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -693,423 +693,434 @@ const SalesForm = () => {
     }
   };
 
+  const resetForm = () => {
+    setFormData({
+      companyName: '',
+      concernPersonName: '',
+      designation: '',
+      phoneNumber: '',
+      emailAddress: '',
+      alternatePhoneNumber: '',
+      website: '',
+      locality: '',
+      buildingFlatNo: '',
+      landmark: '',
+      pincode: '',
+      city: '',
+      state: '',
+      area: '',
+      typeOfBusiness: '',
+      typeOfShipments: '',
+      averageShipmentVolume: '',
+      mostFrequentRoutes: '',
+      weightRange: '',
+      packingRequired: '',
+      existingLogisticsPartners: '',
+      currentIssues: '',
+      vehiclesNeededPerMonth: '',
+      typeOfVehicleRequired: '',
+      uploadedImage: null,
+    });
+    setImagePreview(null);
+    setErrors({});
+    setAvailableAreas([]);
+  };
+
   return (
-    <div className="w-full space-y-4 sm:space-y-6">
+    <div className="min-h-screen bg-white">
+      <Navbar />
+      
+      <div className="container mx-auto px-4 py-8 pt-20 max-w-6xl">
 
-      <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-        <div className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-              <FloatingLabelInput
-                id="companyName"
-                value={formData.companyName}
-                onChange={(value) => handleInputChange('companyName', value)}
-                placeholder="Company Name"
-                icon={<Building2 className="h-4 w-4" />}
-                error={errors.companyName}
-                required
-              />
-
-              <FloatingLabelInput
-                id="concernPersonName"
-                value={formData.concernPersonName}
-                onChange={(value) => handleInputChange('concernPersonName', value)}
-                placeholder="Concern Person Name"
-                icon={<User className="h-4 w-4" />}
-                error={errors.concernPersonName}
-                required
-              />
-
-              <FloatingLabelInput
-                id="designation"
-                value={formData.designation}
-                onChange={(value) => handleInputChange('designation', value)}
-                placeholder="Designation"
-                icon={<Briefcase className="h-4 w-4" />}
-                error={errors.designation}
-                required
-              />
-
-              <FloatingLabelInput
-                id="phoneNumber"
-                value={formData.phoneNumber}
-                onChange={(value) => handleInputChange('phoneNumber', value)}
-                placeholder="Phone Number"
-                type="tel"
-                maxLength={10}
-                icon={<Phone className="h-4 w-4" />}
-                error={errors.phoneNumber}
-                required
-              />
-
-              <FloatingLabelInput
-                id="emailAddress"
-                value={formData.emailAddress}
-                onChange={(value) => handleInputChange('emailAddress', value)}
-                placeholder="Email Address"
-                type="email"
-                icon={<Mail className="h-4 w-4" />}
-                error={errors.emailAddress}
-                required
-              />
-
-              <FloatingLabelInput
-                id="alternatePhoneNumber"
-                value={formData.alternatePhoneNumber}
-                onChange={(value) => handleInputChange('alternatePhoneNumber', value)}
-                placeholder="Alternate Phone Number (Optional)"
-                type="tel"
-                icon={<Phone className="h-4 w-4" />}
-              />
-
-              <FloatingLabelInput
-                id="website"
-                value={formData.website}
-                onChange={(value) => handleInputChange('website', value)}
-                placeholder="Website (Optional)"
-                type="url"
-                icon={<Globe className="h-4 w-4" />}
-              />
-            </div>
-
-            {/* Address Fields */}
-            <div className="space-y-3 sm:space-y-4">
-              <FloatingLabelInput
-                id="locality"
-                value={formData.locality}
-                onChange={(value) => handleInputChange('locality', value)}
-                placeholder="Locality / Street"
-                icon={<MapPin className="h-4 w-4" />}
-                error={errors.locality}
-                required
-              />
-
+        <div className="w-full space-y-4 sm:space-y-6 bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+            <div className="pt-4 sm:pt-6 space-y-3 sm:space-y-4 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <FloatingLabelInput
-                  id="buildingFlatNo"
-                  value={formData.buildingFlatNo}
-                  onChange={(value) => handleInputChange('buildingFlatNo', value)}
-                  placeholder="Building / Flat No"
+                  id="companyName"
+                  value={formData.companyName}
+                  onChange={(value) => handleInputChange('companyName', value)}
+                  placeholder="Company Name"
                   icon={<Building2 className="h-4 w-4" />}
-                  error={errors.buildingFlatNo}
+                  error={errors.companyName}
                   required
                 />
-                <FloatingLabelInput
-                  id="landmark"
-                  value={formData.landmark}
-                  onChange={(value) => handleInputChange('landmark', value)}
-                  placeholder="Landmark (Optional)"
-                  icon={<MapPin className="h-4 w-4" />}
-                />
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <FloatingLabelInput
-                  id="pincode"
-                  value={formData.pincode}
-                  onChange={handlePincodeChange}
-                  placeholder="PIN Code"
+                  id="concernPersonName"
+                  value={formData.concernPersonName}
+                  onChange={(value) => handleInputChange('concernPersonName', value)}
+                  placeholder="Concern Person Name"
+                  icon={<User className="h-4 w-4" />}
+                  error={errors.concernPersonName}
+                  required
+                />
+
+                <FloatingLabelInput
+                  id="designation"
+                  value={formData.designation}
+                  onChange={(value) => handleInputChange('designation', value)}
+                  placeholder="Designation"
+                  icon={<Briefcase className="h-4 w-4" />}
+                  error={errors.designation}
+                  required
+                />
+
+                <FloatingLabelInput
+                  id="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={(value) => handleInputChange('phoneNumber', value)}
+                  placeholder="Phone Number"
                   type="tel"
-                  maxLength={6}
-                  icon={<MapPin className="h-4 w-4" />}
-                  error={errors.pincode}
+                  maxLength={10}
+                  icon={<Phone className="h-4 w-4" />}
+                  error={errors.phoneNumber}
                   required
-                  className={isLoadingPincode ? 'opacity-50' : ''}
                 />
+
                 <FloatingLabelInput
-                  id="city"
-                  value={formData.city}
-                  onChange={(value) => handleInputChange('city', value)}
-                  placeholder="City"
-                  icon={<MapPin className="h-4 w-4" />}
-                  error={errors.city}
+                  id="emailAddress"
+                  value={formData.emailAddress}
+                  onChange={(value) => handleInputChange('emailAddress', value)}
+                  placeholder="Email Address"
+                  type="email"
+                  icon={<Mail className="h-4 w-4" />}
+                  error={errors.emailAddress}
                   required
-                  disabled={isLoadingPincode}
+                />
+
+                <FloatingLabelInput
+                  id="alternatePhoneNumber"
+                  value={formData.alternatePhoneNumber}
+                  onChange={(value) => handleInputChange('alternatePhoneNumber', value)}
+                  placeholder="Alternate Phone Number (Optional)"
+                  type="tel"
+                  icon={<Phone className="h-4 w-4" />}
+                />
+
+                <FloatingLabelInput
+                  id="website"
+                  value={formData.website}
+                  onChange={(value) => handleInputChange('website', value)}
+                  placeholder="Website (Optional)"
+                  type="url"
+                  icon={<Globe className="h-4 w-4" />}
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              {/* Address Fields */}
+              <div className="space-y-3 sm:space-y-4">
                 <FloatingLabelInput
-                  id="state"
-                  value={formData.state}
-                  onChange={(value) => handleInputChange('state', value)}
-                  placeholder="State"
+                  id="locality"
+                  value={formData.locality}
+                  onChange={(value) => handleInputChange('locality', value)}
+                  placeholder="Locality / Street"
                   icon={<MapPin className="h-4 w-4" />}
-                  error={errors.state}
+                  error={errors.locality}
                   required
-                  disabled={isLoadingPincode}
                 />
-                <div className="relative">
-                  <Select
-                    value={formData.area}
-                    onValueChange={(value) => handleInputChange('area', value)}
-                    disabled={availableAreas.length === 0 || isLoadingPincode}
-                  >
-                    <SelectTrigger className="w-full h-10 bg-white/90 border-gray-300/60 text-xs">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableAreas.map((area, index) => (
-                        <SelectItem key={index} value={area}>
-                          {area}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <label
-                    className={`absolute transition-all duration-200 ease-in-out pointer-events-none select-none left-4 ${
-                      formData.area
-                        ? 'top-0 -translate-y-1/2 text-xs px-2 bg-white text-blue-600'
-                        : 'top-1/2 -translate-y-1/2 text-xs text-gray-500'
-                    }`}
-                  >
-                    Area {availableAreas.length === 0 && formData.pincode.length === 6 && '(Optional)'}
-                  </label>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                  <FloatingLabelInput
+                    id="buildingFlatNo"
+                    value={formData.buildingFlatNo}
+                    onChange={(value) => handleInputChange('buildingFlatNo', value)}
+                    placeholder="Building / Flat No"
+                    icon={<Building2 className="h-4 w-4" />}
+                    error={errors.buildingFlatNo}
+                    required
+                  />
+                  <FloatingLabelInput
+                    id="landmark"
+                    value={formData.landmark}
+                    onChange={(value) => handleInputChange('landmark', value)}
+                    placeholder="Landmark (Optional)"
+                    icon={<MapPin className="h-4 w-4" />}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                  <FloatingLabelInput
+                    id="pincode"
+                    value={formData.pincode}
+                    onChange={handlePincodeChange}
+                    placeholder="PIN Code"
+                    type="tel"
+                    maxLength={6}
+                    icon={<MapPin className="h-4 w-4" />}
+                    error={errors.pincode}
+                    required
+                    className={isLoadingPincode ? 'opacity-50' : ''}
+                  />
+                  <FloatingLabelInput
+                    id="city"
+                    value={formData.city}
+                    onChange={(value) => handleInputChange('city', value)}
+                    placeholder="City"
+                    icon={<MapPin className="h-4 w-4" />}
+                    error={errors.city}
+                    required
+                    disabled={isLoadingPincode}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                  <FloatingLabelInput
+                    id="state"
+                    value={formData.state}
+                    onChange={(value) => handleInputChange('state', value)}
+                    placeholder="State"
+                    icon={<MapPin className="h-4 w-4" />}
+                    error={errors.state}
+                    required
+                    disabled={isLoadingPincode}
+                  />
+                  <div className="relative">
+                    <Select
+                      value={formData.area}
+                      onValueChange={(value) => handleInputChange('area', value)}
+                      disabled={availableAreas.length === 0 || isLoadingPincode}
+                    >
+                      <SelectTrigger className="w-full h-10 bg-white/90 border-gray-300/60 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableAreas.map((area, index) => (
+                          <SelectItem key={index} value={area}>
+                            {area}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <label
+                      className={`absolute transition-all duration-200 ease-in-out pointer-events-none select-none left-4 ${
+                        formData.area
+                          ? 'top-0 -translate-y-1/2 text-xs px-2 bg-white text-blue-600'
+                          : 'top-1/2 -translate-y-1/2 text-xs text-gray-500'
+                      }`}
+                    >
+                      Area {availableAreas.length === 0 && formData.pincode.length === 6 && '(Optional)'}
+                    </label>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FloatingSelect
-                label="Type of Business / Industry"
-                value={formData.typeOfBusiness}
-                onChange={(value) => handleInputChange('typeOfBusiness', value)}
-                options={['E-commerce', 'Manufacturing', 'Retail', 'Wholesale', 'Pharmaceutical', 'Textiles', 'Electronics', 'Food & Beverages', 'Automotive', 'Other']}
-                error={errors.typeOfBusiness}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FloatingSelect
+                  label="Type of Business / Industry"
+                  value={formData.typeOfBusiness}
+                  onChange={(value) => handleInputChange('typeOfBusiness', value)}
+                  options={['E-commerce', 'Manufacturing', 'Retail', 'Wholesale', 'Pharmaceutical', 'Textiles', 'Electronics', 'Food & Beverages', 'Automotive', 'Other']}
+                  error={errors.typeOfBusiness}
+                  required
+                />
+
+                <FloatingSelect
+                  label="Type of Shipments"
+                  value={formData.typeOfShipments}
+                  onChange={(value) => handleInputChange('typeOfShipments', value)}
+                  options={['Documents', 'Parcels', 'Bulk Cargo', 'Fragile Items', 'Perishable Goods', 'Hazardous Materials', 'Mixed', 'Other']}
+                  error={errors.typeOfShipments}
+                  required
+                />
+
+                <FloatingLabelInput
+                  id="averageShipmentVolume"
+                  value={formData.averageShipmentVolume}
+                  onChange={(value) => handleInputChange('averageShipmentVolume', value)}
+                  placeholder="Average Shipment Volume Per Month"
+                  error={errors.averageShipmentVolume}
+                  required
+                />
+
+                <FloatingLabelInput
+                  id="mostFrequentRoutes"
+                  value={formData.mostFrequentRoutes}
+                  onChange={(value) => handleInputChange('mostFrequentRoutes', value)}
+                  placeholder="Most Frequent Routes (From–To)"
+                  error={errors.mostFrequentRoutes}
+                  required
+                />
+
+                <FloatingSelect
+                  label="Weight Range of Shipments"
+                  value={formData.weightRange}
+                  onChange={(value) => handleInputChange('weightRange', value)}
+                  options={['0-5 kg', '5-10 kg', '10-25 kg', '25-50 kg', '50-100 kg', '100-500 kg', '500 kg+', 'Mixed']}
+                  error={errors.weightRange}
+                  required
+                />
+
+                <div>
+                  <style>{`
+                    #packing-yes,
+                    #packing-no {
+                      width: 0.75rem !important;
+                      height: 0.75rem !important;
+                      min-width: 0.75rem !important;
+                      min-height: 0.75rem !important;
+                    }
+                    #packing-yes svg,
+                    #packing-no svg {
+                      width: 0.375rem !important;
+                      height: 0.375rem !important;
+                    }
+                  `}</style>
+                  <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+                    <Label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                      Packing Required? <span className="text-red-500">*</span>
+                    </Label>
+                    <RadioGroup
+                      value={formData.packingRequired}
+                      onValueChange={(value) => handleInputChange('packingRequired', value)}
+                      className="flex gap-4 sm:gap-6"
+                    >
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="yes" id="packing-yes" className="!h-3 !w-3" />
+                        <Label htmlFor="packing-yes" className="cursor-pointer">Yes</Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="no" id="packing-no" className="!h-3 !w-3" />
+                        <Label htmlFor="packing-no" className="cursor-pointer">No</Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
+                  {errors.packingRequired && (
+                    <p className="text-sm text-red-600 mt-1">{errors.packingRequired}</p>
+                  )}
+                </div>
+              </div>
+
+              <FloatingLabelTextarea
+                id="existingLogisticsPartners"
+                value={formData.existingLogisticsPartners}
+                onChange={(value) => handleInputChange('existingLogisticsPartners', value)}
+                placeholder="Existing Logistics Partners"
+                error={errors.existingLogisticsPartners}
                 required
+                rows={3}
               />
 
-              <FloatingSelect
-                label="Type of Shipments"
-                value={formData.typeOfShipments}
-                onChange={(value) => handleInputChange('typeOfShipments', value)}
-                options={['Documents', 'Parcels', 'Bulk Cargo', 'Fragile Items', 'Perishable Goods', 'Hazardous Materials', 'Mixed', 'Other']}
-                error={errors.typeOfShipments}
+              <FloatingLabelTextarea
+                id="currentIssues"
+                value={formData.currentIssues}
+                onChange={(value) => handleInputChange('currentIssues', value)}
+                placeholder="Current Issues / Pain Points (late deliveries, high cost, poor pickup, damage, no tracking, etc.)"
+                error={errors.currentIssues}
                 required
+                rows={4}
               />
 
-              <FloatingLabelInput
-                id="averageShipmentVolume"
-                value={formData.averageShipmentVolume}
-                onChange={(value) => handleInputChange('averageShipmentVolume', value)}
-                placeholder="Average Shipment Volume Per Month"
-                error={errors.averageShipmentVolume}
-                required
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FloatingLabelInput
+                  id="vehiclesNeededPerMonth"
+                  value={formData.vehiclesNeededPerMonth}
+                  onChange={(value) => handleInputChange('vehiclesNeededPerMonth', value)}
+                  placeholder="Vehicles Needed Per Month"
+                  error={errors.vehiclesNeededPerMonth}
+                  required
+                />
 
-              <FloatingLabelInput
-                id="mostFrequentRoutes"
-                value={formData.mostFrequentRoutes}
-                onChange={(value) => handleInputChange('mostFrequentRoutes', value)}
-                placeholder="Most Frequent Routes (From–To)"
-                error={errors.mostFrequentRoutes}
-                required
-              />
-
-              <FloatingSelect
-                label="Weight Range of Shipments"
-                value={formData.weightRange}
-                onChange={(value) => handleInputChange('weightRange', value)}
-                options={['0-5 kg', '5-10 kg', '10-25 kg', '25-50 kg', '50-100 kg', '100-500 kg', '500 kg+', 'Mixed']}
-                error={errors.weightRange}
-                required
-              />
+                <FloatingSelect
+                  label="Type of Vehicle Required"
+                  value={formData.typeOfVehicleRequired}
+                  onChange={(value) => handleInputChange('typeOfVehicleRequired', value)}
+                  options={['Tata Ace', 'Bolero', 'Pickup', '14ft', '17ft', '19ft', 'Container', 'Mixed', 'Other']}
+                  error={errors.typeOfVehicleRequired}
+                  required
+                />
+              </div>
 
               <div>
-                <style>{`
-                  #packing-yes,
-                  #packing-no {
-                    width: 0.75rem !important;
-                    height: 0.75rem !important;
-                    min-width: 0.75rem !important;
-                    min-height: 0.75rem !important;
-                  }
-                  #packing-yes svg,
-                  #packing-no svg {
-                    width: 0.375rem !important;
-                    height: 0.375rem !important;
-                  }
-                `}</style>
-                <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
-                  <Label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                    Packing Required? <span className="text-red-500">*</span>
-                  </Label>
-                  <RadioGroup
-                    value={formData.packingRequired}
-                    onValueChange={(value) => handleInputChange('packingRequired', value)}
-                    className="flex gap-4 sm:gap-6"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="yes" id="packing-yes" className="!h-3 !w-3" />
-                      <Label htmlFor="packing-yes" className="cursor-pointer">Yes</Label>
+                <Label className="text-sm font-medium text-gray-700 mb-2 block">
+                  Upload Image (Business Card / Shop Image / Company Photo)
+                </Label>
+                {!imagePreview ? (
+                  <div className={cn(
+                    "border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-6 text-center transition-all duration-200",
+                    "border-gray-300/60 hover:border-blue-400/50 hover:shadow-sm",
+                    "bg-white/50"
+                  )}>
+                    <input
+                      type="file"
+                      id="imageUpload"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="imageUpload"
+                      className="cursor-pointer flex flex-col items-center gap-2"
+                    >
+                      <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
+                      <span className="text-xs sm:text-sm text-gray-600">
+                        Click to upload or drag and drop
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        PNG, JPG, JPEG up to 5MB
+                      </span>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="relative inline-block">
+                    <img
+                      src={imagePreview}
+                      alt="Preview"
+                      className="max-w-xs h-auto max-h-20 rounded-lg"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center gap-3">
+                      <div
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={() => window.open(imagePreview, '_blank')}
+                        title="View image"
+                      >
+                        <Eye className="h-5 w-5 text-blue-500 drop-shadow-lg" />
+                      </div>
+                      <div
+                        className="cursor-pointer hover:opacity-80 transition-opacity"
+                        onClick={removeImage}
+                        title="Remove image"
+                      >
+                        <X className="h-5 w-5 text-blue-500 drop-shadow-lg" />
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="no" id="packing-no" className="!h-3 !w-3" />
-                      <Label htmlFor="packing-no" className="cursor-pointer">No</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                {errors.packingRequired && (
-                  <p className="text-sm text-red-600 mt-1">{errors.packingRequired}</p>
+                  </div>
                 )}
               </div>
             </div>
 
-            <FloatingLabelTextarea
-              id="existingLogisticsPartners"
-              value={formData.existingLogisticsPartners}
-              onChange={(value) => handleInputChange('existingLogisticsPartners', value)}
-              placeholder="Existing Logistics Partners"
-              error={errors.existingLogisticsPartners}
-              required
-              rows={3}
-            />
-
-            <FloatingLabelTextarea
-              id="currentIssues"
-              value={formData.currentIssues}
-              onChange={(value) => handleInputChange('currentIssues', value)}
-              placeholder="Current Issues / Pain Points (late deliveries, high cost, poor pickup, damage, no tracking, etc.)"
-              error={errors.currentIssues}
-              required
-              rows={4}
-            />
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FloatingLabelInput
-                id="vehiclesNeededPerMonth"
-                value={formData.vehiclesNeededPerMonth}
-                onChange={(value) => handleInputChange('vehiclesNeededPerMonth', value)}
-                placeholder="Vehicles Needed Per Month"
-                error={errors.vehiclesNeededPerMonth}
-                required
-              />
-
-              <FloatingSelect
-                label="Type of Vehicle Required"
-                value={formData.typeOfVehicleRequired}
-                onChange={(value) => handleInputChange('typeOfVehicleRequired', value)}
-                options={['Tata Ace', 'Bolero', 'Pickup', '14ft', '17ft', '19ft', 'Container', 'Mixed', 'Other']}
-                error={errors.typeOfVehicleRequired}
-                required
-              />
+            {/* Submit Button */}
+            <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
+              <Button
+                type="button"
+                onClick={resetForm}
+                className="w-full sm:w-auto bg-white text-gray-900 border-0 hover:bg-white hover:text-gray-900 shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]"
+              >
+                Reset
+              </Button>
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto min-w-[120px] bg-blue-500 text-white border-0 hover:bg-blue-500 hover:text-white shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="animate-spin mr-2">⏳</span>
+                    Submitting...
+                  </>
+                ) : (
+                  'Submit Form'
+                )}
+              </Button>
             </div>
-
-            <div>
-              <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                Upload Image (Business Card / Shop Image / Company Photo)
-              </Label>
-              {!imagePreview ? (
-                <div className={cn(
-                  "border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-6 text-center transition-all duration-200",
-                  "border-gray-300/60 hover:border-blue-400/50 hover:shadow-sm",
-                  "bg-white/50"
-                )}>
-                  <input
-                    type="file"
-                    id="imageUpload"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                  />
-                  <label
-                    htmlFor="imageUpload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
-                  >
-                    <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
-                    <span className="text-xs sm:text-sm text-gray-600">
-                      Click to upload or drag and drop
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      PNG, JPG, JPEG up to 5MB
-                    </span>
-                  </label>
-                </div>
-              ) : (
-                <div className="relative inline-block">
-                  <img
-                    src={imagePreview}
-                    alt="Preview"
-                    className="max-w-xs h-auto max-h-20 rounded-lg"
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center gap-3">
-                    <div
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={() => window.open(imagePreview, '_blank')}
-                      title="View image"
-                    >
-                      <Eye className="h-5 w-5 text-blue-500 drop-shadow-lg" />
-                    </div>
-                    <div
-                      className="cursor-pointer hover:opacity-80 transition-opacity"
-                      onClick={removeImage}
-                      title="Remove image"
-                    >
-                      <X className="h-5 w-5 text-blue-500 drop-shadow-lg" />
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+          </form>
         </div>
+      </div>
 
-        {/* Submit Button */}
-        <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4 px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10">
-          <Button
-            type="button"
-            onClick={() => {
-              setFormData({
-                companyName: '',
-                concernPersonName: '',
-                designation: '',
-                phoneNumber: '',
-                emailAddress: '',
-                alternatePhoneNumber: '',
-                website: '',
-                locality: '',
-                buildingFlatNo: '',
-                landmark: '',
-                pincode: '',
-                city: '',
-                state: '',
-                area: '',
-                typeOfBusiness: '',
-                typeOfShipments: '',
-                averageShipmentVolume: '',
-                mostFrequentRoutes: '',
-                weightRange: '',
-                packingRequired: '',
-                existingLogisticsPartners: '',
-                currentIssues: '',
-                vehiclesNeededPerMonth: '',
-                typeOfVehicleRequired: '',
-                uploadedImage: null,
-              });
-              setAvailableAreas([]);
-              setImagePreview(null);
-              setErrors({});
-            }}
-            className="w-full sm:w-auto bg-white text-gray-900 border-0 hover:bg-white hover:text-gray-900 shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]"
-          >
-            Reset
-          </Button>
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full sm:w-auto min-w-[120px] bg-blue-500 text-white border-0 hover:bg-blue-500 hover:text-white shadow-[rgba(0,0,0,0.16)_0px_3px_6px,rgba(0,0,0,0.23)_0px_3px_6px]"
-          >
-            {isSubmitting ? (
-              <>
-                <span className="animate-spin mr-2">⏳</span>
-                Submitting...
-              </>
-            ) : (
-              'Submit Form'
-            )}
-          </Button>
-        </div>
-      </form>
+      <Footer />
     </div>
   );
 };
 
 export default SalesForm;
+

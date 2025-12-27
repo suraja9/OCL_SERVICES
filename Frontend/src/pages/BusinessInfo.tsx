@@ -85,16 +85,16 @@ const BusinessInfo = () => {
 
       {/* Top Section - One Row */}
       <motion.section
-        className="pt-24 pb-12 bg-gradient-to-br from-orange-50 via-white to-blue-50"
+        className="pt-16 pb-8 md:pt-24 md:pb-12 bg-gradient-to-br from-orange-50 via-white to-blue-50"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.6 }}
       >
         <div className="container mx-auto px-4 md:px-6 max-w-6xl">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 md:gap-8">
             {/* Left - Title */}
             <motion.div
-              className="flex-1"
+              className="flex-1 mt-8 md:mt-0"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
@@ -108,17 +108,39 @@ const BusinessInfo = () => {
               >
                 Business <span style={{ color: "#FFA019" }}>Information</span>
               </h1>
+              {/* Mobile: Description with image on right */}
+              <div className="flex flex-row items-center gap-3 md:hidden">
+                <p
+                  className="text-base text-gray-600 flex-1"
+                  style={{ fontFamily: "'Value Serif Pro Bold', serif" }}
+                >
+                  Official company details for verification and billing
+                </p>
+                <motion.div
+                  className="flex-shrink-0"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                >
+                  <img 
+                    src={businessImg} 
+                    alt="Business illustration" 
+                    className="w-auto h-auto max-w-[120px]"
+                  />
+                </motion.div>
+              </div>
+              {/* Desktop: Description only */}
               <p
-                className="text-base md:text-lg text-gray-600"
+                className="hidden md:block text-base md:text-lg text-gray-600"
                 style={{ fontFamily: "'Value Serif Pro Bold', serif" }}
               >
                 Official company details for verification and billing
               </p>
             </motion.div>
 
-            {/* Right - Image */}
+            {/* Right - Image (Desktop only) */}
             <motion.div
-              className="flex-shrink-0"
+              className="hidden md:block flex-shrink-0"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
@@ -126,7 +148,7 @@ const BusinessInfo = () => {
               <img 
                 src={businessImg} 
                 alt="Business illustration" 
-                className="w-full h-auto max-w-[280px] md:max-w-[320px]"
+                className="w-full h-auto max-w-[320px]"
               />
             </motion.div>
           </div>
@@ -157,13 +179,13 @@ const BusinessInfo = () => {
             Company <span style={{ color: "#FFA019" }}>Details</span>
           </motion.h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6">
             {businessDetails.map((detail, index) => {
               const IconComponent = detail.icon;
               return (
                 <motion.div
                   key={index}
-                  className="rounded-lg p-5 transition-all duration-300 relative overflow-hidden flex items-center justify-center"
+                  className="rounded-lg p-3 md:p-5 transition-all duration-300 relative overflow-hidden flex items-center justify-center"
                   style={{
                     backgroundColor: '#1a1a1a',
                     backgroundImage: detail.backgroundImage ? `url(${detail.backgroundImage})` : undefined,
@@ -171,7 +193,7 @@ const BusinessInfo = () => {
                     backgroundPosition: 'center',
                     backgroundRepeat: 'no-repeat',
                     boxShadow: 'rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px',
-                    minHeight: '180px'
+                    minHeight: '120px'
                   }}
                   initial={{ opacity: 0, y: 15 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -189,7 +211,7 @@ const BusinessInfo = () => {
                   ) : null}
                   <div className="flex flex-col items-center justify-center text-center relative z-10 w-full">
                     <p 
-                      className="text-sm md:text-base font-medium uppercase tracking-wider mb-2"
+                      className="text-xs md:text-sm lg:text-base font-medium uppercase tracking-wider mb-1 md:mb-2"
                       style={{ 
                         color: '#FFFFFF',
                         fontFamily: "'Value Serif Pro Bold', serif",
@@ -199,7 +221,7 @@ const BusinessInfo = () => {
                       {detail.label}:
                     </p>
                     <p 
-                      className={`text-sm font-bold break-all w-full text-center ${detail.label === "Legal Name" ? "font-sans" : "font-mono"}`}
+                      className={`text-xs md:text-sm font-bold break-all w-full text-center ${detail.label === "Legal Name" ? "font-sans" : "font-mono"}`}
                       style={{ 
                         color: '#FFFFFF',
                         fontFamily: detail.label === "Legal Name" 
@@ -245,8 +267,129 @@ const BusinessInfo = () => {
             </h2>
           </motion.div>
 
-          <div className="rounded-xl p-6 md:p-8 shadow-lg" style={{ backgroundColor: '#000000' }}>
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8 items-center">
+          <div className="rounded-xl p-3 md:p-6 lg:p-8 shadow-lg" style={{ backgroundColor: '#000000' }}>
+            {/* Mobile View - 2 columns grid */}
+            <div className="lg:hidden">
+              {/* First Row - Bank Details */}
+              <div className="grid grid-cols-2 gap-3 mb-4">
+                {/* Bank Name */}
+                <motion.div
+                  className="rounded-lg p-2 bg-[#1a1a1a] text-center"
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <Landmark className="w-3 h-3" style={{ color: "#FFA019" }} />
+                    <label className="text-[10px] font-medium uppercase tracking-wider" style={{ color: '#FFA019', fontFamily: "'Value Serif Pro Bold', serif" }}>
+                      Bank:
+                    </label>
+                  </div>
+                  <p className="text-xs font-semibold" style={{ color: '#FFFFFF', fontFamily: "'Value Serif Pro Bold', serif" }}>
+                    {formData.bankName || "Not provided"}
+                  </p>
+                </motion.div>
+
+                {/* IFSC Code */}
+                <motion.div
+                  className="rounded-lg p-2 bg-[#1a1a1a] text-center"
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                >
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <Hash className="w-3 h-3" style={{ color: "#FFA019" }} />
+                    <label className="text-[10px] font-medium uppercase tracking-wider" style={{ color: '#FFA019', fontFamily: "'Value Serif Pro Bold', serif" }}>
+                      IFSC:
+                    </label>
+                  </div>
+                  <p className="text-xs font-semibold font-mono break-all" style={{ color: '#FFFFFF', fontFamily: "monospace" }}>
+                    {formData.ifscCode || "Not provided"}
+                  </p>
+                </motion.div>
+
+                {/* Account Number */}
+                <motion.div
+                  className="rounded-lg p-2 bg-[#1a1a1a] text-center"
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                >
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <CreditCard className="w-3 h-3" style={{ color: "#FFA019" }} />
+                    <label className="text-[10px] font-medium uppercase tracking-wider" style={{ color: '#FFA019', fontFamily: "'Value Serif Pro Bold', serif" }}>
+                      Account:
+                    </label>
+                  </div>
+                  <p className="text-xs font-semibold font-mono break-all" style={{ color: '#FFFFFF', fontFamily: "monospace" }}>
+                    {formData.accountNumber || "Not provided"}
+                  </p>
+                </motion.div>
+
+                {/* Branch */}
+                <motion.div
+                  className="rounded-lg p-2 bg-[#1a1a1a] text-center"
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.3 }}
+                >
+                  <div className="flex items-center justify-center gap-1 mb-1">
+                    <Building2 className="w-3 h-3" style={{ color: "#FFA019" }} />
+                    <label className="text-[10px] font-medium uppercase tracking-wider" style={{ color: '#FFA019', fontFamily: "'Value Serif Pro Bold', serif" }}>
+                      Branch:
+                    </label>
+                  </div>
+                  <p className="text-xs font-semibold" style={{ color: '#FFFFFF', fontFamily: "'Value Serif Pro Bold', serif" }}>
+                    {formData.branch || "Not provided"}
+                  </p>
+                </motion.div>
+              </div>
+
+              {/* Second Row - Verified and Logo */}
+              <div className="grid grid-cols-2 gap-3">
+                {/* Verified Badge */}
+                <motion.div
+                  className="flex flex-col items-center justify-center"
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                >
+                  <CheckCircle className="w-6 h-6 mb-1" style={{ color: "#FFA019" }} />
+                  <p 
+                    className="text-xs font-semibold uppercase tracking-wider"
+                    style={{ 
+                      color: '#FFA019',
+                      fontFamily: "'Value Serif Pro Bold', serif"
+                    }}
+                  >
+                    VERIFIED
+                  </p>
+                </motion.div>
+
+                {/* HDFC Logo */}
+                <motion.div
+                  className="flex items-center justify-center"
+                  initial={{ opacity: 0, y: 15 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.5 }}
+                >
+                  <img
+                    src={hdfcImg}
+                    alt="HDFC Bank Logo"
+                    className="w-auto h-auto max-w-full max-h-[60px] object-contain"
+                  />
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Desktop View - Original Layout */}
+            <div className="hidden lg:grid grid-cols-4 gap-6 lg:gap-8 items-center">
               {/* Column 1 - Bank Name and IFSC Code */}
               <div className="space-y-5">
                 <motion.div

@@ -78,7 +78,6 @@ import CorporateBooking from '@/components/admin/CorporateBooking';
 import ColdCalling from '@/components/admin/ColdCalling';
 import PaymentStatus from '@/components/admin/PaymentStatus';
 import CollectPayment from '@/components/admin/CollectPayment';
-import SalesForm from '@/components/admin/SalesForm';
 
 interface PermissionSet {
   dashboard: boolean;
@@ -121,7 +120,6 @@ interface PermissionSet {
   coldCalling: boolean;
   payments: boolean;
   collectPayment: boolean;
-  salesForm: boolean;
 }
 
 interface OfficeUser {
@@ -206,7 +204,6 @@ const OfficeDashboard = () => {
           coldCalling: false,
           payments: false,
           collectPayment: false,
-          salesForm: false,
         };
 
         if (userData.permissions) {
@@ -356,7 +353,6 @@ const OfficeDashboard = () => {
           coldCalling: false,
           payments: false,
           collectPayment: false,
-          salesForm: false,
         };
 
         if (userData.permissions) {
@@ -1200,22 +1196,6 @@ const OfficeDashboard = () => {
               </button>
             )}
 
-            {/* Sales Form - only shown when user has access */}
-            {(user?.permissions?.salesForm || user?.adminInfo?.permissions?.salesForm) && (
-              <button
-                onClick={() => setActiveTab('salesForm')}
-                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
-                  activeTab === 'salesForm'
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
-                    : 'text-gray-700 hover:bg-gray-50'
-                }`}
-                title={isSidebarCollapsed ? "Sales Form" : ""}
-              >
-                <FileText className="h-5 w-5" />
-                {!isSidebarCollapsed && <span className="font-medium text-sm">Sales Form</span>}
-              </button>
-            )}
-
             {/* Admin-only sections */}
             {user?.adminInfo && user?.adminInfo?.role === 'super_admin' && (
               <button
@@ -1643,13 +1623,6 @@ const OfficeDashboard = () => {
           {activeTab === 'collectPayment' && (
             <div className="space-y-6">
               <CollectPayment />
-            </div>
-          )}
-
-          {/* Sales Form */}
-          {activeTab === 'salesForm' && (
-            <div className="space-y-6">
-              <SalesForm />
             </div>
           )}
 

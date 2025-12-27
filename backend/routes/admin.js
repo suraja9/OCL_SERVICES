@@ -8013,7 +8013,22 @@ router.post('/generate-quotation', authenticateAdmin, async (req, res) => {
       year: 'numeric'
     });
 
-    // Build HTML for quotation PDF - Modern Professional Design
+    // Build HTML for quotation PDF - Exact Replica of Reference
+    const pathModule = await import('path');
+    const fsModule = await import('fs');
+    const path = pathModule.default || pathModule;
+    const fs = fsModule.default || fsModule;
+    const logoPath = path.join(process.cwd(), 'Frontend', 'public', 'ocl-logo.png');
+    let logoBase64 = '';
+    try {
+      if (fs.existsSync(logoPath)) {
+        const logoBuffer = fs.readFileSync(logoPath);
+        logoBase64 = `data:image/png;base64,${logoBuffer.toString('base64')}`;
+      }
+    } catch (err) {
+      console.warn('Logo file not found, using placeholder');
+    }
+    
     const html = `
       <!DOCTYPE html>
       <html>
@@ -8022,444 +8037,361 @@ router.post('/generate-quotation', authenticateAdmin, async (req, res) => {
           <title>Quotation - ${customerName}</title>
           <style>
             @page {
-              margin: 0;
+              margin: 10mm 30mm;
               size: A4;
             }
             * {
               box-sizing: border-box;
-            }
-            body {
               margin: 0;
               padding: 0;
-              font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              color: #333;
-              line-height: 1.6;
             }
-            .page-container {
-              position: relative;
-              width: 100%;
-              min-height: 100vh;
-              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-              padding: 20px;
+            body {
+              font-family: Arial, Helvetica, sans-serif;
+              background: white;
+              color: #000;
+              line-height: 1.5;
+              font-size: 12px;
             }
             .document {
               background: white;
-              border-radius: 20px;
-              box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
-              overflow: hidden;
-              position: relative;
+              max-width: 100%;
+              margin: 0 auto;
+              padding: 0 50px;
             }
             .header {
-              background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-              color: white;
-              padding: 30px 40px;
-              position: relative;
-              overflow: hidden;
-            }
-            .header::before {
-              content: '';
-              position: absolute;
-              top: -50%;
-              right: -50%;
-              width: 200%;
-              height: 200%;
-              background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-              animation: float 6s ease-in-out infinite;
-            }
-            @keyframes float {
-              0%, 100% { transform: translateY(0px) rotate(0deg); }
-              50% { transform: translateY(-20px) rotate(180deg); }
-            }
-            .header-content {
-              position: relative;
-              z-index: 2;
+              background:rgb(142, 142, 143);
+              padding: 15px 20px;
               display: flex;
               justify-content: space-between;
-              align-items: center;
+              align-items: flex-start;
+              margin: 0 -30px;
+              width: calc(100% + 60px);
             }
-            .logo-section {
+            .header-left {
               display: flex;
               align-items: center;
               gap: 15px;
+              flex: 0 0 auto;
             }
-            .logo {
-              width: 70px;
-              height: 70px;
-              background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-              border-radius: 20px;
+            .logo-img {
+              height: 50px;
+              width: auto;
+            }
+            .header-center {
+              text-align: center;
+              flex: 1;
               display: flex;
+              flex-direction: column;
               align-items: center;
               justify-content: center;
-              font-weight: 900;
-              font-size: 24px;
-              color: white;
-              box-shadow: 0 10px 25px rgba(251, 191, 36, 0.3);
             }
-            .company-info h1 {
-              font-size: 28px;
-              font-weight: 800;
+            .company-name {
+              font-size: 18px;
+              font-weight: 600;
+              color: #fff;
               margin: 0;
-              text-shadow: 0 2px 4px rgba(0,0,0,0.3);
             }
-            .company-info p {
-              font-size: 14px;
-              margin: 5px 0 0 0;
-              opacity: 0.9;
+            .company-tagline {
+              font-size: 11px;
+              color: #fff;
+              margin: 3px 0 0 0;
             }
-            .quotation-badge {
-              background: rgba(255, 255, 255, 0.2);
-              padding: 15px 25px;
-              border-radius: 50px;
-              text-align: center;
-              backdrop-filter: blur(10px);
-              border: 1px solid rgba(255, 255, 255, 0.3);
+            .quotation-box {
+              background:rgb(76, 77, 78);
+              padding: 12px 30px;
+              border-radius: 6px;
+              margin: 10px 0 0 0;
+              display: inline-block;
+              width: auto;
             }
-            .quotation-badge h2 {
-              font-size: 20px;
-              font-weight: 700;
+            .quotation-title {
+              font-size: 18px;
+              font-weight: 600;
+              color: #fff;
               margin: 0;
-              letter-spacing: 1px;
             }
-            .quotation-badge p {
+            .header-right {
+              text-align: right;
+              flex: 0 0 auto;
+            }
+            .quotation-date {
               font-size: 12px;
-              margin: 5px 0 0 0;
-              opacity: 0.8;
+              color: #fff;
+              margin: 2px 0;
             }
-            .content {
-              padding: 40px;
+            .header-line {
+              height: 1px;
+              background: #000;
+              width: 100%;
+              margin: 15px 0 20px 0;
             }
-            .section {
-              margin-bottom: 35px;
+            .two-column-section {
+              display: table;
+              width: 100%;
+              margin: 25px 0 20px 0;
+            }
+            .column-left {
+              display: table-cell;
+              width: 50%;
+              vertical-align: top;
+              padding: 0 15px 0 0;
+            }
+            .column-right {
+              display: table-cell;
+              width: 50%;
+              vertical-align: top;
+              padding: 0 0 0 15px;
+            }
+            .column-separator {
+              width: 1px;
+              background: #000;
+              display: table-cell;
             }
             .section-title {
-              font-size: 20px;
-              font-weight: 700;
-              color: #1e3a8a;
-              margin-bottom: 20px;
-              padding-bottom: 10px;
-              border-bottom: 3px solid #3b82f6;
-              position: relative;
+              font-size: 13px;
+              font-weight: 600;
+              color: #000;
+              margin-bottom: 10px;
             }
-            .section-title::after {
-              content: '';
-              position: absolute;
-              bottom: -3px;
-              left: 0;
-              width: 50px;
-              height: 3px;
-              background: linear-gradient(90deg, #fbbf24, #f59e0b);
-            }
-            .info-grid {
-              display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-              gap: 20px;
-              margin-bottom: 20px;
-            }
-            .info-card {
-              background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
-              padding: 20px;
-              border-radius: 15px;
-              border-left: 5px solid #3b82f6;
-              box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            .info-item {
+              margin-bottom: 8px;
+              font-size: 13px;
             }
             .info-label {
-              font-weight: 600;
-              color: #64748b;
-              font-size: 14px;
-              margin-bottom: 5px;
-              text-transform: uppercase;
-              letter-spacing: 0.5px;
+              color: #000;
+              display: inline;
+              font-weight: normal;
             }
             .info-value {
-              color: #1e293b;
-              font-size: 16px;
-              font-weight: 500;
+              color: #000;
+              font-weight: normal;
+              display: inline;
             }
             .pricing-section {
-              background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
-              padding: 30px;
-              border-radius: 20px;
-              border: 2px solid #0ea5e9;
-              box-shadow: 0 10px 30px rgba(14, 165, 233, 0.1);
+              margin: 20px 0;
             }
             .pricing-title {
-              font-size: 24px;
-              font-weight: 800;
-              color: #0c4a6e;
-              margin-bottom: 25px;
-              text-align: center;
+              font-size: 13px;
+              font-weight: 600;
+              color: #000;
+              margin-bottom: 10px;
+              text-decoration: underline;
             }
             .pricing-table {
               width: 100%;
               border-collapse: collapse;
-              margin-bottom: 20px;
+              margin-top: 10px;
             }
             .pricing-table th {
-              background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+              background: #1e40af;
               color: white;
-              padding: 15px;
+              padding: 10px;
               text-align: left;
               font-weight: 600;
-              font-size: 14px;
+              font-size: 11px;
               text-transform: uppercase;
-              letter-spacing: 0.5px;
             }
             .pricing-table td {
-              padding: 15px;
-              border-bottom: 1px solid #e2e8f0;
-              font-size: 15px;
+              padding: 10px;
+              border-bottom: 1px solid #ddd;
+              font-size: 12px;
+              color: #000;
             }
             .pricing-table tr:nth-child(even) {
-              background: rgba(14, 165, 233, 0.05);
-            }
-            .pricing-table tr:hover {
-              background: rgba(14, 165, 233, 0.1);
+              background: #f9fafb;
             }
             .total-row {
-              background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
-              color: white !important;
-              font-weight: 700 !important;
-              font-size: 18px !important;
+              font-weight: 700;
+              font-style: italic;
             }
             .total-row td {
-              border: none !important;
-              padding: 20px 15px !important;
+              border-bottom: none;
+              padding-top: 15px;
             }
             .terms-section {
-              background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-              padding: 25px;
-              border-radius: 15px;
-              border-left: 5px solid #f59e0b;
+              margin: 20px 0;
+              background: #f9fafb;
+              padding: 15px;
             }
             .terms-title {
-              font-size: 18px;
-              font-weight: 700;
-              color: #92400e;
-              margin-bottom: 15px;
+              font-size: 13px;
+              font-weight: 600;
+              color: #000;
+              margin-bottom: 10px;
+              text-decoration: underline;
             }
             .terms-list {
-              list-style: none;
-              padding: 0;
+              list-style: decimal;
+              padding-left: 25px;
+              color: #000;
+              font-size: 11px;
+              line-height: 1.6;
             }
             .terms-list li {
-              margin-bottom: 10px;
-              padding-left: 25px;
-              position: relative;
-              color: #92400e;
-              font-size: 14px;
+              margin-bottom: 6px;
             }
-            .terms-list li::before {
-              content: '✓';
-              position: absolute;
-              left: 0;
-              color: #f59e0b;
-              font-weight: bold;
-              font-size: 16px;
-            }
-            .footer {
-              background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-              color: white;
-              padding: 30px 40px;
-              text-align: center;
-            }
-            .footer-content {
-              max-width: 800px;
-              margin: 0 auto;
-            }
-            .footer-title {
-              font-size: 24px;
-              font-weight: 800;
-              margin-bottom: 15px;
-              background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
-              -webkit-background-clip: text;
-              -webkit-text-fill-color: transparent;
-              background-clip: text;
-            }
-            .footer-contact {
-              display: flex;
-              justify-content: center;
-              gap: 30px;
-              flex-wrap: wrap;
-              font-size: 14px;
-            }
-            .footer-contact span {
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              padding: 8px 15px;
-              background: rgba(255, 255, 255, 0.1);
-              border-radius: 25px;
-              backdrop-filter: blur(10px);
-            }
-            .approval-section {
-              background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-              padding: 25px;
-              border-radius: 15px;
-              border: 2px solid #22c55e;
-              text-align: center;
-              margin-top: 30px;
+            .footer-line {
+              height: 1px;
+              background: #000;
+              width: 100%;
+              margin: 20px 0 15px 0;
             }
             .approval-text {
-              color: #166534;
-              font-style: italic;
-              font-size: 16px;
-              margin: 0;
+              color: #000;
+              font-size: 11px;
+              line-height: 1.5;
+              margin: 0 0 15px 0;
+              text-align: center;
             }
-            .highlight {
-              color: #f59e0b;
-              font-weight: 700;
+            .footer {
+              background: white;
+              padding: 10px 0;
+              text-align: center;
             }
-            .currency {
-              font-family: 'Courier New', monospace;
+            .footer-company {
+              font-size: 12px;
               font-weight: 600;
+              color: #000;
+              margin-bottom: 8px;
+            }
+            .footer-contact {
+              font-size: 11px;
+              color: #000;
             }
           </style>
         </head>
         <body>
-          <div class="page-container">
-            <div class="document">
-              <div class="header">
-                <div class="header-content">
-                  <div class="logo-section">
-                    <div class="logo">OCL</div>
-                    <div class="company-info">
-                      <h1>Our Courier & Logistics</h1>
-                      <p>Reliable • Fast • Secure</p>
-                    </div>
-                  </div>
-                  <div class="quotation-badge">
-                    <h2>QUOTATION</h2>
-                    <p>Valid Until: ${validUntilDate}</p>
-                  </div>
+          <div class="document">
+            <div class="header">
+              <div class="header-left">
+                ${logoBase64 ? `<img src="${logoBase64}" class="logo-img" alt="OCL Logo" />` : ''}
+              </div>
+              <div class="header-center">
+                <h1 class="company-name">Our Courier & Logistics</h1>
+                <p class="company-tagline">Reliable • Fast • Secure</p>
+                <div class="quotation-box">
+                  <div class="quotation-title">Quotation</div>
                 </div>
               </div>
-              
-              <div class="content">
-                <div class="section">
-                  <div class="section-title">Customer Information</div>
-                  <div class="info-grid">
-                    <div class="info-card">
-                      <div class="info-label">Customer Name</div>
-                      <div class="info-value">${customerName}</div>
-                    </div>
-                    <div class="info-card">
-                      <div class="info-label">Email Address</div>
-                      <div class="info-value">${customerEmail}</div>
-                    </div>
-                    ${customerPhone ? `
-                    <div class="info-card">
-                      <div class="info-label">Phone Number</div>
-                      <div class="info-value">${customerPhone}</div>
-                    </div>
-                    ` : ''}
-                    <div class="info-card">
-                      <div class="info-label">Quotation Date</div>
-                      <div class="info-value">${formattedDate}</div>
-                    </div>
-                  </div>
+              <div class="header-right">
+                <div class="quotation-date">Date: ${formattedDate}</div>
+                <div class="quotation-date">Valid Until: ${validUntilDate}</div>
+              </div>
+            </div>
+            
+            <div class="two-column-section">
+              <div class="column-left">
+                <div class="section-title">Customer Details:</div>
+                <div class="info-item">
+                  <span class="info-label">Name: </span>
+                  <span class="info-value">${customerName}</span>
                 </div>
-
-                <div class="section">
-                  <div class="section-title">Service Details</div>
-                  <div class="info-grid">
-                    <div class="info-card">
-                      <div class="info-label">Route</div>
-                      <div class="info-value">${origin} → ${destination}</div>
-                    </div>
-                    <div class="info-card">
-                      <div class="info-label">Weight</div>
-                      <div class="info-value">${weight} kg</div>
-                    </div>
-                    <div class="info-card">
-                      <div class="info-label">Rate per kg</div>
-                      <div class="info-value">₹${ratePerKgNum}</div>
-                    </div>
-                    <div class="info-card">
-                      <div class="info-label">Service Type</div>
-                      <div class="info-value">Express Delivery</div>
-                    </div>
-                  </div>
+                <div class="info-item">
+                  <span class="info-label">Email Address: </span>
+                  <span class="info-value">${customerEmail}</span>
                 </div>
-
-                <div class="pricing-section">
-                  <div class="pricing-title">Pricing Breakdown</div>
-                  <table class="pricing-table">
-                    <thead>
-                      <tr>
-                        <th>Description</th>
-                        <th>Quantity</th>
-                        <th>Rate</th>
-                        <th>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>Base Shipping Cost</td>
-                        <td>${weight} kg</td>
-                        <td>₹${ratePerKgNum}/kg</td>
-                        <td class="currency">₹${baseAmount.toFixed(2)}</td>
-                      </tr>
-                      ${additionalCharges && additionalCharges.length > 0 ? additionalCharges.map(charge => `
-                      <tr>
-                        <td>${charge.description || 'Additional Charge'}</td>
-                        <td>1</td>
-                        <td>₹${parseFloat(charge.amount || 0).toFixed(2)}</td>
-                        <td class="currency">₹${parseFloat(charge.amount || 0).toFixed(2)}</td>
-                      </tr>
-                      `).join('') : ''}
-                      ${additionalCharges && additionalCharges.length > 0 ? `
-                      <tr style="background: rgba(59, 130, 246, 0.1);">
-                        <td colspan="3"><strong>Subtotal</strong></td>
-                        <td class="currency"><strong>₹${subtotal.toFixed(2)}</strong></td>
-                      </tr>
-                      ` : ''}
-                      <tr>
-                        <td>GST (${gstRateNum}%)</td>
-                        <td>-</td>
-                        <td>${gstRateNum}%</td>
-                        <td class="currency">₹${gstAmount.toFixed(2)}</td>
-                      </tr>
-                      <tr class="total-row">
-                        <td colspan="3"><strong>TOTAL AMOUNT</strong></td>
-                        <td class="currency"><strong>₹${totalAmount.toFixed(2)}</strong></td>
-                      </tr>
-                    </tbody>
-                  </table>
+                ${customerPhone ? `
+                <div class="info-item">
+                  <span class="info-label">Phone Number: </span>
+                  <span class="info-value">${customerPhone}</span>
                 </div>
-
-                <div class="terms-section">
-                  <div class="terms-title">Terms & Conditions</div>
-                  <ul class="terms-list">
-                    <li>This quotation is valid for 7 working days from the date of issue</li>
-                    <li>Payment terms: 50% advance payment required, balance on delivery</li>
-                    <li>Estimated delivery time: 3-5 working days for domestic shipments</li>
-                    <li>Insurance coverage up to ₹50,000 included in the quoted price</li>
-                    <li>Real-time tracking number will be provided after dispatch</li>
-                    <li>Any additional charges will be communicated and approved before dispatch</li>
-                    <li>All prices are inclusive of GST and applicable taxes</li>
-                    <li>Delivery confirmation required upon receipt of goods</li>
-                  </ul>
-                </div>
-
-                <div class="approval-section">
-                  <p class="approval-text">
-                    This quotation is subject to your approval and acceptance of the above terms and conditions.<br>
-                    Please sign and return this document to confirm your order.
-                  </p>
+                ` : ''}
+                <div class="info-item">
+                  <span class="info-label">Quotation Date: </span>
+                  <span class="info-value">${formattedDate}</span>
                 </div>
               </div>
-
-              <div class="footer">
-                <div class="footer-content">
-                  <div class="footer-title">Our Courier & Logistics</div>
-                  <div class="footer-contact">
-                    <span>📧 info@oclcourier.com</span>
-                    <span>📞 +91 9876543210</span>
-                    <span>🌐 www.oclcourier.com</span>
-                  </div>
+              <div class="column-separator"></div>
+              <div class="column-right">
+                <div class="info-item">
+                  <span class="info-label">Route: </span>
+                  <span class="info-value">${origin} → ${destination}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Weight: </span>
+                  <span class="info-value">${weight} kg</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Rate per kg: </span>
+                  <span class="info-value">₹${ratePerKgNum} Express</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Service Type: </span>
+                  <span class="info-value">Delivery</span>
                 </div>
               </div>
+            </div>
+
+            <div class="pricing-section">
+              <div class="pricing-title">Pricing Breakdown:</div>
+              <table class="pricing-table">
+                <thead>
+                  <tr>
+                    <th>Description</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Base Shipping Cost</td>
+                    <td>${weight} kg</td>
+                    <td>₹${ratePerKgNum}/kg</td>
+                    <td>₹${baseAmount.toFixed(2)}</td>
+                  </tr>
+                  ${additionalCharges && additionalCharges.length > 0 ? additionalCharges.map(charge => `
+                  <tr>
+                    <td>${charge.description || 'Additional Charge'}</td>
+                    <td>1</td>
+                    <td>₹${parseFloat(charge.amount || 0).toFixed(2)}</td>
+                    <td>₹${parseFloat(charge.amount || 0).toFixed(2)}</td>
+                  </tr>
+                  `).join('') : ''}
+                  ${additionalCharges && additionalCharges.length > 0 ? `
+                  <tr>
+                    <td colspan="3"><strong>Subtotal</strong></td>
+                    <td><strong>₹${subtotal.toFixed(2)}</strong></td>
+                  </tr>
+                  ` : ''}
+                  <tr>
+                    <td>GST (${gstRateNum}%)</td>
+                    <td>-</td>
+                    <td>${gstRateNum}%</td>
+                    <td>₹${gstAmount.toFixed(2)}</td>
+                  </tr>
+                  <tr class="total-row">
+                    <td colspan="3"><strong>TOTAL AMOUNT</strong></td>
+                    <td><strong>₹${totalAmount.toFixed(2)}</strong></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="terms-section">
+              <div class="terms-title">Terms & Conditions</div>
+              <ol class="terms-list">
+                <li>This quotation is valid for 7 working days from the date of issue</li>
+                <li>Payment terms: 50% advance payment required, balance on delivery</li>
+                <li>Estimated delivery time: 3-5 working days for domestic shipments</li>
+                <li>Insurance coverage up to ₹50,000 included in the quoted price</li>
+                <li>Real-time tracking number will be provided after dispatch</li>
+                <li>Any additional charges will be communicated and approved before dispatch</li>
+                <li>All prices are inclusive of GST and applicable taxes</li>
+                <li>Delivery confirmation required upon receipt of goods</li>
+              </ol>
+            </div>
+
+            <div class="footer-line"></div>
+            
+            <div class="approval-text">
+              This quotation is subject to your approval and acceptance of the above terms and conditions.<br>
+              Please sign and return this document to confirm your order.
+            </div>
+
+            <div class="footer">
+              <div class="footer-company">Our Courier & Logistics</div>
+              <div class="footer-contact">info@oclcourier.com +91 9876543210 www.oclcourier.com</div>
             </div>
           </div>
         </body>

@@ -73,7 +73,7 @@ import Delivery from '@/components/admin/Delivery';
 import ForceDelivery from '@/components/admin/ForceDelivery';
 import PaymentStatus from '@/components/admin/PaymentStatus';
 import CollectPayment from '@/components/admin/CollectPayment';
-import SalesForm from '@/components/admin/SalesForm';
+import SalesForms from '@/components/admin/SalesForms';
 import MedicineBookingOverview from '@/components/admin/medicineBookingOverview';
 import CustomerBookingOverview from '@/components/admin/CustomerBookingOverview';
 import AllBookings from '@/components/admin/AllBookings';
@@ -777,15 +777,15 @@ const AdminDashboard = () => {
             </button>
 
             <button
-              onClick={() => setActiveTab('salesForm')}
-              className={`w-full ${isSidebarCollapsed ? 'flex justify-center p-2' : 'text-left flex items-center gap-3 px-3 py-2'} rounded-xl transition ${activeTab === 'salesForm'
-                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+              onClick={() => setActiveTab('salesForms')}
+              className={`w-full ${isSidebarCollapsed ? 'flex justify-center p-2' : 'text-left flex items-center gap-3 px-3 py-2'} rounded-xl transition ${activeTab === 'salesForms'
+                ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md'
                 : 'text-gray-700 hover:bg-gray-50'
                 }`}
-              title={isSidebarCollapsed ? "Sales Form" : ""}
+              title={isSidebarCollapsed ? "Sales Forms" : ""}
             >
               <ClipboardList className="h-5 w-5" />
-              {!isSidebarCollapsed && <span className="font-medium text-sm">Sales Form</span>}
+              {!isSidebarCollapsed && <span className="font-medium text-sm">Sales Forms</span>}
             </button>
 
             {adminInfo?.role === 'super_admin' && (
@@ -1481,7 +1481,7 @@ const AdminDashboard = () => {
           {activeTab === 'coldCalling' && <ColdCalling />}
           {activeTab === 'payments' && <PaymentStatus />}
           {activeTab === 'collectPayment' && <CollectPayment />}
-          {activeTab === 'salesForm' && <SalesForm />}
+          {activeTab === 'salesForms' && <SalesForms />}
           {activeTab === 'admins' && adminInfo?.role === 'super_admin' && (
             <AdminManagement />
           )}

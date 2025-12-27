@@ -36,6 +36,7 @@ import CreditAccount from "./pages/CreditAccount";
 import ContactOCL from "./pages/support/ContactOCL";
 import BusinessInfo from "./pages/BusinessInfo";
 import WriteToUs from "./pages/support/WriteToUs";
+import SalesForm from "./pages/SalesForm";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OfficeLogin from "./pages/office/OfficeLogin";
@@ -115,6 +116,7 @@ const App = () => {
           <Route path="/business-info" element={<BusinessInfo />} />
           <Route path="/contact" element={<ContactOCL />} />
           <Route path="/support/write" element={<WriteToUs />} />
+          <Route path="/sales-form" element={<SalesForm />} />
           <Route path="/user" element={<UserDashboard />} />
           
           {/* Public Pricing Approval Routes */}

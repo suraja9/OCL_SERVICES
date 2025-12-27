@@ -2,6 +2,8 @@ import Navbar from "@/components/Navbar";
 import HeroCarousel from "@/components/HeroCarousel";
 import TrustStrip from "@/components/TrustStrip";
 import FeatureCards from "@/components/FeatureCards";
+import SchedulePickupSection from "@/components/SchedulePickupSection";
+import NeedHelpCard from "@/components/NeedHelpCard";
 import PartnersScroll from "@/components/PartnersScroll";
 import CustomerReviews from "@/components/CustomerReviews";
 import FAQ from "@/components/FAQ";
@@ -10,6 +12,7 @@ import TrustStatsSection from "@/components/TrustStatsSection";
 // import TrackingSection from "@/components/TrackingSection";
 import Footer from "@/components/Footer";
 import WavyDivider from "@/components/WavyDivider";
+import ScrollToTop from "@/components/ScrollToTop";
 import { useScrollAnimation } from "@/hooks/useScrollAnimation";
 
 const Index = () => {
@@ -31,14 +34,19 @@ const Index = () => {
         <FeatureCards />
       </div>
       
-      <FAQ />
+      <SchedulePickupSection />
       
       <PartnersScroll />
+      
+      <FAQ />
+
+      <NeedHelpCard />
       
       <CustomerReviews />
       
       {/* Tracking section removed per request */}
       <Footer />
+      <ScrollToTop />
     </div>
   );
 };

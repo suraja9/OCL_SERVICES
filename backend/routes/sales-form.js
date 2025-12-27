@@ -16,7 +16,15 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       emailAddress,
       alternatePhoneNumber,
       website,
-      fullAddress,
+      fullAddress, // Legacy field - will be used if provided, otherwise generated from structured fields
+      // New structured address fields
+      locality,
+      buildingFlatNo,
+      landmark,
+      pincode,
+      city,
+      state,
+      area,
       typeOfBusiness,
       typeOfShipments,
       averageShipmentVolume,
@@ -36,7 +44,6 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       designation: 'Designation is required',
       phoneNumber: 'Phone number is required',
       emailAddress: 'Email address is required',
-      fullAddress: 'Full address is required',
       typeOfBusiness: 'Type of business is required',
       typeOfShipments: 'Type of shipments is required',
       averageShipmentVolume: 'Average shipment volume is required',
@@ -48,6 +55,23 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       vehiclesNeededPerMonth: 'Vehicles needed per month is required',
       typeOfVehicleRequired: 'Type of vehicle required is required'
     };
+
+    // Address validation - either fullAddress (legacy) or structured fields
+    const hasFullAddress = fullAddress && fullAddress.trim();
+    const hasStructuredAddress = locality && locality.trim() && 
+                                  buildingFlatNo && buildingFlatNo.trim() && 
+                                  pincode && pincode.trim() && 
+                                  city && city.trim() && 
+                                  state && state.trim();
+    
+    if (!hasFullAddress && !hasStructuredAddress) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        message: 'Please provide either full address or all address fields (locality, building/flat no, pincode, city, state)',
+        details: ['Address information is required']
+      });
+    }
 
     const missingFields = [];
     for (const [field, message] of Object.entries(requiredFields)) {
@@ -109,6 +133,21 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       }
     }
 
+    // Generate fullAddress from structured fields if not provided
+    let finalFullAddress = fullAddress?.trim() || '';
+    if (!finalFullAddress && hasStructuredAddress) {
+      const addressParts = [
+        locality?.trim(),
+        buildingFlatNo?.trim(),
+        landmark?.trim(),
+        area?.trim(),
+        city?.trim(),
+        state?.trim(),
+        pincode?.trim()
+      ].filter(part => part && part.length > 0);
+      finalFullAddress = addressParts.join(', ');
+    }
+
     // Create new sales form entry
     const salesForm = new SalesForm({
       companyName: companyName.trim(),
@@ -118,7 +157,16 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       emailAddress: emailAddress.trim().toLowerCase(),
       alternatePhoneNumber: alternatePhoneNumber?.trim() || '',
       website: website?.trim() || '',
-      fullAddress: fullAddress.trim(),
+      // Structured address fields
+      locality: locality?.trim() || '',
+      buildingFlatNo: buildingFlatNo?.trim() || '',
+      landmark: landmark?.trim() || '',
+      pincode: pincode?.trim() || '',
+      city: city?.trim() || '',
+      state: state?.trim() || '',
+      area: area?.trim() || '',
+      // Full address (generated or provided)
+      fullAddress: finalFullAddress,
       typeOfBusiness: typeOfBusiness.trim(),
       typeOfShipments: typeOfShipments.trim(),
       averageShipmentVolume: averageShipmentVolume.trim(),

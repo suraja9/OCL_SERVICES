@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { Phone, Mail, MapPin, Clock, MessageCircle, AlertCircle, Building2, Send, Globe } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, MessageCircle, Send, Globe, User, FileText } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import companyData from "@/data/company.json";
@@ -11,6 +11,7 @@ import facebookIcon from "@/Icon-images/facebook.png";
 import instagramIcon from "@/Icon-images/instagram.png";
 import twitterIcon from "@/Icon-images/twitter.png";
 import linkedinIcon from "@/Icon-images/linkedin.png";
+import supportCenterImg from "@/assets/support-center.jpg";
 
 const ContactOCL = () => {
   const [formData, setFormData] = useState({
@@ -51,15 +52,6 @@ const ContactOCL = () => {
       emoji: "📞"
     },
     {
-      icon: MessageCircle,
-      title: "WhatsApp Support",
-      description: "Get instant help via WhatsApp",
-      contact: "+91 8453994809",
-      action: "https://wa.me/918453994809",
-      actionText: "+91 8453994809",
-      emoji: "💬"
-    },
-    {
       icon: Mail,
       title: "Email Support",
       description: "Send us your queries and we'll respond within 24 hours",
@@ -67,6 +59,15 @@ const ContactOCL = () => {
       action: "mailto:info@oclservices.com",
       actionText: "info@oclservices.com",
       emoji: "📧"
+    },
+    {
+      icon: MessageCircle,
+      title: "WhatsApp Support",
+      description: "Get instant help via WhatsApp",
+      contact: "+91 8453994809",
+      action: "https://wa.me/918453994809",
+      actionText: "+91 8453994809",
+      emoji: "💬"
     }
   ];
 
@@ -98,8 +99,305 @@ const ContactOCL = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white relative overflow-hidden">
+    <div
+      className="min-h-screen bg-white relative overflow-hidden"
+      style={{ fontFamily: "'Value Serif Pro Regular', serif" }}
+    >
       <style>{`
+        /* Mobile view - reduce header section and fix background image */
+        @media (max-width: 767px) {
+          /* Reduce header section height on mobile */
+          .hero-section-mobile {
+            height: 250px !important;
+            min-height: 250px !important;
+            background-attachment: fixed !important;
+          }
+        }
+
+        /* Mobile view - reduce card sizes and display in one row */
+        @media (max-width: 767px) {
+          .contact-cards-container > div {
+            flex: 1 1 calc(33.333% - 6px) !important;
+            min-width: 0 !important;
+            max-width: calc(33.333% - 6px) !important;
+            width: calc(33.333% - 6px) !important;
+          }
+
+          .contact-cards-container > div > div {
+            padding: 8px 4px !important;
+          }
+
+          /* Make Call Us and WhatsApp Support cards smaller */
+          .contact-cards-container .call-us-card,
+          .contact-cards-container .whatsapp-support-card {
+            flex: 0 0 calc(30% - 6px) !important;
+            max-width: calc(30% - 6px) !important;
+            width: calc(30% - 6px) !important;
+          }
+
+          /* Email Support card takes larger space */
+          .contact-cards-container .email-support-card {
+            flex: 0 0 calc(40% - 6px) !important;
+            max-width: calc(40% - 6px) !important;
+            width: calc(40% - 6px) !important;
+          }
+
+          /* Smaller padding for Call Us and WhatsApp Support */
+          .contact-cards-container .call-us-card > div,
+          .contact-cards-container .whatsapp-support-card > div {
+            padding: 6px 4px !important;
+          }
+
+          /* Larger padding for Email Support - increase height */
+          .contact-cards-container .email-support-card > div {
+            padding: 12px 4px !important;
+          }
+
+          .contact-cards-container .text-lg,
+          .contact-cards-container .text-base {
+            font-size: 11px !important;
+          }
+
+          .contact-cards-container .text-sm,
+          .contact-cards-container .text-xs {
+            font-size: 9px !important;
+          }
+
+          .contact-cards-container h3 {
+            margin-bottom: 6px !important;
+            font-size: 11px !important;
+          }
+
+          /* Smaller font for Call Us and WhatsApp Support titles */
+          .contact-cards-container .call-us-card h3,
+          .contact-cards-container .whatsapp-support-card h3 {
+            font-size: 9px !important;
+          }
+
+          /* Larger font for Email Support title */
+          .contact-cards-container .email-support-card h3 {
+            font-size: 11px !important;
+          }
+
+          /* Hide description on mobile */
+          .contact-cards-container p {
+            display: none !important;
+          }
+
+          .contact-cards-container button {
+            padding: 4px 6px !important;
+            font-size: 9px !important;
+            max-width: 100% !important;
+            white-space: normal !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+            line-height: 1.2 !important;
+            word-break: break-word !important;
+          }
+
+
+          .contact-cards-container svg,
+          .contact-cards-container img {
+            width: 28px !important;
+            height: 28px !important;
+          }
+
+          /* Smaller icons for Call Us and WhatsApp Support */
+          .contact-cards-container .call-us-card svg,
+          .contact-cards-container .call-us-card img,
+          .contact-cards-container .whatsapp-support-card svg,
+          .contact-cards-container .whatsapp-support-card img {
+            width: 20px !important;
+            height: 20px !important;
+          }
+
+          /* Larger icons for Email Support */
+          .contact-cards-container .email-support-card svg,
+          .contact-cards-container .email-support-card img {
+            width: 28px !important;
+            height: 28px !important;
+          }
+
+          .contact-cards-container > div > div > div:first-child {
+            margin-bottom: 6px !important;
+          }
+
+          /* Smaller icon container margin for Call Us and WhatsApp Support */
+          .contact-cards-container .call-us-card > div > div:first-child,
+          .contact-cards-container .whatsapp-support-card > div > div:first-child {
+            margin-bottom: 4px !important;
+          }
+
+          /* Larger icon container margin for Email Support */
+          .contact-cards-container .email-support-card > div > div:first-child {
+            margin-bottom: 6px !important;
+          }
+
+          /* Set heading font sizes to 30px on mobile */
+          .hero-section-mobile h1 {
+            font-size: 30px !important;
+          }
+
+          /* Reduce Get in Touch section height on mobile */
+          .get-in-touch-section {
+            min-height: 140px !important;
+            padding-bottom: 70px !important;
+            padding-top: 16px !important;
+          }
+
+          .get-in-touch-section h2 {
+            font-size: 30px !important;
+          }
+
+          /* Contact Information heading */
+          .contact-information-panel h3 {
+            font-size: 30px !important;
+          }
+
+          /* Reduce contact information text and icons on mobile */
+          .contact-information-panel .text-base,
+          .contact-information-panel p,
+          .contact-information-panel a {
+            font-size: 12px !important;
+          }
+
+          /* Reduce contact icons (MapPin, Phone, Mail, Globe) */
+          .contact-information-panel svg.w-6 {
+            width: 18px !important;
+            height: 18px !important;
+          }
+
+          /* Reduce gap between icon and text */
+          .contact-information-panel .flex.items-start,
+          .contact-information-panel .flex.items-center {
+            gap: 12px !important;
+          }
+
+          /* Reduce "Follow Us" text */
+          .contact-information-panel .text-sm {
+            font-size: 11px !important;
+            margin-bottom: 12px !important;
+          }
+
+          /* Reduce social media icons */
+          .contact-information-panel .flex.gap-4 > a {
+            width: 32px !important;
+            height: 32px !important;
+          }
+
+          .contact-information-panel .flex.gap-4 img {
+            width: 24px !important;
+            height: 24px !important;
+          }
+
+          /* Reduce spacing between contact items */
+          .contact-information-panel .space-y-4 > * {
+            margin-bottom: 12px !important;
+          }
+
+          /* Reduce floating panel size on mobile */
+          .floating-panel-container {
+            margin-top: -60px !important;
+          }
+
+          .floating-panel-container > div {
+            max-width: 85% !important;
+            padding: 0 12px !important;
+          }
+
+          .drop-us-line-card {
+            padding: 12px 10px !important;
+          }
+
+          .drop-us-line-card h3 {
+            font-size: 16px !important;
+            margin-bottom: 12px !important;
+          }
+
+          .drop-us-line-card form.space-y-8 > * + * {
+            margin-top: 12px !important;
+          }
+
+          .drop-us-line-card input,
+          .drop-us-line-card textarea {
+            padding-bottom: 2px !important;
+            font-size: 13px !important;
+          }
+
+          .drop-us-line-card .flex.justify-end {
+            justify-content: center !important;
+          }
+
+          .drop-us-line-card .flex.justify-end button {
+            width: 42px !important;
+            height: 42px !important;
+            margin-top: 8px !important;
+          }
+
+          .drop-us-line-card .flex.justify-end button svg {
+            width: 20px !important;
+            height: 20px !important;
+          }
+
+          .drop-us-line-card label {
+            font-size: 11px !important;
+          }
+
+          .drop-us-line-card svg.w-4 {
+            width: 14px !important;
+            height: 14px !important;
+          }
+
+          /* Keep labels inside textboxes on mobile - no floating, override React classes */
+          .drop-us-line-card form .relative label {
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            -webkit-transform: translateY(-50%) !important;
+            font-size: 13px !important;
+            color: #9CA3AF !important;
+            left: 24px !important;
+          }
+
+          /* Override the -top-5 class on mobile to keep label centered */
+          .drop-us-line-card form .relative label.text-blue-500,
+          .drop-us-line-card form .relative label.text-xs {
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            -webkit-transform: translateY(-50%) !important;
+            font-size: 13px !important;
+            color: #9CA3AF !important;
+          }
+
+          /* Hide label when input is focused to show user typing */
+          .drop-us-line-card form input:focus + label,
+          .drop-us-line-card form textarea:focus + label {
+            opacity: 0 !important;
+          }
+
+          /* Reduce width of textboxes inside the card */
+          .drop-us-line-card form input,
+          .drop-us-line-card form textarea {
+            width: calc(100% - 24px) !important;
+            margin-left: 12px !important;
+            margin-right: 12px !important;
+          }
+
+          .drop-us-line-card form .relative {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+          }
+
+          /* Reduce white gap spacing on mobile */
+          .container.mx-auto.pt-16 {
+            padding-top: 32px !important;
+            padding-bottom: 16px !important;
+          }
+
+          .bg-white.relative.pt-0 {
+            padding-bottom: 24px !important;
+          }
+        }
+
         .button-86 {
           all: unset;
           width: auto;
@@ -181,7 +479,7 @@ const ContactOCL = () => {
       
       {/* Full-Width Hero Section */}
       <motion.div
-        className="relative w-full h-[400px] md:h-[500px] flex items-center justify-center overflow-hidden"
+        className="relative w-full h-[400px] md:h-[500px] flex items-center justify-center overflow-hidden hero-section-mobile"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
@@ -199,7 +497,7 @@ const ContactOCL = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
           style={{
-            fontFamily: "'Poppins', sans-serif",
+            fontFamily: "'Value Serif Pro Bold', serif",
             fontWeight: 700,
             textShadow: "0px 4px 20px rgba(0, 0, 0, 0.8)",
             marginTop: "40px"
@@ -215,7 +513,7 @@ const ContactOCL = () => {
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="flex flex-col md:flex-row items-center justify-center gap-8 mb-8 flex-wrap"
+          className="flex flex-row md:flex-row items-center justify-center gap-2 md:gap-8 mb-8 flex-wrap contact-cards-container"
         >
           {contactMethods.map((method, index) => {
             const IconComponent = method.icon;
@@ -224,7 +522,7 @@ const ContactOCL = () => {
                 key={index}
                 variants={itemVariants}
                 transition={{ duration: 0.3, ease: "easeOut" }}
-                className="relative group"
+                className={`relative group ${method.title === "Call Us" ? "call-us-card" : method.title === "Email Support" ? "email-support-card" : method.title === "WhatsApp Support" ? "whatsapp-support-card" : ""}`}
                 style={{
                   maxWidth: method.title === "Call Us" || method.title === "Email Support" ? "240px" : "320px",
                   width: method.title === "Call Us" || method.title === "Email Support" ? "240px" : "auto",
@@ -296,7 +594,7 @@ const ContactOCL = () => {
                   <h3
                     className={`${method.title === "Call Us" || method.title === "Email Support" ? "text-base mb-2" : "text-lg mb-3"} font-bold text-center relative z-10`}
                     style={{
-                      fontFamily: "'Poppins', sans-serif",
+                      fontFamily: "'Value Serif Pro Bold', serif",
                       fontWeight: 700,
                       color: method.title === "WhatsApp Support"
                         ? "#1B5E20"
@@ -314,7 +612,7 @@ const ContactOCL = () => {
                   <p
                     className={`${method.title === "Call Us" || method.title === "Email Support" ? "text-xs mb-3 min-h-[32px]" : "text-sm mb-6 min-h-[40px]"} text-center relative z-10`}
                     style={{
-                      fontFamily: "'Inter', sans-serif",
+                      fontFamily: "'Value Serif Pro Regular', serif",
                       fontWeight: 400,
                       color: "#424242",
                       lineHeight: "1.5"
@@ -327,7 +625,7 @@ const ContactOCL = () => {
                     onClick={() => window.open(method.action, '_blank')}
                     className={`${method.title === "Call Us" || method.title === "Email Support" ? "w-auto px-3 py-1.5 text-xs" : "w-auto px-4 py-2 text-xs"} rounded-xl font-semibold transition-all duration-300 mx-auto block relative z-10`}
                     style={{
-                      fontFamily: "'Inter', sans-serif",
+                      fontFamily: "'Value Serif Pro Regular', serif",
                       fontWeight: 600,
                       maxWidth: method.title === "Call Us" || method.title === "Email Support" ? "160px" : "200px",
                       background: method.title === "WhatsApp Support"
@@ -361,12 +659,12 @@ const ContactOCL = () => {
       {/* Get in Touch Section with Floating Panel */}
       <div className="relative w-full">
         {/* Black Background Section - Increased height for better overlap */}
-        <div className="w-full min-h-[350px] flex items-start justify-center px-4 md:px-8 relative pb-36 pt-8" style={{ background: "#000000" }}>
+        <div className="w-full min-h-[350px] flex items-start justify-center px-4 md:px-8 relative pb-36 pt-8 get-in-touch-section" style={{ background: "#000000" }}>
           <div className="max-w-7xl mx-auto text-center">
             <h2
               className="text-4xl md:text-5xl font-bold"
-        style={{
-                fontFamily: "'Poppins', sans-serif",
+              style={{
+                fontFamily: "'Value Serif Pro Bold', serif",
                 fontWeight: 700,
                 color: "#FFFFFF",
                 letterSpacing: "-0.02em"
@@ -378,11 +676,11 @@ const ContactOCL = () => {
         </div>
 
         {/* White Background Section */}
-        <div className="w-full bg-white relative pt-0 pb-16">
-          1
+        <div className="w-full bg-white relative pt-0 pb-12">
+          <span className="text-white">1</span>
           {/* Floating Two-Column Panel - 40% on black, 60% on white */}
-           <div className="relative -mt-52 mb-4 z-20">
-          <div className="max-w-5xl mx-auto px-4">
+           <div className="relative -mt-40 mb-4 z-20 floating-panel-container">
+          <div className="max-w-4xl mx-auto px-4">
           <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
@@ -394,11 +692,11 @@ const ContactOCL = () => {
             >
               <div className="grid md:grid-cols-2">
                 {/* Left Panel - White Contact Form */}
-                <div className="bg-white p-6 md:p-8 relative">
+                <div className="bg-white p-5 md:p-6 relative drop-us-line-card">
                   <h3
                     className="text-xl md:text-2xl font-bold mb-6 text-center"
                     style={{
-                      fontFamily: "'Poppins', sans-serif",
+                      fontFamily: "'Value Serif Pro Bold', serif",
                       fontWeight: 700,
                       color: "#0C1B33",
                       letterSpacing: "-0.02em"
@@ -410,27 +708,28 @@ const ContactOCL = () => {
                   <form className="space-y-8">
                     {/* Name Field */}
                     <div className="relative">
+                      <User className="w-4 h-4 text-gray-400 absolute left-0 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         value={formData.name}
                         onChange={(e) => handleChange("name", e.target.value)}
                         onFocus={() => handleFocus("name")}
                         onBlur={() => handleBlur("name")}
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none pb-1 pt-0"
+                        className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none pb-1 pt-0 pl-6"
                         style={{
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Value Serif Pro Regular', serif",
                           fontSize: "16px",
                           color: "#0C1B33"
                         }}
                       />
                       <label
-                        className={`absolute left-0 transition-all duration-200 pointer-events-none ${
+                        className={`absolute left-6 transition-all duration-200 pointer-events-none ${
                           focused.name || formData.name
                             ? "-top-5 text-xs text-blue-500"
-                            : "top-0 text-base text-gray-400"
+                            : "top-1/2 -translate-y-1/2 text-base text-gray-400"
                         }`}
                         style={{
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Value Serif Pro Regular', serif",
                           fontWeight: 400
                         }}
                       >
@@ -440,27 +739,28 @@ const ContactOCL = () => {
 
                     {/* Email Field */}
                     <div className="relative">
+                      <Mail className="w-4 h-4 text-gray-400 absolute left-0 top-1/2 -translate-y-1/2" />
                       <input
                         type="email"
                         value={formData.email}
                         onChange={(e) => handleChange("email", e.target.value)}
                         onFocus={() => handleFocus("email")}
                         onBlur={() => handleBlur("email")}
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none pb-1 pt-0"
+                        className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none pb-1 pt-0 pl-6"
                         style={{
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Value Serif Pro Regular', serif",
                           fontSize: "16px",
                           color: "#0C1B33"
                         }}
                       />
                       <label
-                        className={`absolute left-0 transition-all duration-200 pointer-events-none ${
+                        className={`absolute left-6 transition-all duration-200 pointer-events-none ${
                           focused.email || formData.email
                             ? "-top-5 text-xs text-blue-500"
-                            : "top-0 text-base text-gray-400"
+                            : "top-1/2 -translate-y-1/2 text-base text-gray-400"
                         }`}
                         style={{
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Value Serif Pro Regular', serif",
                           fontWeight: 400
                         }}
                       >
@@ -470,87 +770,90 @@ const ContactOCL = () => {
 
                     {/* Subject Field */}
                     <div className="relative">
+                      <FileText className="w-4 h-4 text-gray-400 absolute left-0 top-1/2 -translate-y-1/2" />
                       <input
                         type="text"
                         value={formData.subject}
                         onChange={(e) => handleChange("subject", e.target.value)}
                         onFocus={() => handleFocus("subject")}
                         onBlur={() => handleBlur("subject")}
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none pb-1 pt-0"
+                        className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none pb-1 pt-0 pl-6"
                         style={{
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Value Serif Pro Regular', serif",
                           fontSize: "16px",
                           color: "#0C1B33"
                         }}
                       />
                       <label
-                        className={`absolute left-0 transition-all duration-200 pointer-events-none ${
+                        className={`absolute left-6 transition-all duration-200 pointer-events-none ${
                           focused.subject || formData.subject
                             ? "-top-5 text-xs text-blue-500"
-                            : "top-0 text-base text-gray-400"
+                            : "top-1/2 -translate-y-1/2 text-base text-gray-400"
                         }`}
-                  style={{
-                          fontFamily: "'Inter', sans-serif",
+                        style={{
+                          fontFamily: "'Value Serif Pro Regular', serif",
                           fontWeight: 400
-                  }}
-                >
+                        }}
+                      >
                         Subject
                       </label>
-                </div>
+                    </div>
 
                     {/* Phone Field */}
                     <div className="relative">
+                      <Phone className="w-4 h-4 text-gray-400 absolute left-0 top-1/2 -translate-y-1/2" />
                       <input
                         type="tel"
                         value={formData.phone}
                         onChange={(e) => handleChange("phone", e.target.value)}
                         onFocus={() => handleFocus("phone")}
                         onBlur={() => handleBlur("phone")}
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none pb-1 pt-0"
+                        className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none pb-1 pt-0 pl-6"
                         style={{
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Value Serif Pro Regular', serif",
                           fontSize: "16px",
                           color: "#0C1B33"
                         }}
                       />
                       <label
-                        className={`absolute left-0 transition-all duration-200 pointer-events-none ${
+                        className={`absolute left-6 transition-all duration-200 pointer-events-none ${
                           focused.phone || formData.phone
                             ? "-top-5 text-xs text-blue-500"
-                            : "top-0 text-base text-gray-400"
+                            : "top-1/2 -translate-y-1/2 text-base text-gray-400"
                         }`}
-                  style={{
-                          fontFamily: "'Inter', sans-serif",
+                        style={{
+                          fontFamily: "'Value Serif Pro Regular', serif",
                           fontWeight: 400
                         }}
                       >
                         Phone
                       </label>
-              </div>
+                    </div>
               
                     {/* Message Field */}
                     <div className="relative">
+                      <MessageCircle className="w-4 h-4 text-gray-400 absolute left-0 top-1/2 -translate-y-1/2" />
                       <textarea
                         rows={1}
                         value={formData.message}
                         onChange={(e) => handleChange("message", e.target.value)}
                         onFocus={() => handleFocus("message")}
                         onBlur={() => handleBlur("message")}
-                        className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none pb-1 pt-0 resize-none"
+                        className="w-full bg-transparent border-0 border-b-2 border-gray-300 focus:border-blue-500 focus:outline-none pb-1 pt-0 pl-6 resize-none"
                         style={{
-                          fontFamily: "'Inter', sans-serif",
+                          fontFamily: "'Value Serif Pro Regular', serif",
                           fontSize: "16px",
                           color: "#0C1B33"
                         }}
                       />
                       <label
-                        className={`absolute left-0 transition-all duration-200 pointer-events-none ${
+                        className={`absolute left-6 transition-all duration-200 pointer-events-none ${
                           focused.message || formData.message
                             ? "-top-5 text-xs text-blue-500"
-                            : "top-0 text-base text-gray-400"
+                            : "top-1/2 -translate-y-1/2 text-base text-gray-400"
                         }`}
-                    style={{
-                      fontFamily: "'Inter', sans-serif",
+                        style={{
+                          fontFamily: "'Value Serif Pro Regular', serif",
                           fontWeight: 400
                         }}
                       >
@@ -574,11 +877,11 @@ const ContactOCL = () => {
                 </div>
 
                 {/* Right Panel - Black Contact Information */}
-                <div className="bg-black p-6 md:p-8 text-white">
+                <div className="bg-black p-5 md:p-6 text-white contact-information-panel">
                   <h3
                     className="text-xl md:text-2xl font-bold mb-6 text-center"
                     style={{
-                      fontFamily: "'Poppins', sans-serif",
+                      fontFamily: "'Value Serif Pro Bold', serif",
                       fontWeight: 700,
                       color: "#FFFFFF",
                       letterSpacing: "-0.02em"
@@ -597,7 +900,7 @@ const ContactOCL = () => {
                         <p
                           className="text-base leading-relaxed"
                           style={{
-                            fontFamily: "'Inter', sans-serif",
+                            fontFamily: "'Value Serif Pro Regular', serif",
                             fontWeight: 400,
                             color: "#E0E0E0",
                             lineHeight: "1.6"
@@ -618,12 +921,12 @@ const ContactOCL = () => {
                         <a
                           href="tel:+918453994809"
                           className="text-base transition-colors hover:opacity-80"
-                  style={{
-                            fontFamily: "'Inter', sans-serif",
+                          style={{
+                            fontFamily: "'Value Serif Pro Regular', serif",
                             fontWeight: 400,
                             color: "#E0E0E0"
-                  }}
-                >
+                          }}
+                        >
                           +91 8453994809
                         </a>
                 </div>
@@ -638,8 +941,8 @@ const ContactOCL = () => {
                         <a
                           href="mailto:info@oclservices.com"
                           className="text-base transition-colors hover:opacity-80"
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
+                          style={{
+                            fontFamily: "'Value Serif Pro Regular', serif",
                             fontWeight: 400,
                             color: "#E0E0E0"
                           }}
@@ -660,9 +963,9 @@ const ContactOCL = () => {
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-base transition-colors hover:opacity-80"
-                  style={{
-                    fontFamily: "'Inter', sans-serif",
-                    fontWeight: 400,
+                          style={{
+                            fontFamily: "'Value Serif Pro Regular', serif",
+                            fontWeight: 400,
                             color: "#E0E0E0"
                           }}
                         >
@@ -676,9 +979,9 @@ const ContactOCL = () => {
                   <div>
                     <p
                       className="text-sm mb-4"
-                style={{
-                  fontFamily: "'Inter', sans-serif",
-                  fontWeight: 500,
+                      style={{
+                        fontFamily: "'Value Serif Pro Regular', serif",
+                        fontWeight: 500,
                         color: "#B0B0B0"
                       }}
                     >
@@ -713,7 +1016,7 @@ const ContactOCL = () => {
                         <img src={twitterIcon} alt="Twitter" className="w-8 h-8" />
                       </a>
                       <a
-                        href="https://www.facebook.com/oclservices"
+                        href="https://facebook.com/oclcourier"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
@@ -740,20 +1043,22 @@ const ContactOCL = () => {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="text-center"
+          className="text-center hidden md:block"
         >
           <div
-            className="rounded-2xl p-10 bg-white"
+            className="rounded-2xl p-10 bg-cover bg-center bg-no-repeat"
             style={{
-              boxShadow: "rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px"
+              boxShadow: "rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px",
+              backgroundImage: `url(${supportCenterImg})`
             }}
           >
             <h3
               className="text-2xl md:text-3xl font-bold mb-4"
               style={{
-                fontFamily: "'Poppins', sans-serif",
+                fontFamily: "'Value Serif Pro Bold', serif",
                 fontWeight: 700,
-                color: "#0C1B33"
+                color: "#FFFFFF",
+                textShadow: "0 3px 10px rgba(0, 0, 0, 0.6)"
               }}
             >
               Need Immediate Assistance?
@@ -761,10 +1066,11 @@ const ContactOCL = () => {
             <p
               className="text-base mb-8 max-w-2xl mx-auto"
               style={{
-                fontFamily: "'Inter', sans-serif",
+                fontFamily: "'Value Serif Pro Regular', serif",
                 fontWeight: 400,
-                color: "#5A5A5A",
-                lineHeight: "1.6"
+                color: "#F5F5F5",
+                lineHeight: "1.6",
+                textShadow: "0 2px 8px rgba(0, 0, 0, 0.6)"
               }}
             >
               For immediate support, you can also track your shipments, schedule pickups, or access our help center
@@ -774,7 +1080,7 @@ const ContactOCL = () => {
                 onClick={() => window.location.href = '/track'}
                 className="button-86"
                 style={{
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Value Serif Pro Regular', serif",
                   fontWeight: 600
                 }}
               >
@@ -784,7 +1090,7 @@ const ContactOCL = () => {
                 onClick={() => window.location.href = '/schedule-pickup'}
                 className="button-86 button-86-orange"
                 style={{
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Value Serif Pro Regular', serif",
                   fontWeight: 600
                 }}
               >
@@ -794,7 +1100,7 @@ const ContactOCL = () => {
                 onClick={() => window.location.href = '/support/write'}
                 className="button-86"
                 style={{
-                  fontFamily: "'Inter', sans-serif",
+                  fontFamily: "'Value Serif Pro Regular', serif",
                   fontWeight: 600
                 }}
               >

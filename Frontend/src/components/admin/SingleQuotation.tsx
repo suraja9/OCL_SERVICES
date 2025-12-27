@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Send, FileText, Plus, Trash2 } from 'lucide-react';
+import { Loader2, Send, FileText, Trash2 } from 'lucide-react';
 
 interface AdditionalCharge {
   id: string;
@@ -29,6 +28,7 @@ interface QuotationFormData {
 const SingleQuotation = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [focusedFields, setFocusedFields] = useState<Set<string>>(new Set());
   const [formData, setFormData] = useState<QuotationFormData>({
     customerName: '',
     customerEmail: '',
@@ -36,8 +36,8 @@ const SingleQuotation = () => {
     origin: '',
     destination: '',
     weight: '',
-    ratePerKg: '45',
-    gstRate: '18',
+    ratePerKg: '',
+    gstRate: '',
     additionalCharges: []
   });
 
@@ -46,6 +46,24 @@ const SingleQuotation = () => {
       ...prev,
       [field]: value
     }));
+  };
+
+  const handleFocus = (field: string) => {
+    setFocusedFields(prev => new Set(prev).add(field));
+  };
+
+  const handleBlur = (field: string, value: string) => {
+    if (!value) {
+      setFocusedFields(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(field);
+        return newSet;
+      });
+    }
+  };
+
+  const isFloating = (field: string, value: string) => {
+    return focusedFields.has(field) || !!value;
   };
 
   const addAdditionalCharge = () => {
@@ -140,10 +158,11 @@ const SingleQuotation = () => {
           origin: '',
           destination: '',
           weight: '',
-          ratePerKg: '45',
-          gstRate: '18',
+          ratePerKg: '',
+          gstRate: '',
           additionalCharges: []
         });
+        setFocusedFields(new Set());
       } else {
         throw new Error(result.error || 'Failed to generate quotation');
       }
@@ -164,61 +183,104 @@ const SingleQuotation = () => {
   return (
     <div className="max-w-5xl mx-auto p-2 sm:p-4">
       <Card className="bg-white/95 backdrop-blur-sm shadow-xl border-0 rounded-2xl overflow-hidden">
-        <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 sm:p-6">
-          <CardTitle className="text-lg sm:text-xl font-bold flex items-center gap-2 sm:gap-3">
-            <div className="p-1.5 sm:p-2 bg-white/20 rounded-lg">
-              <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
-            </div>
+        <CardHeader className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-2.5 sm:p-3">
+          <CardTitle className="text-base sm:text-lg font-bold flex items-center gap-1.5 sm:gap-2">
+            <FileText className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             <span className="text-sm sm:text-base">Quick Quotation Generator</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-4 sm:p-6">
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
             {/* Customer & Service Info - Mobile Optimized */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="customerName" className="text-xs sm:text-sm font-medium text-gray-700">Customer Name *</Label>
+            {/* First Row: Customer Name and Email */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="relative">
+                <label
+                  htmlFor="customerName"
+                  className={`absolute left-3 transition-all duration-200 pointer-events-none z-10 ${
+                    isFloating('customerName', formData.customerName)
+                      ? 'top-0 text-xs text-gray-400 bg-white px-1 -translate-y-1/2'
+                      : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
+                  }`}
+                >
+                  Customer Name <span className="text-red-500">*</span>
+                </label>
                 <Input
                   id="customerName"
                   value={formData.customerName}
                   onChange={(e) => handleInputChange('customerName', e.target.value)}
-                  placeholder="Customer name"
-                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  onFocus={() => handleFocus('customerName')}
+                  onBlur={() => handleBlur('customerName', formData.customerName)}
+                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 pt-4"
                   required
                 />
               </div>
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="customerEmail" className="text-xs sm:text-sm font-medium text-gray-700">Email *</Label>
+              <div className="relative">
+                <label
+                  htmlFor="customerEmail"
+                  className={`absolute left-3 transition-all duration-200 pointer-events-none z-10 ${
+                    isFloating('customerEmail', formData.customerEmail)
+                      ? 'top-0 text-xs text-gray-400 bg-white px-1 -translate-y-1/2'
+                      : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
+                  }`}
+                >
+                  Email <span className="text-red-500">*</span>
+                </label>
                 <Input
                   id="customerEmail"
                   type="email"
                   value={formData.customerEmail}
                   onChange={(e) => handleInputChange('customerEmail', e.target.value)}
-                  placeholder="email@example.com"
-                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  onFocus={() => handleFocus('customerEmail')}
+                  onBlur={() => handleBlur('customerEmail', formData.customerEmail)}
+                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 pt-4"
                   required
                 />
               </div>
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="customerPhone" className="text-xs sm:text-sm font-medium text-gray-700">Phone</Label>
+            </div>
+
+            {/* Second Row: Phone and Weight */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div className="relative">
+                <label
+                  htmlFor="customerPhone"
+                  className={`absolute left-3 transition-all duration-200 pointer-events-none z-10 ${
+                    isFloating('customerPhone', formData.customerPhone)
+                      ? 'top-0 text-xs text-gray-400 bg-white px-1 -translate-y-1/2'
+                      : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
+                  }`}
+                >
+                  Phone
+                </label>
                 <Input
                   id="customerPhone"
                   value={formData.customerPhone}
                   onChange={(e) => handleInputChange('customerPhone', e.target.value)}
-                  placeholder="+91 9876543210"
-                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  onFocus={() => handleFocus('customerPhone')}
+                  onBlur={() => handleBlur('customerPhone', formData.customerPhone)}
+                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 pt-4"
                 />
               </div>
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="weight" className="text-xs sm:text-sm font-medium text-gray-700">Weight (kg) *</Label>
+              <div className="relative">
+                <label
+                  htmlFor="weight"
+                  className={`absolute left-3 transition-all duration-200 pointer-events-none z-10 ${
+                    isFloating('weight', formData.weight)
+                      ? 'top-0 text-xs text-gray-400 bg-white px-1 -translate-y-1/2'
+                      : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
+                  }`}
+                >
+                  Weight (kg) <span className="text-red-500">*</span>
+                </label>
                 <Input
                   id="weight"
                   type="number"
                   step="0.1"
                   value={formData.weight}
                   onChange={(e) => handleInputChange('weight', e.target.value)}
-                  placeholder="0.0"
-                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  onFocus={() => handleFocus('weight')}
+                  onBlur={() => handleBlur('weight', formData.weight)}
+                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 pt-4"
                   required
                 />
               </div>
@@ -226,25 +288,45 @@ const SingleQuotation = () => {
 
             {/* Origin & Destination - Mobile Optimized */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="origin" className="text-xs sm:text-sm font-medium text-gray-700">Origin *</Label>
+              <div className="relative">
+                <label
+                  htmlFor="origin"
+                  className={`absolute left-3 transition-all duration-200 pointer-events-none z-10 ${
+                    isFloating('origin', formData.origin)
+                      ? 'top-0 text-xs text-gray-400 bg-white px-1 -translate-y-1/2'
+                      : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
+                  }`}
+                >
+                  Origin <span className="text-red-500">*</span>
+                </label>
                 <Input
                   id="origin"
                   value={formData.origin}
                   onChange={(e) => handleInputChange('origin', e.target.value)}
-                  placeholder="e.g., Guwahati"
-                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  onFocus={() => handleFocus('origin')}
+                  onBlur={() => handleBlur('origin', formData.origin)}
+                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 pt-4"
                   required
                 />
               </div>
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="destination" className="text-xs sm:text-sm font-medium text-gray-700">Destination *</Label>
+              <div className="relative">
+                <label
+                  htmlFor="destination"
+                  className={`absolute left-3 transition-all duration-200 pointer-events-none z-10 ${
+                    isFloating('destination', formData.destination)
+                      ? 'top-0 text-xs text-gray-400 bg-white px-1 -translate-y-1/2'
+                      : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
+                  }`}
+                >
+                  Destination <span className="text-red-500">*</span>
+                </label>
                 <Input
                   id="destination"
                   value={formData.destination}
                   onChange={(e) => handleInputChange('destination', e.target.value)}
-                  placeholder="e.g., Amravati, Hyderabad"
-                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                  onFocus={() => handleFocus('destination')}
+                  onBlur={() => handleBlur('destination', formData.destination)}
+                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 pt-4"
                   required
                 />
               </div>
@@ -252,77 +334,135 @@ const SingleQuotation = () => {
 
             {/* Pricing - Mobile Optimized */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="ratePerKg" className="text-xs sm:text-sm font-medium text-gray-700">Rate/kg (₹)</Label>
-                <Input
-                  id="ratePerKg"
-                  type="number"
-                  step="0.01"
-                  value={formData.ratePerKg}
-                  onChange={(e) => handleInputChange('ratePerKg', e.target.value)}
-                  placeholder="45.00"
-                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                />
+              <div className="relative">
+                <label
+                  htmlFor="ratePerKg"
+                  className={`absolute left-3 transition-all duration-200 pointer-events-none z-10 ${
+                    isFloating('ratePerKg', formData.ratePerKg)
+                      ? 'top-0 text-xs text-gray-400 bg-white px-1 -translate-y-1/2'
+                      : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
+                  }`}
+                >
+                  Rate/kg (₹)
+                </label>
+                <div className="relative">
+                  <Input
+                    id="ratePerKg"
+                    type="number"
+                    step="0.01"
+                    value={formData.ratePerKg}
+                    onChange={(e) => handleInputChange('ratePerKg', e.target.value)}
+                    onFocus={() => handleFocus('ratePerKg')}
+                    onBlur={() => handleBlur('ratePerKg', formData.ratePerKg)}
+                    className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 pt-4 pr-12 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  />
+                  {isFloating('ratePerKg', formData.ratePerKg) && (
+                    <span className="absolute right-3 text-sm text-gray-400 pointer-events-none z-10" style={{ top: '1rem', lineHeight: '1.25rem' }}>
+                      .00
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="space-y-1.5 sm:space-y-2">
-                <Label htmlFor="gstRate" className="text-xs sm:text-sm font-medium text-gray-700">GST (%)</Label>
-                <Input
-                  id="gstRate"
-                  type="number"
-                  step="0.01"
+              <div className="relative">
+                <label
+                  htmlFor="gstRate"
+                  className={`absolute left-3 transition-all duration-200 pointer-events-none z-10 ${
+                    isFloating('gstRate', formData.gstRate)
+                      ? 'top-0 text-xs text-gray-400 bg-white px-1 -translate-y-1/2'
+                      : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
+                  }`}
+                >
+                  GST (%)
+                </label>
+                <Select
                   value={formData.gstRate}
-                  onChange={(e) => handleInputChange('gstRate', e.target.value)}
-                  placeholder="18.00"
-                  className="h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
-                />
+                  onValueChange={(value) => {
+                    handleInputChange('gstRate', value);
+                    handleFocus('gstRate');
+                  }}
+                  onOpenChange={(open) => {
+                    if (open) {
+                      handleFocus('gstRate');
+                    } else if (!formData.gstRate) {
+                      handleBlur('gstRate', formData.gstRate);
+                    }
+                  }}
+                >
+                  <SelectTrigger
+                    id="gstRate"
+                    className={`h-11 sm:h-10 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 ${
+                      isFloating('gstRate', formData.gstRate) ? 'pt-4' : ''
+                    }`}
+                  >
+                    <SelectValue placeholder="" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">0%</SelectItem>
+                    <SelectItem value="18">18%</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             {/* Additional Charges Section */}
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-gray-700">Additional Charges</h3>
+              <div>
                 <Button
                   type="button"
                   onClick={addAdditionalCharge}
-                  className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 h-8 text-xs font-medium shadow-sm"
+                  className="bg-green-600 hover:bg-green-700 text-white px-2 py-0.5 h-4 text-xs font-medium shadow-sm"
                 >
-                  <Plus className="h-3 w-3 mr-1" />
                   Add Charge
                 </Button>
               </div>
               
               {formData.additionalCharges.map((charge, index) => (
-                <div key={charge.id} className="grid grid-cols-3 gap-3 items-end">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-gray-600">Description</Label>
+                <div key={charge.id} className="flex items-center gap-3 w-full">
+                  <div className="relative flex-1">
+                    <label
+                      className={`absolute left-3 transition-all duration-200 pointer-events-none z-10 ${
+                        isFloating(`charge-desc-${charge.id}`, charge.description)
+                          ? 'top-0 text-xs text-gray-400 bg-white px-1 -translate-y-1/2'
+                          : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
+                      }`}
+                    >
+                      Description
+                    </label>
                     <Input
                       value={charge.description}
                       onChange={(e) => updateAdditionalCharge(charge.id, 'description', e.target.value)}
-                      placeholder="e.g., Fuel surcharge, Insurance"
-                      className="h-8 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                      onFocus={() => handleFocus(`charge-desc-${charge.id}`)}
+                      onBlur={() => handleBlur(`charge-desc-${charge.id}`, charge.description)}
+                      className="h-8 w-full text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 pt-3"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-medium text-gray-600">Amount (₹)</Label>
+                  <div className="relative flex-1">
+                    <label
+                      className={`absolute left-3 transition-all duration-200 pointer-events-none z-10 ${
+                        isFloating(`charge-amount-${charge.id}`, charge.amount)
+                          ? 'top-0 text-xs text-gray-400 bg-white px-1 -translate-y-1/2'
+                          : 'top-1/2 -translate-y-1/2 text-sm text-gray-400'
+                      }`}
+                    >
+                      Amount (₹)
+                    </label>
                     <Input
                       type="number"
                       step="0.01"
                       value={charge.amount}
                       onChange={(e) => updateAdditionalCharge(charge.id, 'amount', e.target.value)}
-                      placeholder="0.00"
-                      className="h-8 text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200"
+                      onFocus={() => handleFocus(`charge-amount-${charge.id}`)}
+                      onBlur={() => handleBlur(`charge-amount-${charge.id}`, charge.amount)}
+                      className="h-8 w-full text-sm shadow-sm border-gray-200 focus:border-blue-500 focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 transition-all duration-200 pt-3"
                     />
                   </div>
-                  <div className="flex justify-end">
-                    <Button
-                      type="button"
-                      onClick={() => removeAdditionalCharge(charge.id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 h-8 text-xs"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeAdditionalCharge(charge.id)}
+                    className="text-red-500 hover:text-red-700 cursor-pointer p-1 transition-colors flex-shrink-0"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -331,54 +471,38 @@ const SingleQuotation = () => {
             {formData.weight && (
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-xl shadow-sm border border-green-100">
                 <div className="space-y-2">
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-gray-600">Base Amount</span>
-                    </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-600">Base Amount</span>
                     <span className="font-semibold text-gray-800">₹{calculations.baseAmount}</span>
                   </div>
                   
                   {formData.additionalCharges.length > 0 && (
                     <>
                       {formData.additionalCharges.map((charge, index) => (
-                        <div key={charge.id} className="flex justify-between items-center text-sm">
-                          <div className="flex items-center gap-2">
-                            <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                            <span className="text-gray-600">{charge.description || `Charge ${index + 1}`}</span>
-                          </div>
-                          <span className="font-semibold text-gray-800">₹{parseFloat(charge.amount || '0').toFixed(2)}</span>
+                        <div key={charge.id} className="flex items-center text-xs">
+                          <span className="text-gray-600">Charge {index + 1}:</span>
                         </div>
                       ))}
-                      <div className="flex justify-between items-center text-sm">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                          <span className="text-gray-600">Additional Charges Total</span>
-                        </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-600">Additional Charges Total</span>
                         <span className="font-semibold text-gray-800">₹{calculations.additionalChargesTotal}</span>
                       </div>
-                      <div className="flex justify-between items-center text-sm border-t border-green-200 pt-2">
-                        <div className="flex items-center gap-2">
-                          <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
-                          <span className="text-gray-600">Subtotal</span>
-                        </div>
+                      <div className="flex justify-between items-center text-xs border-t border-green-200 pt-2">
+                        <span className="text-gray-600">Subtotal</span>
                         <span className="font-semibold text-gray-800">₹{calculations.subtotal}</span>
                       </div>
                     </>
                   )}
                   
-                  <div className="flex justify-between items-center text-sm">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <span className="text-gray-600">GST ({formData.gstRate}%)</span>
-                    </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-600">GST ({formData.gstRate}%)</span>
                     <span className="font-semibold text-gray-800">₹{calculations.gstAmount}</span>
                   </div>
                   
                   <div className="border-t border-green-200 mt-3 pt-3">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-lg text-gray-800">Total Amount</span>
-                      <span className="font-bold text-xl text-green-600">₹{calculations.totalAmount}</span>
+                      <span className="font-bold text-base text-gray-800">Total Amount</span>
+                      <span className="font-bold text-base text-green-600">₹{calculations.totalAmount}</span>
                     </div>
                   </div>
                 </div>

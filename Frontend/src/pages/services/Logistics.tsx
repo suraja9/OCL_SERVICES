@@ -136,10 +136,10 @@ const Logistics = () => {
             }}
           />
           
-          <div className="container mx-auto px-4 relative z-10 flex items-center justify-center min-h-[80vh]">
-            <div ref={titleAnimation.ref} className={`text-center transition-all duration-700 ${titleAnimation.className}`}>
+          <div className="container mx-auto px-4 relative z-10 flex flex-col items-center justify-center min-h-[60vh] md:min-h-[80vh]">
+            <div ref={titleAnimation.ref} className={`text-center transition-all duration-700 ${titleAnimation.className} flex flex-col h-full`}>
               <motion.h1 
-                className="text-5xl md:text-7xl lg:text-8xl font-bold text-white mb-6 leading-tight"
+                className="text-[30px] md:text-[60px] font-bold text-white mb-16 md:mb-6 leading-tight whitespace-nowrap px-2"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
@@ -147,7 +147,7 @@ const Logistics = () => {
                 Logistics Solutions
               </motion.h1>
               <motion.p 
-                className="text-lg md:text-xl text-white/90 max-w-3xl mx-auto mb-10 leading-relaxed"
+                className="hidden md:block text-lg md:text-xl text-white/90 max-w-3xl mx-auto mb-10 leading-relaxed"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
@@ -157,7 +157,7 @@ const Logistics = () => {
               </motion.p>
               
               <motion.div 
-                className="flex flex-wrap justify-center gap-4"
+                className="flex flex-col md:flex-row md:flex-wrap justify-center gap-4 mt-auto pb-4 md:pb-0"
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.6 }}
@@ -172,7 +172,7 @@ const Logistics = () => {
                   <Link to="/enquiry">
                     <Button 
                       size="lg" 
-                      className="px-8 py-6 text-base font-semibold bg-[#FDA11E] text-white hover:bg-white hover:text-black rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-[#FDA11E] hover:border-white"
+                      className="px-6 py-4 md:px-8 md:py-6 text-sm md:text-base font-semibold bg-[#FDA11E]/80 md:bg-[#FDA11E] text-white hover:bg-white hover:text-black rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-[#FDA11E]/80 md:border-[#FDA11E] hover:border-white backdrop-blur-sm"
                     >
                       Get Custom Quote
                     </Button>
@@ -190,7 +190,7 @@ const Logistics = () => {
                     <Button 
                       variant="outline" 
                       size="lg" 
-                      className="px-8 py-6 text-base font-semibold bg-white text-black hover:bg-[#FA9D17] hover:text-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-white hover:border-[#FA9D17]"
+                      className="px-6 py-4 md:px-8 md:py-6 text-sm md:text-base font-semibold bg-white/20 md:bg-white text-white md:text-black hover:bg-[#FA9D17] hover:text-white rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl border-2 border-white/80 md:border-white hover:border-[#FA9D17] backdrop-blur-sm"
                     >
                       Contact Expert
                     </Button>
@@ -217,7 +217,7 @@ const Logistics = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="font-bold mb-4" style={{ fontWeight: 600, color: "#1a1a1a", fontSize: "48px" }}>
+              <h2 className="font-bold mb-4" style={{ fontWeight: 600, color: "#1a1a1a", fontSize: "30px" }}>
                 <span style={{ color: "#FFA019" }}>Our</span> Logistics Services
               </h2>
               
@@ -312,14 +312,14 @@ const Logistics = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="font-bold mb-3" style={{ fontWeight: 600, color: "#ffffff", fontSize: "48px" }}>
+              <h2 className="font-bold mb-3" style={{ fontWeight: 600, color: "#ffffff", fontSize: "30px" }}>
                 Industries <span style={{ color: "#FFA019" }}>We Serve</span>
               </h2>
               
             </motion.div>
 
             <div className="relative overflow-x-hidden py-2" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-              <div className="flex justify-center items-center w-full min-h-[120px]">
+              <div className="flex justify-center items-center w-full min-h-[70px] sm:min-h-[100px]">
                 <div 
                   className="flex gap-5"
                   style={{
@@ -334,30 +334,15 @@ const Logistics = () => {
                     return (
                     <motion.div
                       key={`${industry.name}-${index}`}
-                      className="flex-shrink-0 w-[300px] sm:w-[320px] md:w-[360px]"
+                      className="flex-shrink-0 w-[200px] sm:w-[320px] md:w-[360px]"
                       onHoverStart={() => setIsHovered(true)}
                       onHoverEnd={() => setIsHovered(false)}
                     >
-                      <motion.div
-                        className="relative"
-                        style={{
-                          transformOrigin: "center center",
-                        }}
-                        initial="rest"
-                        whileHover="hover"
-                        variants={{
-                          rest: { 
-                            scale: 1,
-                          },
-                          hover: { 
-                            scale: 1.05,
-                            zIndex: 5,
-                            transition: { duration: 0.4, ease: "easeInOut" }
-                          }
-                        }}
+                      <div
+                        className="relative industry-card-container"
                       >
-                        <motion.div
-                          className="industry-card bg-white rounded-none relative overflow-hidden cursor-pointer h-[120px]"
+                        <div
+                          className={`industry-card rounded-none relative overflow-hidden cursor-pointer h-[120px] sm:h-[100px] ${index % 2 === 0 ? 'bg-white industry-card-white' : 'bg-[#FDA11E] industry-card-orange'}`}
                           style={{
                             borderRadius: "0",
                             padding: "24px",
@@ -367,54 +352,34 @@ const Logistics = () => {
                           }}
                         >
                           {/* Title on the left */}
-                          <motion.div 
-                            className="flex-1 z-10"
-                            variants={{
-                              rest: { opacity: 1 },
-                              hover: { opacity: 0, transition: { duration: 0.3 } }
-                            }}
-                          >
+                          <div className="flex-1 z-10 industry-title">
                             <h3 
-                              className="font-bold text-lg md:text-xl"
-                              style={{ color: "#1a1a1a" }}
+                              className={`font-bold text-sm sm:text-lg md:text-xl ${index % 2 === 0 ? 'text-[#1a1a1a]' : 'text-white'}`}
                             >
                               {industry.name}
                             </h3>
-                          </motion.div>
+                          </div>
 
                           {/* Icon on the right */}
-                          <motion.div 
-                            className="z-10 ml-4"
-                            variants={{
-                              rest: { opacity: 1, scale: 1 },
-                              hover: { opacity: 0, scale: 0.8, transition: { duration: 0.3 } }
-                            }}
-                          >
+                          <div className="z-10 ml-2 sm:ml-4 industry-icon-container">
                             <IconComponent 
-                              className="w-12 h-12"
-                              style={{ color: "#FDA11E" }}
+                              className="w-8 h-8 sm:w-12 sm:h-12 industry-icon"
+                              style={{ color: index % 2 === 0 ? "#FDA11E" : "#000000" }}
                             />
-                          </motion.div>
+                          </div>
 
                           {/* Description overlay on hover */}
-                          <motion.div
-                            className="absolute inset-0 z-20 flex items-center justify-center p-6"
-                            variants={{
-                              rest: { 
-                                opacity: 0,
-                              },
-                              hover: { 
-                                opacity: 1,
-                                transition: { duration: 0.4, ease: "easeInOut" }
-                              }
-                            }}
+                          <div
+                            className="absolute inset-0 z-20 flex items-center justify-center p-6 industry-overlay"
                             style={{
                               background: "rgba(253, 161, 30, 0.95)",
                               borderRadius: "0",
+                              opacity: 0,
+                              transition: "opacity 0.4s ease-in-out",
                             }}
                           >
                             <p 
-                              className="leading-relaxed text-center"
+                              className="leading-relaxed text-center industry-overlay-text"
                               style={{
                                 fontSize: "16px",
                                 fontWeight: 500,
@@ -426,9 +391,9 @@ const Logistics = () => {
                             >
                               {industry.hoverDescription}
                             </p>
-                          </motion.div>
-                        </motion.div>
-                      </motion.div>
+                          </div>
+                        </div>
+                      </div>
                     </motion.div>
                     );
                   })}
@@ -446,8 +411,50 @@ const Logistics = () => {
               }
               @media (max-width: 640px) {
                 .industry-card {
+                  height: 70px !important;
+                  padding: 12px !important;
+                }
+                .flex.justify-center.items-center.w-full {
+                  min-height: 70px !important;
+                }
+              }
+              @media (min-width: 641px) {
+                .industry-card {
                   height: 100px !important;
-                  padding: 16px !important;
+                }
+                /* Smooth hover overlay without any movement */
+                .industry-card-container {
+                  transform: none !important;
+                }
+                .industry-card-container:hover .industry-overlay {
+                  opacity: 1 !important;
+                }
+                .industry-card-container:hover .industry-title,
+                .industry-card-container:hover .industry-icon-container {
+                  opacity: 0 !important;
+                  transition: opacity 0.3s ease;
+                }
+                .industry-title,
+                .industry-icon-container {
+                  transition: opacity 0.3s ease;
+                }
+                /* Reduce font size of hover description on desktop */
+                .industry-overlay-text {
+                  font-size: 14px !important;
+                }
+                /* Orange cards: white background and black text on hover */
+                .industry-card-orange:hover .industry-overlay {
+                  background: #ffffff !important;
+                }
+                .industry-card-orange:hover .industry-overlay-text {
+                  color: #000000 !important;
+                }
+                /* White cards: keep orange background and white text on hover */
+                .industry-card-white:hover .industry-overlay {
+                  background: rgba(253, 161, 30, 0.95) !important;
+                }
+                .industry-card-white:hover .industry-overlay-text {
+                  color: #FFFFFF !important;
                 }
               }
               /* Hide scrollbars */
@@ -477,7 +484,7 @@ const Logistics = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="font-bold mb-4" style={{ fontWeight: 600, color: "#111111", fontSize: "48px" }}>
+              <h2 className="font-bold mb-4" style={{ fontWeight: 600, color: "#111111", fontSize: "30px" }}>
                 <span style={{ color: "#FFA019" }}>Our</span> Process
               </h2>
               
@@ -492,9 +499,9 @@ const Logistics = () => {
               />
             </motion.div>
 
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-7xl mx-auto px-4">
               <div className="relative flex justify-center">
-                <div className="flex flex-col md:flex-row gap-10 items-center md:items-start">
+                <div className="grid grid-cols-2 md:flex md:flex-row gap-6 md:gap-10 justify-center md:items-start">
                   {process.map((step, index) => {
                     const IconComponent = step.icon;
                     return (
@@ -504,17 +511,16 @@ const Logistics = () => {
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                         transition={{ duration: 0.6, delay: index * 0.1, ease: "easeOut" }}
-                        className="relative flex-shrink-0"
-                        style={{ width: "230px" }}
+                        className="relative flex-shrink-0 justify-self-center process-step-wrapper"
                       >
                         {/* Colored background layer - offset diagonally */}
                         <div
-                          className="absolute rounded-none z-0"
+                          className="absolute rounded-xl z-0 process-card-bg"
                           style={{
-                            width: "230px",
+                            width: "100%",
                             height: "210px",
-                            background: step.color,
-                            borderRadius: "0",
+                            background: "#5a5a5a",
+                            borderRadius: "12px",
                             top: "8px",
                             left: "8px",
                           }}
@@ -522,11 +528,11 @@ const Logistics = () => {
                         
                         {/* White card */}
                         <div 
-                          className="relative bg-white rounded-none cursor-pointer transition-all duration-300"
+                          className="relative bg-white rounded-xl cursor-pointer transition-all duration-300 process-card"
                           style={{
-                            width: "230px",
+                            width: "100%",
                             height: "210px",
-                            borderRadius: "0",
+                            borderRadius: "12px",
                             boxShadow: "rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px",
                             padding: "20px 18px 60px 18px",
                             display: "flex",
@@ -587,7 +593,7 @@ const Logistics = () => {
                               height: "65px",
                               background: step.color,
                               clipPath: "polygon(100% 0, 100% 100%, 0 0)",
-                              borderTopRightRadius: "0",
+                              borderTopRightRadius: "12px",
                               display: "flex",
                               flexDirection: "column",
                               justifyContent: "flex-start",
@@ -640,18 +646,7 @@ const Logistics = () => {
                           />
                         )}
                         
-                        {/* Connector line for mobile - vertical */}
-                        {index < process.length - 1 && (
-                          <div 
-                            className="md:hidden absolute top-full left-1/2 z-10"
-                            style={{
-                              background: "#E5E5E5",
-                              transform: "translateX(-50%)",
-                              width: "2px",
-                              height: "40px",
-                            }}
-                          />
-                        )}
+                        {/* Connector line for mobile - removed since cards are in rows now */}
                     </motion.div>
                     );
                   })}
@@ -659,6 +654,103 @@ const Logistics = () => {
               </div>
             </div>
           </div>
+          <style>{`
+            @media (max-width: 767px) {
+              .process-step-wrapper {
+                width: 100%;
+              }
+              .process-card,
+              .process-card-bg {
+                width: 100% !important;
+                border-radius: 12px !important;
+              }
+              .process-card {
+                height: 150px !important;
+                padding: 12px 10px 40px 10px !important;
+              }
+              .process-card-bg {
+                height: 150px !important;
+                top: 5px !important;
+                left: 5px !important;
+              }
+              .process-card .flex.justify-center {
+                margin-bottom: 8px !important;
+              }
+              .process-card .flex.justify-center svg {
+                width: 24px !important;
+                height: 24px !important;
+              }
+              .process-card h3 {
+                font-size: 0.875rem !important;
+                margin-bottom: 4px !important;
+              }
+              .process-card p {
+                font-size: 0.7rem !important;
+                margin-bottom: 8px !important;
+              }
+              .process-card .absolute.top-0.right-0 {
+                width: 45px !important;
+                height: 45px !important;
+                padding-top: 2px !important;
+                padding-right: 4px !important;
+                border-top-right-radius: 12px !important;
+              }
+              .process-card .absolute.top-0.right-0 span:first-child {
+                font-size: 8px !important;
+              }
+              .process-card .absolute.top-0.right-0 span:last-child {
+                font-size: 10px !important;
+              }
+            }
+            @media (min-width: 768px) {
+              .process-step-wrapper {
+                width: 230px !important;
+                max-width: 230px !important;
+                flex-shrink: 0 !important;
+              }
+              .process-card,
+              .process-card-bg {
+                width: 230px !important;
+                height: 210px !important;
+                border-radius: 12px !important;
+              }
+              .process-card {
+                padding: 20px 18px 60px 18px !important;
+              }
+              .process-card-bg {
+                top: 8px !important;
+                left: 8px !important;
+              }
+              .process-card .flex.justify-center {
+                margin-bottom: 12px !important;
+              }
+              .process-card .flex.justify-center svg {
+                width: 40px !important;
+                height: 40px !important;
+              }
+              .process-card h3 {
+                font-size: 1.2rem !important;
+                margin-bottom: 8px !important;
+              }
+              .process-card p {
+                font-size: 0.9rem !important;
+                margin-bottom: 16px !important;
+              }
+              .process-card .absolute.top-0.right-0 {
+                width: 65px !important;
+                height: 65px !important;
+                padding-top: 4px !important;
+                padding-right: 6px !important;
+                border-top-right-radius: 12px !important;
+              }
+              .process-card .absolute.top-0.right-0 span:first-child {
+                font-size: 10px !important;
+              }
+              .process-card .absolute.top-0.right-0 span:last-child {
+                font-size: 12px !important;
+              }
+            }
+          `}</style>
         </section>
 
       </main>
