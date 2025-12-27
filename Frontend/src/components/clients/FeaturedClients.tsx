@@ -42,14 +42,12 @@ const FeaturedClients = ({ clients }: FeaturedClientsProps) => {
       >
         <div className="flex items-center justify-center gap-2 mb-4">
           <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900">
+          <h2 className="text-3xl md:text-4xl font-bold text-white">
             Featured Partners
           </h2>
           <Star className="w-6 h-6 text-yellow-500 fill-yellow-500" />
         </div>
-        <p className="text-gray-600 max-w-2xl mx-auto text-lg">
-          Leading brands that trust OCL for their logistics needs
-        </p>
+        
       </motion.div>
 
       {/* Premium Partner Cards Grid - Small Square Cards */}

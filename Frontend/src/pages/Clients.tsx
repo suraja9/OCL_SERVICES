@@ -1,11 +1,14 @@
 import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
+import clientPageImage from "@/assets/client-page-1.png";
 import Footer from "@/components/Footer";
 import AnimatedCounter from "@/components/clients/AnimatedCounter";
 import LogoCloud from "@/components/clients/LogoCloud";
 import IndustryFilter from "@/components/clients/IndustryFilter";
 import FeaturedClients from "@/components/clients/FeaturedClients";
+import { Button } from "@/components/ui/button";
 import {
   featuredClients,
   industryClients,
@@ -149,9 +152,136 @@ const Clients = () => {
       </section>
 
       {/* 3. Featured Partners */}
-      <section className="pt-4 pb-16 md:pb-24 bg-white">
+      <section className="pt-4 pb-4 md:pb-6 bg-black">
         <div className="container mx-auto px-4 md:px-6 max-w-7xl">
           <FeaturedClients clients={featuredClients} />
+        </div>
+      </section>
+
+      {/* 4. Become a Featured Partner */}
+      <section className="pt-4 md:pt-6 pb-8 md:pb-12 bg-white">
+        <style>{`
+          .button-86 {
+            all: unset;
+            width: auto;
+            min-width: 200px;
+            height: auto;
+            font-size: 16px;
+            background: transparent;
+            border: none;
+            position: relative;
+            color: #f0f0f0;
+            cursor: pointer;
+            z-index: 1;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+            font-weight: 600;
+          }
+
+          .button-86::after,
+          .button-86::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            z-index: -99999;
+            transition: all .4s;
+          }
+
+          .button-86::before {
+            transform: translate(0%, 0%);
+            width: 100%;
+            height: 100%;
+            background: #28282d;
+            border-radius: 10px;
+          }
+
+          .button-86::after {
+            transform: translate(10px, 10px);
+            width: 35px;
+            height: 35px;
+            background: #ffffff15;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            border-radius: 50px;
+          }
+
+          .button-86:hover::before {
+            transform: translate(5%, 20%);
+            width: 110%;
+            height: 110%;
+            background: #FFA019;
+          }
+
+          .button-86:hover::after {
+            border-radius: 10px;
+            transform: translate(0, 0);
+            width: 100%;
+            height: 100%;
+          }
+
+          .button-86:active::after {
+            transition: 0s;
+            transform: translate(0, 5%);
+          }
+        `}</style>
+        <div className="container mx-auto px-10 md:px-6 max-w-[1200px]">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="relative p-10 md:p-12"
+          >
+            <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+              {/* Left Side - Text Content */}
+              <div className="text-center md:text-left md:-ml-10">
+                <h2 
+                  className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 tracking-tight"
+                  style={{ letterSpacing: '-0.02em' }}
+                >
+                  Become a Partner with <span style={{ color: '#FFA019' }}>OCL</span>
+                </h2>
+                <p 
+                  className="text-sm md:text-base text-gray-500 leading-relaxed mb-8 max-w-lg mx-auto md:mx-0"
+                  style={{ lineHeight: '1.75' }}
+                >
+                  Join India's growing logistics network. Long-term partner brands get featured here, gaining visibility across thousands of monthly visitors. Showcase your brand alongside leading companies that trust OCL.
+                </p>
+                <div className="flex flex-col items-center md:items-start gap-4">
+                  <Link to="/contact">
+                    <button className="button-86" role="button">
+                      Become a Featured Partner
+                    </button>
+                  </Link>
+                  
+                </div>
+              </div>
+
+              {/* Right Side - Image */}
+              <div className="relative flex justify-center md:justify-end">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  className="relative w-full max-w-md z-10"
+                >
+                  <img
+                    src={clientPageImage}
+                    alt="Featured Partner"
+                    className="w-full h-auto object-contain"
+                  />
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
         </div>
       </section>
 
