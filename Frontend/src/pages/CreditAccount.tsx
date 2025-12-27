@@ -290,13 +290,13 @@ const CreditAccount = () => {
 
       {/* Header Section */}
       <motion.section
-        className="relative w-full py-16 md:py-24 overflow-hidden"
+        className="relative w-full py-16 md:py-24 overflow-hidden flex items-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.8 }}
-        style={{ backgroundColor: '#000000' }}
+        style={{ backgroundColor: '#000000', minHeight: '40vh' }}
       >
-        <div className="container mx-auto px-4 md:px-6 relative z-10" style={{ maxWidth: '1400px' }}>
+        <div className="container mx-auto px-4 md:px-6 relative z-10 w-full" style={{ maxWidth: '1400px' }}>
           <motion.div
             className="text-center"
             initial={{ opacity: 0, y: 30 }}
@@ -304,7 +304,7 @@ const CreditAccount = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
           >
             <h1
-              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-6"
+              className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mb-0 md:mb-6"
               style={{ 
                 color: "#FFFFFF",
                 fontFamily: "'Value Serif Pro Bold', serif"
@@ -313,7 +313,7 @@ const CreditAccount = () => {
               Apply for <span style={{ color: "#FFA019" }}>Credit</span> Account
             </h1>
             <p
-              className="text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto"
+              className="hidden md:block text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto"
               style={{ 
                 color: "#E0E0E0",
                 fontFamily: "'Value Serif Pro Bold', serif" 
@@ -335,18 +335,47 @@ const CreditAccount = () => {
           transition={{ duration: 0.8, delay: 0.15 }}
           className="mb-24"
         >
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Title - Centered at Top */}
+          <motion.div
+            className="flex justify-center mb-6 md:mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            <motion.div
+              className="inline-block"
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 500, damping: 25 }}
+            >
+              <div 
+                className="flex items-center gap-2 px-3 py-1.5 credit-benefits-title-mobile"
+                style={{
+                  background: '#643B29',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  borderRadius: '0px'
+                }}
+              >
+                <Sparkles className="h-4 w-4 md:h-5 md:w-5" style={{ color: '#FDA11E' }} />
+                <h2 className="text-lg md:text-2xl font-normal" style={{ color: '#FFFFFF' }}>
+                  <span style={{ color: '#FFA019' }}>Credit</span> Account Benefits
+                </h2>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-12 items-center">
             {/* Left: Image Box with Layered Design */}
           <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative max-w-[90%] pr-4"
+              className="hidden lg:block relative max-w-full md:max-w-[90%] pr-2 md:pr-4 credit-benefits-image-mobile"
             >
               {/* Orange Offset Box Behind */}
               <div 
-                className="absolute -z-10"
+                className="absolute -z-10 credit-benefits-orange-box-mobile"
               style={{
                   width: '100%',
                   height: '100%',
@@ -369,7 +398,7 @@ const CreditAccount = () => {
                 <img 
                   src={applyCreditImage} 
                   alt="Credit Account Benefits" 
-                  className="w-full h-[320px] object-cover"
+                  className="w-full h-[200px] md:h-[320px] object-cover credit-benefits-img"
                 />
               </motion.div>
             </motion.div>
@@ -380,44 +409,25 @@ const CreditAccount = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="pl-4 pr-4"
+              className="w-full lg:pl-2 md:pl-4 pr-4 credit-benefits-content-mobile"
             >
-              <motion.div
-                className="inline-block mb-8"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 500, damping: 25 }}
-              >
-                <div 
-                  className="flex items-center gap-2 px-3 py-1.5"
-                  style={{
-                    background: '#643B29',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    borderRadius: '0px'
-                  }}
-                >
-                  <Sparkles className="h-5 w-5" style={{ color: '#FDA11E' }} />
-                  <h2 className="text-2xl font-normal" style={{ color: '#FFFFFF' }}>
-                    <span style={{ color: '#FFA019' }}>Credit</span> Account Benefits
-                  </h2>
-                </div>
-                </motion.div>
-              <div className="space-y-6">
+              <div className="space-y-3 md:space-y-6 w-full">
                   {benefits.map((benefit, index) => {
                     const IconComponent = benefit.icon;
                     return (
                       <motion.div 
                         key={index} 
-                      className="flex gap-4 items-start"
+                      className="flex gap-2 md:gap-4 items-center justify-center md:justify-start"
                         initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: 0.4 + index * 0.1 }}
                     >
-                      <div className="flex-shrink-0 mt-1">
-                        <IconComponent className="h-7 w-7" style={{ color: benefit.color }} />
+                      <div className="flex-shrink-0">
+                        <IconComponent className="h-4 w-4 md:h-5 md:w-5" style={{ color: benefit.color }} />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-normal mb-2 text-lg" style={{ color: '#111827' }}>
+                      <div>
+                        <h3 className="font-normal text-sm md:text-lg leading-tight text-center md:text-left" style={{ color: '#111827' }}>
                           {benefit.title.includes('Credit') ? (
                             <>
                               {benefit.title.split('Credit').map((part, idx, arr) => (
@@ -431,7 +441,6 @@ const CreditAccount = () => {
                             benefit.title
                           )}
                         </h3>
-                        <p className="text-base leading-relaxed font-normal" style={{ color: '#374151' }}>{benefit.description}</p>
                         </div>
                       </motion.div>
                     );
@@ -447,54 +456,63 @@ const CreditAccount = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true, margin: "-100px" }}
           transition={{ duration: 0.8, delay: 0.3 }}
-          className="mb-24"
+          className="mb-24 -mt-8 md:-mt-4"
         >
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          {/* Title - Centered at Top */}
+          <motion.div
+            className="flex justify-center mb-6 md:mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.45 }}
+          >
+            <motion.div
+              className="inline-block"
+              whileHover={{ scale: 1.02 }}
+              transition={{ type: "spring", stiffness: 500, damping: 25 }}
+            >
+              <div 
+                className="flex items-center gap-2 px-3 py-1.5 credit-benefits-title-mobile"
+                style={{
+                  background: '#643B29',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                  borderRadius: '0px'
+                }}
+              >
+                <FileText className="h-4 w-4 md:h-5 md:w-5" style={{ color: '#FDA11E' }} />
+                <h2 className="text-lg md:text-2xl font-normal" style={{ color: '#FFFFFF' }}>
+                  Required Documents
+                </h2>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-12 items-start lg:items-center">
             {/* Left: Content Text */}
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.45 }}
-              className="pl-4 pr-4"
+              className="w-full lg:pl-4 pr-4 credit-benefits-content-mobile flex items-center"
             >
-              <motion.div
-                className="inline-block mb-8"
-                whileHover={{ scale: 1.02 }}
-                transition={{ type: "spring", stiffness: 500, damping: 25 }}
-              >
-                <div 
-                  className="flex items-center gap-2 px-3 py-1.5"
-                style={{
-                    background: '#643B29',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    borderRadius: '0px'
-                  }}
-                >
-                  <FileText className="h-5 w-5" style={{ color: '#FDA11E' }} />
-                  <h2 className="text-2xl font-normal" style={{ color: '#FFFFFF' }}>
-                    Required Documents
-                  </h2>
-                </div>
-                </motion.div>
-              <div className="space-y-6">
+              <div className="space-y-3 md:space-y-6 w-full">
                 {requiredDocs.map((doc, index) => {
                   const IconComponent = doc.icon;
                   return (
                     <motion.div 
                       key={index}
-                      className="flex gap-4 items-start"
+                      className="flex gap-2 md:gap-4 items-center justify-center md:justify-start"
                       initial={{ opacity: 0, y: 20 }}
                       whileInView={{ opacity: 1, y: 0 }}
                       viewport={{ once: true }}
                       transition={{ duration: 0.5, delay: 0.55 + index * 0.1 }}
                     >
-                      <div className="flex-shrink-0 mt-1">
-                        <IconComponent className="h-7 w-7" style={{ color: doc.color }} />
+                      <div className="flex-shrink-0">
+                        <IconComponent className="h-4 w-4 md:h-5 md:w-5" style={{ color: doc.color }} />
                       </div>
-                      <div className="flex-1">
-                        <h3 className="font-normal mb-2 text-lg" style={{ color: '#111827' }}>{doc.title}</h3>
-                        <p className="text-base leading-relaxed font-normal" style={{ color: '#374151' }}>{doc.description}</p>
+                      <div>
+                        <h3 className="font-normal text-sm md:text-lg leading-tight text-center md:text-left" style={{ color: '#111827' }}>{doc.title}</h3>
               </div>
           </motion.div>
                   );
@@ -508,7 +526,7 @@ const CreditAccount = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.6 }}
-              className="relative max-w-[90%] pl-4"
+              className="hidden lg:block relative max-w-[90%] pl-4"
             >
               {/* Orange Offset Box Behind */}
               <div 
@@ -576,7 +594,7 @@ const CreditAccount = () => {
               </div>
             </motion.div>
             <Card 
-              className="relative rounded-[20px] border-0 overflow-hidden"
+              className="relative rounded-[20px] md:border-0 border-0 overflow-hidden credit-form-card-mobile"
               style={{
                 background: 'rgba(255, 255, 255, 0.65)',
                 backdropFilter: 'blur(12px)',
@@ -584,7 +602,7 @@ const CreditAccount = () => {
                 border: '1px solid rgba(254, 159, 22, 0.25)'
               }}
             >
-              <CardContent className="pt-6" style={{ backgroundColor: '#FFF9F3' }}>
+              <CardContent className="pt-6 credit-form-cardcontent-mobile" style={{ backgroundColor: '#FFF9F3' }}>
                 <AnimatePresence mode="wait">
                   {submissionStage === 'truck' && null}
 
@@ -1427,64 +1445,121 @@ const CreditAccount = () => {
                           </h3>
                         </div>
                         <div 
-                          className="p-4 rounded-lg bg-white"
+                          className="p-4 md:p-4 rounded-lg bg-white credit-radio-card-mobile"
                               style={{ 
                             boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                             border: '1px solid rgba(0,0,0,0.05)'
                           }}
                         >
                           <style>{`
-                            [data-state="checked"] {
-                              border-color: #3B82F6 !important;
-                              color: #3B82F6 !important;
+                            .radio-wrapper-1 {
+                              color: #212529;
+                              font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", "Liberation Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+                              font-weight: 400;
+                              line-height: 1.5;
                             }
-                            [data-state="checked"] svg {
-                              fill: #3B82F6 !important;
-                              color: #3B82F6 !important;
+                            
+                            .radio-wrapper-1 label {
+                              display: inline-block;
+                              padding-left: .25em;
+                              font-size: 0.875rem;
+                              cursor: pointer;
+                              color: #374151;
+                            }
+                            
+                            .radio-wrapper-1 input[type=radio] {
+                              font-family: inherit;
+                              font-size: inherit;
+                              line-height: inherit;
+                              margin-bottom: 0;
+                              margin-right: 0;
+                            }
+                            
+                            .radio-wrapper-1 input[type=radio] {
+                              background-position: center center;
+                              -webkit-print-color-adjust: exact;
+                              appearance: none;
+                              background-color: #fff;
+                              background-repeat: no-repeat;
+                              background-size: contain;
+                              border: 1px solid rgba(0, 0, 0, .25);
+                              height: 1em;
+                              margin-top: .25em;
+                              vertical-align: top;
+                              width: 1em;
+                              border-radius: 50%;
+                            }
+                            
+                            .radio-wrapper-1 input[type=radio]:active {
+                              filter: brightness(90%);
+                            }
+                            
+                            .radio-wrapper-1 input[type=radio]:focus {
+                              border-color: #86b7fe;
+                              box-shadow: rgba(13, 110, 253, .25) 0 0 0 .25rem;
+                              outline: 0;
+                            }
+                            
+                            .radio-wrapper-1 input[type=radio]:checked {
+                              background-color: #0d6efd;
+                              border-color: #0d6efd;
+                            }
+                            
+                            .radio-wrapper-1 input[type=radio]:checked {
+                              background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='2' fill='%23fff'/%3e%3c/svg%3e");
+                            }
+                            
+                            .radio-wrapper-1 input[type=radio]:disabled {
+                              filter: none;
+                              opacity: .5;
+                              pointer-events: none;
+                            }
+                            
+                            .radio-wrapper-1 input[type=radio]:disabled ~ label {
+                              opacity: .5;
                             }
                           `}</style>
-                          <RadioGroup 
-                            value={formData.addressType} 
-                            onValueChange={(value) => setFormData({...formData, addressType: value})}
-                            className="flex flex-row gap-6"
-                          >
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem 
-                                value="home" 
-                                id="home"
-                                style={{ borderColor: '#3B82F6', color: '#3B82F6' }}
+                          <div className="flex flex-row gap-4 md:gap-6 credit-radio-group-mobile">
+                            <div className="radio-wrapper-1">
+                              <input 
+                                type="radio" 
+                                id="home" 
+                                name="addressType"
+                                value="home"
+                                checked={formData.addressType === "home"}
+                                onChange={(e) => setFormData({...formData, addressType: e.target.value})}
                               />
-                              <Label htmlFor="home" className="text-sm font-normal cursor-pointer" style={{ color: '#374151' }}>
-                                Home
-                              </Label>
+                              <label htmlFor="home">Home</label>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem 
-                                value="office" 
-                                id="office"
-                                style={{ borderColor: '#3B82F6', color: '#3B82F6' }}
+                            <div className="radio-wrapper-1">
+                              <input 
+                                type="radio" 
+                                id="office" 
+                                name="addressType"
+                                value="office"
+                                checked={formData.addressType === "office"}
+                                onChange={(e) => setFormData({...formData, addressType: e.target.value})}
                               />
-                              <Label htmlFor="office" className="text-sm font-normal cursor-pointer" style={{ color: '#374151' }}>
-                                Office
-                              </Label>
+                              <label htmlFor="office">Office</label>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <RadioGroupItem 
-                                value="other" 
-                                id="other"
-                                style={{ borderColor: '#3B82F6', color: '#3B82F6' }}
+                            <div className="radio-wrapper-1">
+                              <input 
+                                type="radio" 
+                                id="other" 
+                                name="addressType"
+                                value="other"
+                                checked={formData.addressType === "other"}
+                                onChange={(e) => setFormData({...formData, addressType: e.target.value})}
                               />
-                              <Label htmlFor="other" className="text-sm font-normal cursor-pointer" style={{ color: '#374151' }}>
-                                Other
-                              </Label>
+                              <label htmlFor="other">Other</label>
                             </div>
-                          </RadioGroup>
+                          </div>
                     </div>
                       </motion.div>
 
                   {/* Terms and Conditions */}
                       <motion.div 
-                        className="flex items-start space-x-3"
+                        className="flex items-start space-x-3 mt-4 md:mt-6"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.7, ease: "easeOut" }}
@@ -1494,7 +1569,7 @@ const CreditAccount = () => {
                       checked={formData.acceptTerms}
                       onCheckedChange={(checked) => setFormData({...formData, acceptTerms: checked as boolean})}
                       disabled={!isFormValid()}
-                          className="mt-1"
+                          className="mt-1 credit-checkbox-mobile"
                       style={{ 
                         borderColor: 'rgba(0,0,0,0.08)',
                         opacity: !isFormValid() ? 0.5 : 1,
@@ -1847,6 +1922,26 @@ const CreditAccount = () => {
           </motion.div>
         </motion.div>
       )}
+      
+      <style>{`
+        @media (max-width: 767px) {
+          .credit-benefits-title-mobile {
+            padding: 0.5rem 0.75rem !important;
+          }
+          .credit-benefits-image-mobile {
+            max-width: 100% !important;
+          }
+          .credit-benefits-orange-box-mobile {
+            transform: translate(8px, 8px) !important;
+          }
+          .credit-benefits-img {
+            height: 180px !important;
+          }
+          .credit-benefits-content-mobile {
+            padding-left: 0.5rem !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };

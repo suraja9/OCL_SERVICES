@@ -45,15 +45,15 @@ const PartnersScroll = () => {
   }, [isPaused]);
 
   return (
-    <>
+    <div style={{ backgroundColor: "#F9FBFF" }}>
       <div className="text-center py-4 md:py-6 px-4">
-        <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-2 uppercase">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 mb-2 uppercase">
           Our Valued Clients
         </h2>
       </div>
 
       <section 
-        className="w-full overflow-hidden py-4 md:py-6 mb-8 md:mb-12"
+        className="w-full overflow-hidden py-2 md:py-4 mb-6 md:mb-8"
         style={{ backgroundColor: "#FFF5E6" }}
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
@@ -89,7 +89,7 @@ const PartnersScroll = () => {
           .logo-item {
             margin-right: 30px;
             width: 150px;
-            height: 60px;
+            height: 45px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -117,22 +117,22 @@ const PartnersScroll = () => {
           /* Responsive adjustments */
           @media (max-width: 768px) {
             .logo-item {
-              width: 120px;
-              height: 50px;
-              margin-right: 25px;
+              width: 100px;
+              height: 35px;
+              margin-right: 20px;
             }
           }
 
           @media (max-width: 480px) {
             .logo-item {
-              width: 100px;
-              height: 40px;
-              margin-right: 20px;
+              width: 80px;
+              height: 30px;
+              margin-right: 15px;
             }
           }
         `}</style>
       </section>
-    </>
+    </div>
   );
 };
 

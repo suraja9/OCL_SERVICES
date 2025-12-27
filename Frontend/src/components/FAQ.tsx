@@ -1,10 +1,10 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle } from "lucide-react";
 import { useMemo } from "react";
-import faqImage from "@/assets/faq.png";
 import distributionIcon from "@/Icon-images/distribution.png";
 import packageIcon from "@/Icon-images/package.png";
 import laptopIcon from "@/Icon-images/laptop.png";
+import faqImage from "@/assets/faq.png";
 
 // Image Icon Components
 const DistributionIcon = ({ className, style }: { className?: string; style?: React.CSSProperties }) => (
@@ -123,53 +123,49 @@ const FAQ = () => {
 
   return (
           <section
-            className="w-full relative py-6 md:py-10"
+            className="w-full relative py-3 md:py-6 pb-2 md:pb-4 faq-section-mobile"
             style={{ background: "linear-gradient(to bottom, #CACDD3 0%, #CACDD3 60%, #FFFFFF 100%)" }}
           >
       {/* Content container */}
       <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-6 md:mb-8">
+        <div className="text-center mb-3 md:mb-5">
           <h2 
-            className="text-xl md:text-2xl lg:text-3xl font-bold tracking-tight"
+            className="text-2xl md:text-3xl lg:text-4xl font-bold tracking-tight"
             style={{ color: "#0D1B2A", fontFamily: 'Poppins, ui-sans-serif' }}
           >
-            FREQUENTLY ASKED QUESTIONS
+            <span className="md:hidden">FAQ</span>
+            <span className="hidden md:inline">FREQUENTLY ASKED QUESTIONS</span>
           </h2>
         </div>
 
-        {/* Two Column Layout: FAQ on Left, Image on Right */}
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-8 md:gap-12">
-          {/* FAQ Container - Left Side */}
-          <div className="w-full md:w-[55%] flex flex-col justify-center">
-            <Accordion type="single" collapsible className="space-y-2.5">
+        {/* FAQ Container - Two Column Layout for Desktop */}
+        <div className="flex flex-col md:flex-row items-stretch px-4 md:px-6 gap-6 md:gap-8 lg:gap-12">
+          {/* FAQ Accordion - Left Side */}
+          <div className="w-full md:w-1/2 flex flex-col justify-center">
+            <Accordion type="single" collapsible className="space-y-1.5">
             {items.map(({ id, question, answer, Illustration }) => (
               <AccordionItem
                 key={id}
                 value={id}
-                className="border rounded-xl bg-white transition-all duration-300"
+                className="border rounded-md bg-white transition-all duration-300"
                 style={{ 
                   borderColor: "#E2E8F0",
-                  borderRadius: "12px",
-                  boxShadow: "rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px"
+                  borderRadius: "6px",
+                  boxShadow: "rgba(0, 0, 0, 0.06) 0px 2px 8px, rgba(0, 0, 0, 0.04) 0px 1px 2px"
                 }}
               >
                 <AccordionTrigger
-                  className="px-3 md:px-4 py-2.5 md:py-3 rounded-xl hover:no-underline data-[state=open]:rounded-t-xl data-[state=open]:rounded-b-none"
+                  className="px-2.5 md:px-4 lg:px-5 py-1.5 md:py-2.5 lg:py-3 rounded-md hover:no-underline data-[state=open]:rounded-t-md data-[state=open]:rounded-b-none"
                 >
-                  <div className="flex w-full items-center gap-2.5">
-                    {/* Question mark icon */}
-                    <div
-                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full"
-                      style={{ backgroundColor: "#FFF2E0" }}
-                    >
-                      <HelpCircle className="h-3.5 w-3.5" style={{ color: "#FF9F00" }} />
-                    </div>
+                  <div className="flex w-full items-center gap-1.5">
+                    {/* Question icon - simplified (no circle) */}
+                    <HelpCircle className="h-3 w-3 md:h-3.5 md:w-3.5 shrink-0" style={{ color: "#FF9F00" }} />
                     
                     {/* Question text */}
                     <div className="flex-1 text-left">
                       <div 
-                        className="font-bold text-sm md:text-base"
+                        className="font-bold text-[10px] md:text-sm lg:text-base"
                         style={{ color: "#1E293B" }}
                       >
                         {question}
@@ -180,20 +176,19 @@ const FAQ = () => {
                 
                 <AccordionContent>
                   <div
-                    className="mx-3 mb-3 mt-1 rounded-lg p-3 md:p-4 flex items-start gap-3 transition-all duration-300"
+                    className="mx-1.5 mb-1.5 mt-0.5 rounded-md p-2 md:p-3 lg:p-4 flex items-start gap-2 md:gap-3 transition-all duration-300"
                     style={{
                       backgroundColor: "#FFF9F3",
-                      borderLeft: "4px solid #FF9F00",
+                      borderLeft: "2px solid #FF9F00",
                     }}
                   >
                     {/* Answer text */}
                     <div className="flex-1">
                       <p 
-                        className="leading-relaxed"
+                        className="leading-relaxed text-[10px] md:text-xs lg:text-sm"
                         style={{ 
                           color: "#64748B",
-                          fontSize: "14px",
-                          lineHeight: "1.5"
+                          lineHeight: "1.4"
                         }}
                       >
                         {answer}
@@ -203,13 +198,13 @@ const FAQ = () => {
                     {/* Illustration icon - hidden on mobile */}
                     <div className="hidden md:block shrink-0">
                       <div 
-                        className="h-10 w-10 rounded-lg flex items-center justify-center"
+                        className="h-8 w-8 rounded-md flex items-center justify-center"
                         style={{ 
                           backgroundColor: "white",
                           border: "1px solid rgba(255, 159, 0, 0.2)"
                         }}
                       >
-                        <Illustration className="h-5 w-5 object-contain" style={{ maxWidth: "20px", maxHeight: "20px" }} />
+                        <Illustration className="h-4 w-4 object-contain" style={{ maxWidth: "16px", maxHeight: "16px" }} />
                       </div>
                     </div>
                   </div>
@@ -218,20 +213,27 @@ const FAQ = () => {
             ))}
           </Accordion>
           </div>
-
-          {/* Image Container - Right Side */}
-          <div className="w-full md:w-[40%] flex items-center justify-center">
-            <div className="w-full max-w-md">
-              <img
-                src={faqImage}
-                alt="FAQ Illustration"
-                className="w-full h-auto object-contain"
-                style={{ maxHeight: "500px" }}
-              />
-            </div>
+          
+          {/* FAQ Image - Right Side (Desktop only) */}
+          <div className="hidden md:flex md:w-1/2 items-center justify-center">
+            <img 
+              src={faqImage} 
+              alt="FAQ" 
+              className="w-full h-auto max-w-md object-contain"
+            />
           </div>
         </div>
       </div>
+
+      {/* Mobile spacing styles */}
+      <style>{`
+        @media (max-width: 767px) {
+          .faq-section-mobile {
+            padding-top: 48px !important;
+            padding-bottom: 48px !important;
+          }
+        }
+      `}</style>
     </section>
   );
 };

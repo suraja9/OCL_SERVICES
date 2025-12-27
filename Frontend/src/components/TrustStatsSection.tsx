@@ -21,11 +21,11 @@ const TrustStatsSection = () => {
 
   return (
     <section 
-      className="w-full py-12 md:py-16 relative overflow-hidden"
+      className="w-full py-4 md:py-8 relative overflow-hidden"
       style={{ backgroundColor: "#FFF5E6" }}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-center justify-center gap-8 md:gap-12 lg:gap-16">
+        <div className="flex flex-row items-center justify-center gap-4 sm:gap-6 md:gap-12 lg:gap-16">
           {trustStats.map((stat, index) => (
             <motion.div
               key={index}
@@ -33,10 +33,10 @@ const TrustStatsSection = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: index * 0.1 }}
-              className="flex flex-col items-center text-center group cursor-default"
+              className="flex flex-col items-center text-center group cursor-default flex-1"
             >
               <motion.div
-                className="text-3xl md:text-4xl lg:text-5xl font-bold mb-2 gradient-number"
+                className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-1 md:mb-2 gradient-number"
                 style={{ 
                   fontFamily: 'Poppins, ui-sans-serif'
                 }}
@@ -45,7 +45,7 @@ const TrustStatsSection = () => {
               >
                 {stat.number}
               </motion.div>
-              <p className="text-sm md:text-base text-gray-600 font-medium">
+              <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">
                 {stat.label}
               </p>
             </motion.div>
