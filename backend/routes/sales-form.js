@@ -35,7 +35,12 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       currentIssues,
       vehiclesNeededPerMonth,
       typeOfVehicleRequired,
-      submittedByName
+      submittedByName,
+      submissionLocation,
+      submissionCity,
+      submissionState,
+      submissionCountry,
+      submissionIpAddress
     } = req.body;
 
     // Validate required fields
@@ -59,12 +64,12 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
 
     // Address validation - either fullAddress (legacy) or structured fields
     const hasFullAddress = fullAddress && fullAddress.trim();
-    const hasStructuredAddress = locality && locality.trim() && 
-                                  buildingFlatNo && buildingFlatNo.trim() && 
-                                  pincode && pincode.trim() && 
-                                  city && city.trim() && 
-                                  state && state.trim();
-    
+    const hasStructuredAddress = locality && locality.trim() &&
+      buildingFlatNo && buildingFlatNo.trim() &&
+      pincode && pincode.trim() &&
+      city && city.trim() &&
+      state && state.trim();
+
     if (!hasFullAddress && !hasStructuredAddress) {
       return res.status(400).json({
         success: false,
@@ -189,6 +194,12 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       uploadedImageKey: uploadedImageKeys.length > 0 ? uploadedImageKeys[0] : '',
       uploadedImageOriginalName: uploadedImageOriginalNames.length > 0 ? uploadedImageOriginalNames[0] : '',
       submittedByName: submittedByName?.trim() || '',
+      // Location data
+      submissionLocation: submissionLocation || undefined,
+      submissionCity: submissionCity?.trim() || '',
+      submissionState: submissionState?.trim() || '',
+      submissionCountry: submissionCountry?.trim() || '',
+      submissionIpAddress: submissionIpAddress?.trim() || '',
       status: 'pending'
     });
 
@@ -211,7 +222,7 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
 
   } catch (error) {
     console.error('Error submitting sales form:', error);
-    
+
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(e => e.message);
       return res.status(400).json({
@@ -233,7 +244,7 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const { status, page = 1, limit = 50 } = req.query;
-    
+
     const query = {};
     if (status) {
       query.status = status;

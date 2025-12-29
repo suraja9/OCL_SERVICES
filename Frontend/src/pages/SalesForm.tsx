@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { 
-  Building2, 
-  User, 
-  Phone, 
-  Mail, 
-  Globe, 
-  Briefcase, 
-  Upload, 
+import {
+  Building2,
+  User,
+  Phone,
+  Mail,
+  Globe,
+  Briefcase,
+  Upload,
   X,
   AlertCircle,
   Eye,
@@ -94,13 +94,13 @@ const FloatingLabelInput: React.FC<FloatingLabelInputProps> = ({
           )}
           placeholder=""
         />
-        
+
         {hasValidationError && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2 z-10">
             <AlertCircle className="w-5 h-5 text-red-500" />
           </div>
         )}
-        
+
         <label
           className={cn(
             "absolute transition-all duration-200 ease-in-out pointer-events-none select-none",
@@ -117,7 +117,7 @@ const FloatingLabelInput: React.FC<FloatingLabelInputProps> = ({
           {placeholder}{required && <span className="text-red-500 ml-1">*</span>}
         </label>
       </div>
-      
+
       {hasValidationError && error && (
         <div className="mt-1">
           <div className="text-xs text-red-600">
@@ -181,13 +181,13 @@ const FloatingLabelTextarea: React.FC<FloatingLabelTextareaProps> = ({
           )}
           placeholder=""
         />
-        
+
         {hasValidationError && (
           <div className="absolute right-3 top-3 z-10">
             <AlertCircle className="w-5 h-5 text-red-500" />
           </div>
         )}
-        
+
         <label
           className={cn(
             "absolute transition-all duration-200 ease-in-out pointer-events-none select-none",
@@ -204,7 +204,7 @@ const FloatingLabelTextarea: React.FC<FloatingLabelTextareaProps> = ({
           {placeholder}{required && <span className="text-red-500 ml-1">*</span>}
         </label>
       </div>
-      
+
       {hasValidationError && error && (
         <div className="mt-1">
           <div className="text-xs text-red-600">
@@ -309,7 +309,7 @@ const FloatingSelect: React.FC<FloatingSelectProps> = ({
           {label}{required && <span className="text-red-500 ml-1">*</span>}
         </label>
       </div>
-      
+
       {hasValidationError && error && (
         <div className="mt-1">
           <div className="text-xs text-red-600">
@@ -357,12 +357,22 @@ interface FormData {
 
   // Section 5: Attachments
   uploadedImages: File[];
+
+  // Location data
+  submissionLocation?: {
+    type: string;
+    coordinates: [number, number];
+  };
+  submissionCity?: string;
+  submissionState?: string;
+  submissionCountry?: string;
+  submissionIpAddress?: string;
 }
 
 const SalesForm = () => {
   const { toast } = useToast();
   const API_BASE: string = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
-  
+
   const [formData, setFormData] = useState<FormData>({
     companyName: '',
     concernPersonName: '',
@@ -389,6 +399,11 @@ const SalesForm = () => {
     vehiclesNeededPerMonth: '',
     typeOfVehicleRequired: '',
     uploadedImages: [],
+    submissionLocation: undefined,
+    submissionCity: '',
+    submissionState: '',
+    submissionCountry: '',
+    submissionIpAddress: '',
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
@@ -412,7 +427,7 @@ const SalesForm = () => {
       setFormData(prev => ({ ...prev, [field]: limitedValue }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
-      
+
       // Clear custom values when switching away from "Other"
       if (field === 'typeOfBusiness' && value !== 'Other') {
         setCustomTypeOfBusiness('');
@@ -466,8 +481,8 @@ const SalesForm = () => {
     if (validFiles.length === 0) return;
 
     // Add valid files to form data
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       uploadedImages: [...prev.uploadedImages, ...validFiles]
     }));
 
@@ -515,7 +530,7 @@ const SalesForm = () => {
           area: '' // Reset area when pincode changes
         }));
         setAvailableAreas(data.areas || []);
-        
+
         toast({
           title: "Pincode Found",
           description: `City: ${data.city}, State: ${data.state}`,
@@ -633,7 +648,7 @@ const SalesForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast({
         title: "Validation Error",
@@ -658,10 +673,129 @@ const SalesForm = () => {
     setNameDialogOpen(false);
     setIsSubmitting(true);
 
+    // Capture user's location
+    let locationData: {
+      submissionLocation?: { type: string; coordinates: [number, number] };
+      submissionCity: string;
+      submissionState: string;
+      submissionCountry: string;
+      submissionIpAddress: string;
+    } = {
+      submissionCity: '',
+      submissionState: '',
+      submissionCountry: '',
+      submissionIpAddress: ''
+    };
+
+    // Try to get IP address first (as fallback)
+    try {
+      const ipResponse = await fetch('https://api.ipify.org?format=json');
+      if (ipResponse.ok) {
+        const ipData = await ipResponse.json();
+        locationData.submissionIpAddress = ipData.ip || '';
+      }
+    } catch (ipError) {
+      console.warn('Could not get IP address:', ipError);
+    }
+
+    // Try to get geolocation
+    try {
+      if (!navigator.geolocation) {
+        throw new Error('Geolocation is not supported by this browser');
+      }
+
+      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          resolve,
+          (error) => {
+            // Provide more specific error messages
+            let errorMessage = 'Unknown error';
+            switch (error.code) {
+              case error.PERMISSION_DENIED:
+                errorMessage = 'Location permission denied by user';
+                break;
+              case error.POSITION_UNAVAILABLE:
+                errorMessage = 'Location information unavailable';
+                break;
+              case error.TIMEOUT:
+                errorMessage = 'Location request timed out';
+                break;
+            }
+            reject(new Error(errorMessage));
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 15000, // 15 seconds
+            maximumAge: 300000 // 5 minutes
+          }
+        );
+      });
+
+      console.log('Location captured:', {
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
+      });
+
+      // Get location details using reverse geocoding
+      try {
+        const response = await fetch(
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+        );
+        
+        if (!response.ok) {
+          throw new Error(`Reverse geocoding failed: ${response.status}`);
+        }
+
+        const locationInfo = await response.json();
+        console.log('Reverse geocoding result:', locationInfo);
+
+        locationData = {
+          submissionLocation: {
+            type: 'Point',
+            coordinates: [position.coords.longitude, position.coords.latitude]
+          },
+          submissionCity: locationInfo.city || locationInfo.locality || locationInfo.localityInfo?.administrativeArea || '',
+          submissionState: locationInfo.principalSubdivision || locationInfo.localityInfo?.administrativeArea || '',
+          submissionCountry: locationInfo.countryName || locationInfo.countryCode || '',
+          submissionIpAddress: locationData.submissionIpAddress
+        };
+      } catch (geocodeError) {
+        console.warn('Reverse geocoding failed, using coordinates only:', geocodeError);
+        // Still use coordinates even if reverse geocoding fails
+        locationData.submissionLocation = {
+          type: 'Point',
+          coordinates: [position.coords.longitude, position.coords.latitude]
+        };
+      }
+    } catch (locationError: any) {
+      console.warn('Could not get user location:', locationError);
+      // Try IP-based location as fallback
+      try {
+        if (locationData.submissionIpAddress) {
+          const ipLocationResponse = await fetch(`https://ipapi.co/${locationData.submissionIpAddress}/json/`);
+          if (ipLocationResponse.ok) {
+            const ipLocationData = await ipLocationResponse.json();
+            locationData.submissionCity = ipLocationData.city || '';
+            locationData.submissionState = ipLocationData.region || ipLocationData.region_code || '';
+            locationData.submissionCountry = ipLocationData.country_name || '';
+            // Use approximate coordinates from IP (less accurate)
+            if (ipLocationData.latitude && ipLocationData.longitude) {
+              locationData.submissionLocation = {
+                type: 'Point',
+                coordinates: [ipLocationData.longitude, ipLocationData.latitude]
+              };
+            }
+          }
+        }
+      } catch (ipLocationError) {
+        console.warn('IP-based location also failed:', ipLocationError);
+      }
+    }
+
     try {
       // Create FormData for file upload
       const submitFormData = new FormData();
-      
+
       // Append all form fields
       submitFormData.append('companyName', formData.companyName.trim());
       submitFormData.append('concernPersonName', formData.concernPersonName.trim());
@@ -670,7 +804,7 @@ const SalesForm = () => {
       submitFormData.append('emailAddress', formData.emailAddress.trim().toLowerCase());
       submitFormData.append('alternatePhoneNumber', formData.alternatePhoneNumber?.trim() || '');
       submitFormData.append('website', formData.website?.trim() || '');
-      
+
       // Append structured address fields
       submitFormData.append('locality', formData.locality.trim());
       submitFormData.append('buildingFlatNo', formData.buildingFlatNo.trim());
@@ -679,7 +813,7 @@ const SalesForm = () => {
       submitFormData.append('city', formData.city.trim());
       submitFormData.append('state', formData.state.trim());
       submitFormData.append('area', formData.area?.trim() || '');
-      
+
       // Also send fullAddress for backward compatibility (backend will generate if not provided)
       const fullAddressParts = [
         formData.locality.trim(),
@@ -693,11 +827,11 @@ const SalesForm = () => {
       const fullAddress = fullAddressParts.join(', ');
       submitFormData.append('fullAddress', fullAddress);
       // Use custom value if "Other" is selected, otherwise use the selected value
-      const typeOfBusinessValue = formData.typeOfBusiness === 'Other' && customTypeOfBusiness.trim() 
-        ? customTypeOfBusiness.trim() 
+      const typeOfBusinessValue = formData.typeOfBusiness === 'Other' && customTypeOfBusiness.trim()
+        ? customTypeOfBusiness.trim()
         : formData.typeOfBusiness.trim();
-      const typeOfShipmentsValue = formData.typeOfShipments === 'Other' && customTypeOfShipments.trim() 
-        ? customTypeOfShipments.trim() 
+      const typeOfShipmentsValue = formData.typeOfShipments === 'Other' && customTypeOfShipments.trim()
+        ? customTypeOfShipments.trim()
         : formData.typeOfShipments.trim();
       submitFormData.append('typeOfBusiness', typeOfBusinessValue);
       submitFormData.append('typeOfShipments', typeOfShipmentsValue);
@@ -709,14 +843,23 @@ const SalesForm = () => {
       submitFormData.append('currentIssues', formData.currentIssues.trim());
       submitFormData.append('vehiclesNeededPerMonth', formData.vehiclesNeededPerMonth.trim());
       // Use custom value if "Others" is selected, otherwise use the selected value
-      const typeOfVehicleRequiredValue = formData.typeOfVehicleRequired === 'Others' && customTypeOfVehicleRequired.trim() 
-        ? customTypeOfVehicleRequired.trim() 
+      const typeOfVehicleRequiredValue = formData.typeOfVehicleRequired === 'Others' && customTypeOfVehicleRequired.trim()
+        ? customTypeOfVehicleRequired.trim()
         : formData.typeOfVehicleRequired.trim();
       submitFormData.append('typeOfVehicleRequired', typeOfVehicleRequiredValue);
-      
+
       // Append submitted by name
       submitFormData.append('submittedByName', submittedByName.trim());
-      
+
+      // Append location data (use the freshly captured locationData, not formData)
+      if (locationData.submissionLocation && locationData.submissionLocation.coordinates[0] !== 0 && locationData.submissionLocation.coordinates[1] !== 0) {
+        submitFormData.append('submissionLocation', JSON.stringify(locationData.submissionLocation));
+      }
+      submitFormData.append('submissionCity', locationData.submissionCity || '');
+      submitFormData.append('submissionState', locationData.submissionState || '');
+      submitFormData.append('submissionCountry', locationData.submissionCountry || '');
+      submitFormData.append('submissionIpAddress', locationData.submissionIpAddress || '');
+
       // Append image files if exist
       formData.uploadedImages.forEach((image, index) => {
         submitFormData.append('uploadedImages', image);
@@ -763,6 +906,11 @@ const SalesForm = () => {
         vehiclesNeededPerMonth: '',
         typeOfVehicleRequired: '',
         uploadedImages: [],
+        submissionLocation: undefined,
+        submissionCity: '',
+        submissionState: '',
+        submissionCountry: '',
+        submissionIpAddress: '',
       });
       setAvailableAreas([]);
       setImagePreviews([]);
@@ -810,6 +958,11 @@ const SalesForm = () => {
       vehiclesNeededPerMonth: '',
       typeOfVehicleRequired: '',
       uploadedImages: [],
+      submissionLocation: undefined,
+      submissionCity: '',
+      submissionState: '',
+      submissionCountry: '',
+      submissionIpAddress: '',
     });
     setImagePreviews([]);
     setErrors({});
@@ -823,7 +976,7 @@ const SalesForm = () => {
   return (
     <div className="min-h-screen bg-white">
       <Navbar />
-      
+
       <div className="container mx-auto px-4 py-8 pt-20 max-w-6xl">
 
         <div className="w-full space-y-4 sm:space-y-6 bg-white rounded-lg shadow-lg p-4 sm:p-6 md:p-8">
@@ -987,11 +1140,10 @@ const SalesForm = () => {
                       </SelectContent>
                     </Select>
                     <label
-                      className={`absolute transition-all duration-200 ease-in-out pointer-events-none select-none left-4 ${
-                        formData.area
+                      className={`absolute transition-all duration-200 ease-in-out pointer-events-none select-none left-4 ${formData.area
                           ? 'top-0 -translate-y-1/2 text-xs px-2 bg-white text-blue-600'
                           : 'top-1/2 -translate-y-1/2 text-xs text-gray-500'
-                      }`}
+                        }`}
                     >
                       Area {availableAreas.length === 0 && formData.pincode.length === 6 && '(Optional)'}
                     </label>
@@ -1158,7 +1310,7 @@ const SalesForm = () => {
                     label="Type of Vehicle Required"
                     value={formData.typeOfVehicleRequired}
                     onChange={(value) => handleInputChange('typeOfVehicleRequired', value)}
-                    options={['Tata Ace', 'Pickup Van', '407 Truck','14ft','17ft','1109 Truck', '20ft','22ft','Container','Trailer', 'Mixed', 'Others']}
+                    options={['Tata Ace', 'Pickup Van', '407 Truck', '14ft', '17ft', '1109 Truck', '20ft', '22ft', 'Container', 'Trailer', 'Mixed', 'Others']}
                     error={errors.typeOfVehicleRequired}
                     required
                   />
@@ -1212,7 +1364,7 @@ const SalesForm = () => {
                     </span>
                   </label>
                 </div>
-                
+
                 {imagePreviews.length > 0 && (
                   <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                     {imagePreviews.map((item, index) => (
@@ -1368,7 +1520,7 @@ const SalesForm = () => {
                 <CheckCircle className="h-16 w-16 text-green-600 animate-scale-in" />
               </div>
             </div>
-            
+
             {/* Success Message */}
             <div className="text-center space-y-2">
               <DialogTitle className="text-2xl font-bold text-green-600">

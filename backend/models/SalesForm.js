@@ -188,6 +188,39 @@ const salesFormSchema = new mongoose.Schema({
     default: null
   },
 
+  // Location from which the form was submitted
+  submissionLocation: {
+    type: {
+      type: String,
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number],
+      index: '2dsphere',
+      default: [0, 0] // [longitude, latitude]
+    }
+  },
+  submissionCity: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  submissionState: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  submissionCountry: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+  submissionIpAddress: {
+    type: String,
+    trim: true,
+    default: ''
+  },
+
   // Timestamps
   createdAt: {
     type: Date,
@@ -210,7 +243,7 @@ salesFormSchema.index({ status: 1 });
 salesFormSchema.index({ createdAt: -1 });
 
 // Update the updatedAt field before saving
-salesFormSchema.pre('save', function(next) {
+salesFormSchema.pre('save', function (next) {
   this.updatedAt = new Date();
   next();
 });

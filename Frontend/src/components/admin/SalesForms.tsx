@@ -3,31 +3,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
-import { 
+import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Search, 
-  Eye, 
+import {
+  Search,
+  Eye,
   RefreshCw,
   Building2,
   Mail,
@@ -40,7 +40,8 @@ import {
   Package,
   Truck,
   AlertCircle,
-  Download
+  Download,
+  Navigation
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -74,6 +75,14 @@ interface SalesForm {
   handledBy?: any;
   createdAt: string;
   updatedAt: string;
+  submissionLocation?: {
+    type: string;
+    coordinates: [number, number];
+  };
+  submissionCity?: string;
+  submissionState?: string;
+  submissionCountry?: string;
+  submissionIpAddress?: string;
 }
 
 interface SalesFormsResponse {
@@ -135,7 +144,7 @@ const SalesForms = () => {
       }
 
       const result: SalesFormsResponse = await response.json();
-      
+
       if (result.success) {
         setSalesForms(result.data || []);
         setTotalPages(result.pagination.pages);
@@ -163,7 +172,7 @@ const SalesForms = () => {
       return;
     }
 
-    const filtered = salesForms.filter(form => 
+    const filtered = salesForms.filter(form =>
       form.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       form.concernPersonName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       form.emailAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -219,7 +228,7 @@ const SalesForms = () => {
   const exportToCSV = () => {
     try {
       const dataToExport = filteredForms.length > 0 ? filteredForms : salesForms;
-      
+
       if (dataToExport.length === 0) {
         toast({
           title: "No Data",
@@ -252,7 +261,11 @@ const SalesForms = () => {
         'Status',
         'Notes',
         'Submitted Date',
-        'Updated Date'
+        'Updated Date',
+        'Submission City',
+        'Submission State',
+        'Submission Country',
+        'Submission IP Address'
       ];
 
       // Create CSV rows
@@ -283,7 +296,11 @@ const SalesForms = () => {
           escapeCSV(form.status),
           escapeCSV(form.notes || ''),
           escapeCSV(formatDate(form.createdAt)),
-          escapeCSV(formatDate(form.updatedAt))
+          escapeCSV(formatDate(form.updatedAt)),
+          escapeCSV(form.submissionCity || ''),
+          escapeCSV(form.submissionState || ''),
+          escapeCSV(form.submissionCountry || ''),
+          escapeCSV(form.submissionIpAddress || '')
         ];
         csvRows.push(row.join(','));
       });
@@ -295,7 +312,7 @@ const SalesForms = () => {
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
-      
+
       link.setAttribute('href', url);
       link.setAttribute('download', `sales-forms-${new Date().toISOString().split('T')[0]}.csv`);
       link.style.visibility = 'hidden';
@@ -423,6 +440,7 @@ const SalesForms = () => {
                   <TableHead className="font-medium text-gray-700 py-3 px-4">Business Type</TableHead>
                   <TableHead className="font-medium text-gray-700 py-3 px-4">Shipment Type</TableHead>
                   <TableHead className="font-medium text-gray-700 py-3 px-4">Status</TableHead>
+                  <TableHead className="font-medium text-gray-700 py-3 px-4">Location</TableHead>
                   <TableHead className="font-medium text-gray-700 py-3 px-4">Submitted</TableHead>
                   <TableHead className="font-medium text-gray-700 py-3 px-4 text-center">Actions</TableHead>
                 </TableRow>
@@ -490,6 +508,19 @@ const SalesForms = () => {
                       </TableCell>
                       <TableCell className="py-3 px-4">
                         {getStatusBadge(form.status)}
+                      </TableCell>
+                      <TableCell className="py-3 px-4">
+                        <div className="text-sm">
+                          <div className="text-gray-900">{form.submissionCity || 'N/A'}</div>
+                          <div className="text-xs text-gray-500">{form.submissionState || form.submissionCountry || ''}</div>
+                          {form.submissionLocation?.coordinates && 
+                           form.submissionLocation.coordinates[0] !== 0 && 
+                           form.submissionLocation.coordinates[1] !== 0 && (
+                            <div className="text-xs text-gray-400 mt-1 font-mono">
+                              {form.submissionLocation.coordinates[1].toFixed(4)}, {form.submissionLocation.coordinates[0].toFixed(4)}
+                            </div>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="py-3 px-4">
                         <div className="text-sm">
@@ -728,6 +759,58 @@ const SalesForms = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Location Information */}
+          {(selectedForm?.submissionCity || selectedForm?.submissionState || selectedForm?.submissionCountry || 
+            (selectedForm?.submissionLocation?.coordinates && 
+             selectedForm.submissionLocation.coordinates[0] !== 0 && 
+             selectedForm.submissionLocation.coordinates[1] !== 0)) && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
+                <Navigation className="h-5 w-5 text-blue-600" />
+                Submission Location
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-1">City</p>
+                  <p className="text-gray-900">{selectedForm?.submissionCity || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-1">State</p>
+                  <p className="text-gray-900">{selectedForm?.submissionState || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500 mb-1">Country</p>
+                  <p className="text-gray-900">{selectedForm?.submissionCountry || 'N/A'}</p>
+                </div>
+                {selectedForm?.submissionLocation?.coordinates && 
+                 selectedForm.submissionLocation.coordinates[0] !== 0 && 
+                 selectedForm.submissionLocation.coordinates[1] !== 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-500 mb-1">Coordinates</p>
+                    <p className="text-gray-900 text-xs font-mono">
+                      {selectedForm.submissionLocation.coordinates[1].toFixed(6)}, {selectedForm.submissionLocation.coordinates[0].toFixed(6)}
+                    </p>
+                  </div>
+                )}
+                {selectedForm?.submissionLocation?.coordinates && 
+                 selectedForm.submissionLocation.coordinates[0] !== 0 && 
+                 selectedForm.submissionLocation.coordinates[1] !== 0 && (
+                  <div className="md:col-span-2">
+                    <a
+                      href={`https://www.google.com/maps?q=${selectedForm.submissionLocation.coordinates[1]},${selectedForm.submissionLocation.coordinates[0]}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline"
+                    >
+                      <Navigation className="h-4 w-4" />
+                      View on Google Maps
+                    </a>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </DialogContent>
