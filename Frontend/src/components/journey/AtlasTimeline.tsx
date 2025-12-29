@@ -1,5 +1,6 @@
-import React, { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion, useSpring, useTransform } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export type AtlasMilestone = {
   id: string;
@@ -23,7 +24,7 @@ export function AtlasTimeline({ milestones, className }: AtlasTimelineProps) {
   const [activeYear, setActiveYear] = useState<string>(milestones[0]?.year || "");
   const [shimmerPosition, setShimmerPosition] = useState(0);
 
-  const years = Array.from(new Set(milestones.map(m => m.year))).sort();
+  const years = useMemo(() => Array.from(new Set(milestones.map(m => m.year))).sort(), [milestones]);
 
   // Shimmer animation
   useEffect(() => {
@@ -38,6 +39,18 @@ export function AtlasTimeline({ milestones, className }: AtlasTimelineProps) {
 
   const activeIndex = years.findIndex((year) => year === activeYear);
   const progress = activeIndex >= 0 ? (activeIndex / (years.length - 1)) * 100 : 0;
+
+  const handlePrevious = () => {
+    const currentIndex = years.findIndex((year) => year === activeYear);
+    const prevIndex = currentIndex === 0 ? years.length - 1 : currentIndex - 1;
+    setActiveYear(years[prevIndex]);
+  };
+
+  const handleNext = () => {
+    const currentIndex = years.findIndex((year) => year === activeYear);
+    const nextIndex = (currentIndex + 1) % years.length;
+    setActiveYear(years[nextIndex]);
+  };
 
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
@@ -70,8 +83,9 @@ export function AtlasTimeline({ milestones, className }: AtlasTimelineProps) {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            {/* Left Side */}
+            {/* Left Side - Description (Desktop Only) */}
             <motion.div
+              className="hidden md:block"
               initial={{ opacity: 0, letterSpacing: "0.1em" }}
               animate={{ opacity: 1, letterSpacing: "0em" }}
               transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
@@ -81,8 +95,8 @@ export function AtlasTimeline({ milestones, className }: AtlasTimelineProps) {
               </p>
             </motion.div>
             
-            {/* Right Side */}
-            <div className="flex items-center gap-3">
+            {/* Mobile/Desktop Layout - Button Left, Years Right */}
+            <div className="flex items-center justify-between md:justify-end gap-3 w-full md:w-auto">
               <motion.div 
                 className="px-4 py-2 backdrop-blur-md text-white text-xs font-semibold rounded-full border"
                 style={{
@@ -97,7 +111,7 @@ export function AtlasTimeline({ milestones, className }: AtlasTimelineProps) {
                 {milestones.length} key milestones
               </motion.div>
               <motion.span 
-                className="text-xs text-gray-400 font-semibold"
+                className="text-xs text-gray-400 font-semibold ml-auto md:ml-0"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
@@ -108,8 +122,53 @@ export function AtlasTimeline({ milestones, className }: AtlasTimelineProps) {
           </div>
         </motion.div>
 
-        {/* Premium Timeline Section */}
-        <div className="relative py-6">
+        {/* Mobile Timeline - Single Year with Arrows */}
+        <div className="md:hidden relative py-6">
+          <div className="relative flex items-center justify-center gap-4">
+            {/* Left Arrow */}
+            <button
+              onClick={handlePrevious}
+              className="text-white hover:text-[#FFA019] transition-colors duration-200 focus:outline-none z-20"
+              aria-label="Previous year"
+            >
+              <ChevronLeft className="w-6 h-6" />
+            </button>
+
+            {/* Centered Year Display */}
+            <div className="flex-1 flex justify-center">
+              <motion.button
+                className="relative z-20 focus:outline-none"
+                onClick={() => setActiveYear(activeYear)}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3 }}
+              >
+                <div
+                  className="relative w-16 h-16 rounded-full flex items-center justify-center backdrop-blur-xl bg-gradient-to-br from-[#FF7A00]/30 to-[#FF9500]/20 border-2 border-[#FF7A00]/60"
+                  style={{
+                    boxShadow: "0 8px 32px rgba(255, 122, 0, 0.4), 0 0 0 1px rgba(255, 122, 0, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.2)",
+                  }}
+                >
+                  <span className="text-sm font-bold text-white drop-shadow-lg">
+                    {activeYear}
+                  </span>
+                </div>
+              </motion.button>
+            </div>
+
+            {/* Right Arrow */}
+            <button
+              onClick={handleNext}
+              className="text-white hover:text-[#FFA019] transition-colors duration-200 focus:outline-none z-20"
+              aria-label="Next year"
+            >
+              <ChevronRight className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop Timeline Section */}
+        <div className="hidden md:block relative py-6">
           <div className="relative">
             {/* Glowing Neon Track with Gradient - Behind circles */}
             <div className="absolute top-[45%] left-0 right-0 h-1.5 -translate-y-1/2 rounded-full overflow-hidden z-0">
@@ -311,7 +370,7 @@ export function AtlasTimeline({ milestones, className }: AtlasTimelineProps) {
           }}
         />
         
-        <div className="h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16">
+        <div className="h-full px-4 sm:px-6 md:px-8 lg:px-12 xl:px-16 pb-20 md:pb-1">
           <AnimatePresence mode="wait">
             {milestones
               .filter((milestone) => milestone.year === activeYear)
@@ -366,9 +425,9 @@ function MilestoneCard({
       }}
     >
       <div className="relative w-full h-full flex flex-col">
-        {/* Icon and Tag in One Row */}
+        {/* Icon and Tag in One Row - Hidden on Mobile */}
         <motion.div
-          className="flex items-center justify-between mb-3"
+          className="hidden md:flex items-center justify-between mb-3"
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{
@@ -404,7 +463,7 @@ function MilestoneCard({
         </motion.div>
         
         <motion.h3
-          className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white mb-2 leading-tight"
+          className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-white mb-2 leading-tight text-center md:text-left"
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{
@@ -418,7 +477,7 @@ function MilestoneCard({
         </motion.h3>
         
         <motion.p
-          className="text-sm sm:text-base md:text-lg text-gray-300 leading-relaxed whitespace-pre-line flex-1 overflow-y-auto"
+          className="text-sm sm:text-base md:text-lg text-gray-300 leading-relaxed whitespace-pre-line flex-1 overflow-y-auto text-center md:text-left"
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{

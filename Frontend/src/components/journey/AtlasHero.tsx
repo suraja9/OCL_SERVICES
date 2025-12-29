@@ -20,7 +20,7 @@ function StatBox({ value, label, delay = 0 }: StatBoxProps) {
   return (
     <motion.div
       ref={ref}
-      className="bg-white rounded-lg border border-gray-100 p-4 flex flex-col justify-center"
+      className="bg-white rounded-lg border border-gray-100 p-2 md:p-4 flex flex-col justify-center items-center text-center"
       style={{
         boxShadow: "rgba(0, 0, 0, 0.19) 0px 10px 20px, rgba(0, 0, 0, 0.23) 0px 6px 6px"
       }}
@@ -29,7 +29,7 @@ function StatBox({ value, label, delay = 0 }: StatBoxProps) {
       transition={{ duration: 0.6, delay, ease: [0.16, 1, 0.3, 1] }}
     >
       <div 
-        className="text-2xl md:text-3xl font-bold mb-1.5 gradient-number"
+        className="text-base md:text-2xl lg:text-3xl font-bold mb-1 md:mb-1.5 gradient-number"
         style={{
           background: 'linear-gradient(90deg, #ff6a00, #0078ff, #8e2de2)',
           backgroundSize: '200% auto',
@@ -45,7 +45,7 @@ function StatBox({ value, label, delay = 0 }: StatBoxProps) {
           value
         )}
       </div>
-      <div className="text-sm text-gray-600 whitespace-nowrap">{label}</div>
+      <div className="text-[10px] md:text-sm text-gray-600 leading-tight px-1">{label}</div>
     </motion.div>
   );
 }
@@ -97,32 +97,30 @@ export function AtlasHero({ image, imageAlt = "OCL Logistics Operations" }: Atla
         .gradient-number {
           animation: gradientMove 3s linear infinite;
         }
+
+        @media (min-width: 768px) {
+          .hero-bg-blur {
+            filter: blur(2px);
+            -webkit-filter: blur(2px);
+          }
+          .hero-image-card-shadow {
+            box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px, rgba(0, 0, 0, 0.23) 0px 3px 6px;
+          }
+        }
       `}</style>
     <section 
       ref={heroRef}
-      className="relative w-full pt-[140px] md:pt-[180px] pb-12 md:pb-16 overflow-hidden"
+      className="relative w-full pt-[100px] md:pt-[240px] pb-8 md:pb-20 overflow-hidden"
     >
-      {/* Background Image Layer - Blurred (ONLY the background) */}
+      {/* Background Image Layer - Clean and visible */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 hero-bg-blur"
         style={{
           backgroundImage: `url(${journeyBg})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
-          filter: 'blur(10px) saturate(0.85)',
-          WebkitFilter: 'blur(10px) saturate(0.85)',
-          transform: 'scale(1.1)', // Scale up to prevent blur edges
           zIndex: 1,
-        }}
-      />
-
-      {/* Dark Overlay - Behind everything but above background */}
-      <div 
-        className="absolute inset-0"
-        style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.15)',
-          zIndex: 2,
         }}
       />
 
@@ -136,16 +134,18 @@ export function AtlasHero({ image, imageAlt = "OCL Logistics Operations" }: Atla
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           >
-            <h1 className="text-[48px] font-bold text-white mb-6 leading-tight">
-              <span className="text-[#FFA019]">Our</span> Journey in Logistics
+            <h1 className="text-[30px] md:text-[48px] font-bold text-black mb-4 md:mb-6 leading-tight text-center md:text-left">
+              <span className="text-[#FFA019]">Our</span> Journey<br className="md:hidden" />
+              <span className="md:hidden"> in Logistics</span>
+              <span className="hidden md:inline"> in Logistics</span>
             </h1>
 
-            <p className="text-lg md:text-xl text-white mb-12 leading-relaxed max-w-xl">
+            <p className="hidden md:block text-lg md:text-xl text-black mb-12 leading-relaxed max-w-xl">
               From a local courier service to a nationwide logistics network, OCL Services has been delivering trust, reliability, and precision for over two decades.
             </p>
 
             {/* Stats Grid - Single Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 max-w-2xl">
+            <div className="grid grid-cols-3 gap-2 md:gap-5 max-w-2xl mx-auto md:mx-0">
               <StatBox value="25+" label="Years in operation" delay={0.1} />
               <StatBox value="75+" label="Cities Covered" delay={0.2} />
               <StatBox value="50k+" label="Shipments delivered" delay={0.3} />
@@ -155,7 +155,7 @@ export function AtlasHero({ image, imageAlt = "OCL Logistics Operations" }: Atla
           {/* Right Column - Glassmorphism Window Card */}
           <motion.div
             ref={cardRef}
-            className="relative rounded-[24px] overflow-hidden mt-8 h-[260px] md:h-[320px] w-full max-w-[90%] mx-auto lg:max-w-full"
+            className="hidden lg:block relative rounded-[24px] overflow-hidden mt-8 h-[260px] md:h-[280px] w-full max-w-[90%] mx-auto lg:max-w-[85%] hero-image-card-shadow"
             style={{
               zIndex: 5,
             }}
