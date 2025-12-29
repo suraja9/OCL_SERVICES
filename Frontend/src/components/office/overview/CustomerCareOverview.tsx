@@ -4404,10 +4404,7 @@ const CustomerCareOverview = () => {
                 </div>
 
                 {/* Submission Location */}
-                {(selectedSalesForm.submissionCity || selectedSalesForm.submissionState || selectedSalesForm.submissionCountry || 
-                  (selectedSalesForm.submissionLocation?.coordinates && 
-                   selectedSalesForm.submissionLocation.coordinates[0] !== 0 && 
-                   selectedSalesForm.submissionLocation.coordinates[1] !== 0)) && (
+                {(selectedSalesForm.submissionCity || selectedSalesForm.submissionState || selectedSalesForm.submissionCountry) && (
                   <div>
                     <h3 className="text-xs font-semibold text-slate-900 mb-3 flex items-center gap-2">
                       <Navigation className="h-3.5 w-3.5" />
@@ -4422,35 +4419,10 @@ const CustomerCareOverview = () => {
                         <p className="text-[10px] text-slate-500 mb-1">State</p>
                         <p className="text-xs font-medium text-slate-900">{selectedSalesForm.submissionState || 'N/A'}</p>
                       </div>
-                      <div>
+                      <div className="md:col-span-2">
                         <p className="text-[10px] text-slate-500 mb-1">Country</p>
                         <p className="text-xs font-medium text-slate-900">{selectedSalesForm.submissionCountry || 'N/A'}</p>
                       </div>
-                      {selectedSalesForm.submissionLocation?.coordinates && 
-                       selectedSalesForm.submissionLocation.coordinates[0] !== 0 && 
-                       selectedSalesForm.submissionLocation.coordinates[1] !== 0 && (
-                        <div>
-                          <p className="text-[10px] text-slate-500 mb-1">Coordinates</p>
-                          <p className="text-xs font-medium text-slate-900 font-mono">
-                            {selectedSalesForm.submissionLocation.coordinates[1].toFixed(6)}, {selectedSalesForm.submissionLocation.coordinates[0].toFixed(6)}
-                          </p>
-                        </div>
-                      )}
-                      {selectedSalesForm.submissionLocation?.coordinates && 
-                       selectedSalesForm.submissionLocation.coordinates[0] !== 0 && 
-                       selectedSalesForm.submissionLocation.coordinates[1] !== 0 && (
-                        <div className="md:col-span-2">
-                          <a
-                            href={`https://www.google.com/maps?q=${selectedSalesForm.submissionLocation.coordinates[1]},${selectedSalesForm.submissionLocation.coordinates[0]}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs text-blue-600 hover:text-blue-700 hover:underline"
-                          >
-                            <Navigation className="h-3 w-3" />
-                            View on Google Maps
-                          </a>
-                        </div>
-                      )}
                     </div>
                   </div>
                 )}

@@ -513,13 +513,6 @@ const SalesForms = () => {
                         <div className="text-sm">
                           <div className="text-gray-900">{form.submissionCity || 'N/A'}</div>
                           <div className="text-xs text-gray-500">{form.submissionState || form.submissionCountry || ''}</div>
-                          {form.submissionLocation?.coordinates && 
-                           form.submissionLocation.coordinates[0] !== 0 && 
-                           form.submissionLocation.coordinates[1] !== 0 && (
-                            <div className="text-xs text-gray-400 mt-1 font-mono">
-                              {form.submissionLocation.coordinates[1].toFixed(4)}, {form.submissionLocation.coordinates[0].toFixed(4)}
-                            </div>
-                          )}
                         </div>
                       </TableCell>
                       <TableCell className="py-3 px-4">
@@ -763,10 +756,7 @@ const SalesForms = () => {
           )}
 
           {/* Location Information */}
-          {(selectedForm?.submissionCity || selectedForm?.submissionState || selectedForm?.submissionCountry || 
-            (selectedForm?.submissionLocation?.coordinates && 
-             selectedForm.submissionLocation.coordinates[0] !== 0 && 
-             selectedForm.submissionLocation.coordinates[1] !== 0)) && (
+          {(selectedForm?.submissionCity || selectedForm?.submissionState || selectedForm?.submissionCountry) && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
                 <Navigation className="h-5 w-5 text-blue-600" />
@@ -781,35 +771,10 @@ const SalesForms = () => {
                   <p className="text-sm font-medium text-gray-500 mb-1">State</p>
                   <p className="text-gray-900">{selectedForm?.submissionState || 'N/A'}</p>
                 </div>
-                <div>
+                <div className="md:col-span-2">
                   <p className="text-sm font-medium text-gray-500 mb-1">Country</p>
                   <p className="text-gray-900">{selectedForm?.submissionCountry || 'N/A'}</p>
                 </div>
-                {selectedForm?.submissionLocation?.coordinates && 
-                 selectedForm.submissionLocation.coordinates[0] !== 0 && 
-                 selectedForm.submissionLocation.coordinates[1] !== 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-500 mb-1">Coordinates</p>
-                    <p className="text-gray-900 text-xs font-mono">
-                      {selectedForm.submissionLocation.coordinates[1].toFixed(6)}, {selectedForm.submissionLocation.coordinates[0].toFixed(6)}
-                    </p>
-                  </div>
-                )}
-                {selectedForm?.submissionLocation?.coordinates && 
-                 selectedForm.submissionLocation.coordinates[0] !== 0 && 
-                 selectedForm.submissionLocation.coordinates[1] !== 0 && (
-                  <div className="md:col-span-2">
-                    <a
-                      href={`https://www.google.com/maps?q=${selectedForm.submissionLocation.coordinates[1]},${selectedForm.submissionLocation.coordinates[0]}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 hover:underline"
-                    >
-                      <Navigation className="h-4 w-4" />
-                      View on Google Maps
-                    </a>
-                  </div>
-                )}
               </div>
             </div>
           )}

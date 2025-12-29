@@ -674,122 +674,52 @@ const SalesForm = () => {
     setIsSubmitting(true);
 
     // Capture user's location
-    let locationData: {
-      submissionLocation?: { type: string; coordinates: [number, number] };
-      submissionCity: string;
-      submissionState: string;
-      submissionCountry: string;
-      submissionIpAddress: string;
-    } = {
-      submissionCity: '',
-      submissionState: '',
-      submissionCountry: '',
-      submissionIpAddress: ''
-    };
-
-    // Try to get IP address first (as fallback)
+    let locationData = {};
     try {
-      const ipResponse = await fetch('https://api.ipify.org?format=json');
-      if (ipResponse.ok) {
-        const ipData = await ipResponse.json();
-        locationData.submissionIpAddress = ipData.ip || '';
-      }
-    } catch (ipError) {
-      console.warn('Could not get IP address:', ipError);
-    }
-
-    // Try to get geolocation
-    try {
-      if (!navigator.geolocation) {
-        throw new Error('Geolocation is not supported by this browser');
-      }
-
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(
-          resolve,
-          (error) => {
-            // Provide more specific error messages
-            let errorMessage = 'Unknown error';
-            switch (error.code) {
-              case error.PERMISSION_DENIED:
-                errorMessage = 'Location permission denied by user';
-                break;
-              case error.POSITION_UNAVAILABLE:
-                errorMessage = 'Location information unavailable';
-                break;
-              case error.TIMEOUT:
-                errorMessage = 'Location request timed out';
-                break;
-            }
-            reject(new Error(errorMessage));
-          },
-          {
-            enableHighAccuracy: true,
-            timeout: 15000, // 15 seconds
-            maximumAge: 300000 // 5 minutes
-          }
-        );
-      });
-
-      console.log('Location captured:', {
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
+        if (!navigator.geolocation) {
+          reject(new Error('Geolocation is not supported by this browser'));
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000, // 10 seconds
+          maximumAge: 300000 // 5 minutes
+        });
       });
 
       // Get location details using reverse geocoding
-      try {
-        const response = await fetch(
-          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
-        );
-        
-        if (!response.ok) {
-          throw new Error(`Reverse geocoding failed: ${response.status}`);
-        }
+      const response = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+      );
+      const locationInfo = await response.json();
 
-        const locationInfo = await response.json();
-        console.log('Reverse geocoding result:', locationInfo);
-
-        locationData = {
-          submissionLocation: {
-            type: 'Point',
-            coordinates: [position.coords.longitude, position.coords.latitude]
-          },
-          submissionCity: locationInfo.city || locationInfo.locality || locationInfo.localityInfo?.administrativeArea || '',
-          submissionState: locationInfo.principalSubdivision || locationInfo.localityInfo?.administrativeArea || '',
-          submissionCountry: locationInfo.countryName || locationInfo.countryCode || '',
-          submissionIpAddress: locationData.submissionIpAddress
-        };
-      } catch (geocodeError) {
-        console.warn('Reverse geocoding failed, using coordinates only:', geocodeError);
-        // Still use coordinates even if reverse geocoding fails
-        locationData.submissionLocation = {
+      locationData = {
+        submissionLocation: {
           type: 'Point',
           coordinates: [position.coords.longitude, position.coords.latitude]
-        };
-      }
-    } catch (locationError: any) {
+        },
+        submissionCity: locationInfo.city || locationInfo.locality || '',
+        submissionState: locationInfo.principalSubdivision || '',
+        submissionCountry: locationInfo.countryName || '',
+        submissionIpAddress: '' // IP address would need backend API to fetch
+      };
+
+      // Update form data with location
+      setFormData(prev => ({
+        ...prev,
+        ...locationData
+      }));
+    } catch (locationError) {
       console.warn('Could not get user location:', locationError);
-      // Try IP-based location as fallback
-      try {
-        if (locationData.submissionIpAddress) {
-          const ipLocationResponse = await fetch(`https://ipapi.co/${locationData.submissionIpAddress}/json/`);
-          if (ipLocationResponse.ok) {
-            const ipLocationData = await ipLocationResponse.json();
-            locationData.submissionCity = ipLocationData.city || '';
-            locationData.submissionState = ipLocationData.region || ipLocationData.region_code || '';
-            locationData.submissionCountry = ipLocationData.country_name || '';
-            // Use approximate coordinates from IP (less accurate)
-            if (ipLocationData.latitude && ipLocationData.longitude) {
-              locationData.submissionLocation = {
-                type: 'Point',
-                coordinates: [ipLocationData.longitude, ipLocationData.latitude]
-              };
-            }
-          }
-        }
-      } catch (ipLocationError) {
-        console.warn('IP-based location also failed:', ipLocationError);
-      }
+      // Still proceed with submission, just without location data
+      locationData = {
+        submissionLocation: undefined,
+        submissionCity: '',
+        submissionState: '',
+        submissionCountry: '',
+        submissionIpAddress: ''
+      };
     }
 
     try {
@@ -851,14 +781,14 @@ const SalesForm = () => {
       // Append submitted by name
       submitFormData.append('submittedByName', submittedByName.trim());
 
-      // Append location data (use the freshly captured locationData, not formData)
-      if (locationData.submissionLocation && locationData.submissionLocation.coordinates[0] !== 0 && locationData.submissionLocation.coordinates[1] !== 0) {
-        submitFormData.append('submissionLocation', JSON.stringify(locationData.submissionLocation));
+      // Append location data
+      if (formData.submissionLocation) {
+        submitFormData.append('submissionLocation', JSON.stringify(formData.submissionLocation));
       }
-      submitFormData.append('submissionCity', locationData.submissionCity || '');
-      submitFormData.append('submissionState', locationData.submissionState || '');
-      submitFormData.append('submissionCountry', locationData.submissionCountry || '');
-      submitFormData.append('submissionIpAddress', locationData.submissionIpAddress || '');
+      submitFormData.append('submissionCity', formData.submissionCity || '');
+      submitFormData.append('submissionState', formData.submissionState || '');
+      submitFormData.append('submissionCountry', formData.submissionCountry || '');
+      submitFormData.append('submissionIpAddress', formData.submissionIpAddress || '');
 
       // Append image files if exist
       formData.uploadedImages.forEach((image, index) => {
