@@ -6,8 +6,8 @@ dotenv.config();
 class WhatsAppService {
   constructor() {
     this.authKey = process.env.MSG91_AUTH_KEY;
-    this.integratedNumber = process.env.MSG91_WHATSAPP_NUMBER || '917896375599';
-    this.namespace = process.env.MSG91_WHATSAPP_NAMESPACE || 'c4c9ddbe_1791_4518_9b6c_d0dd2b5a628f';
+    this.integratedNumber = process.env.MSG91_WHATSAPP_NUMBER || '15558060648';
+    this.namespace = process.env.MSG91_WHATSAPP_NAMESPACE || '170973a2_ea66_42f3_aff0_098b38915d40';
   }
 
   /**
