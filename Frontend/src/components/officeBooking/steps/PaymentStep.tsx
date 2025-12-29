@@ -166,12 +166,12 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const paymentOptions = [
     {
       value: 'Cash',
-      title: 'Cash',
+      title: 'Pre-paid',
       icon: DollarSign
     },
     {
       value: 'To Pay',
-      title: 'To Pay',
+      title: 'Post-paid',
       icon: CreditCard
     }
   ];

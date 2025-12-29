@@ -145,4 +145,3 @@ const FeaturedClients = ({ clients }: FeaturedClientsProps) => {
 };
 
 export default FeaturedClients;
-

@@ -34,7 +34,8 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       existingLogisticsPartners,
       currentIssues,
       vehiclesNeededPerMonth,
-      typeOfVehicleRequired
+      typeOfVehicleRequired,
+      submittedByName
     } = req.body;
 
     // Validate required fields
@@ -108,28 +109,30 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       });
     }
 
-    // Handle image upload to S3 if file exists
-    let uploadedImageUrl = '';
-    let uploadedImageKey = '';
-    let uploadedImageOriginalName = '';
+    // Handle image uploads to S3 if files exist
+    const uploadedImages = [];
+    const uploadedImageKeys = [];
+    const uploadedImageOriginalNames = [];
 
-    if (req.file) {
-      try {
-        const uploadResult = await S3Service.uploadFile(
-          req.file,
-          'uploads/sales-form-images'
-        );
+    if (req.files && req.files.length > 0) {
+      for (const file of req.files) {
+        try {
+          const uploadResult = await S3Service.uploadFile(
+            file,
+            'uploads/sales-form-images'
+          );
 
-        if (uploadResult.success) {
-          uploadedImageUrl = uploadResult.url;
-          uploadedImageKey = uploadResult.key;
-          uploadedImageOriginalName = uploadResult.originalName;
-          console.log(`✅ Sales form image uploaded to S3: ${uploadResult.url}`);
+          if (uploadResult.success) {
+            uploadedImages.push(uploadResult.url);
+            uploadedImageKeys.push(uploadResult.key);
+            uploadedImageOriginalNames.push(uploadResult.originalName);
+            console.log(`✅ Sales form image uploaded to S3: ${uploadResult.url}`);
+          }
+        } catch (uploadError) {
+          console.error('Error uploading image to S3:', uploadError);
+          // Don't fail the form submission if image upload fails
+          // Just log the error and continue
         }
-      } catch (uploadError) {
-        console.error('Error uploading image to S3:', uploadError);
-        // Don't fail the form submission if image upload fails
-        // Just log the error and continue
       }
     }
 
@@ -177,9 +180,15 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       currentIssues: currentIssues.trim(),
       vehiclesNeededPerMonth: vehiclesNeededPerMonth.trim(),
       typeOfVehicleRequired: typeOfVehicleRequired.trim(),
-      uploadedImage: uploadedImageUrl,
-      uploadedImageKey: uploadedImageKey,
-      uploadedImageOriginalName: uploadedImageOriginalName,
+      // Multiple images (new)
+      uploadedImages: uploadedImages,
+      uploadedImageKeys: uploadedImageKeys,
+      uploadedImageOriginalNames: uploadedImageOriginalNames,
+      // Legacy single image fields (for backward compatibility - use first image if available)
+      uploadedImage: uploadedImages.length > 0 ? uploadedImages[0] : '',
+      uploadedImageKey: uploadedImageKeys.length > 0 ? uploadedImageKeys[0] : '',
+      uploadedImageOriginalName: uploadedImageOriginalNames.length > 0 ? uploadedImageOriginalNames[0] : '',
+      submittedByName: submittedByName?.trim() || '',
       status: 'pending'
     });
 

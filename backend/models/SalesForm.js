@@ -141,23 +141,41 @@ const salesFormSchema = new mongoose.Schema({
 
   // Section 5: Attachments
   uploadedImage: {
-    type: String, // S3 URL or file path
+    type: String, // S3 URL or file path (legacy - for backward compatibility)
     default: ''
   },
   uploadedImageKey: {
-    type: String, // S3 key for file management
+    type: String, // S3 key for file management (legacy - for backward compatibility)
     default: ''
   },
   uploadedImageOriginalName: {
-    type: String,
+    type: String, // (legacy - for backward compatibility)
     default: ''
+  },
+  // Multiple images support
+  uploadedImages: {
+    type: [String], // Array of S3 URLs
+    default: []
+  },
+  uploadedImageKeys: {
+    type: [String], // Array of S3 keys for file management
+    default: []
+  },
+  uploadedImageOriginalNames: {
+    type: [String], // Array of original file names
+    default: []
   },
 
   // Status tracking (optional, for admin use)
   status: {
     type: String,
-    enum: ['pending', 'contacted', 'in-progress', 'converted', 'rejected'],
+    enum: ['pending', 'seen', 'contacted', 'in-progress', 'converted', 'rejected'],
     default: 'pending'
+  },
+  submittedByName: {
+    type: String,
+    trim: true,
+    default: ''
   },
   notes: {
     type: String,

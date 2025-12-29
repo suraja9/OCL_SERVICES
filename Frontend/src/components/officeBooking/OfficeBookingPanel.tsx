@@ -3040,6 +3040,14 @@ const OfficeBookingPanel: React.FC = () => {
             if (isNaN(num)) return '₹0.00';
             return `₹${num.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
           };
+          
+          // Map payment mode for display
+          const getPaymentModeLabel = (mode: string | undefined): string => {
+            if (!mode) return '—';
+            if (mode === 'Cash') return 'Pre-paid';
+            if (mode === 'To Pay') return 'Post-paid';
+            return mode;
+          };
 
           return (
             <motion.div
@@ -3251,10 +3259,7 @@ const OfficeBookingPanel: React.FC = () => {
                   <div className="space-y-2 text-sm">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
                       <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
-                        Payment Type: {bookingState.paymentData.paymentType || '—'}
-                      </p>
-                      <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
-                        Mode: {bookingState.paymentData.modeOfPayment || '—'}
+                        Mode: {getPaymentModeLabel(bookingState.paymentData.modeOfPayment)}
                       </p>
                       {bookingState.paymentData.amount && (
                         <p className={cn('text-[9px] sm:text-[10px] md:text-xs font-medium', isDarkMode ? 'text-slate-200' : 'text-[#4B5563]')}>
@@ -3512,8 +3517,7 @@ const OfficeBookingPanel: React.FC = () => {
                     <h4 className={`font-semibold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>Payment</h4>
                   </div>
                   <div className={`space-y-1 text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
-                    <p><span className="font-medium">Mode:</span> {bookingState.paymentData.modeOfPayment || 'N/A'}</p>
-                    <p><span className="font-medium">Type:</span> {bookingState.paymentData.paymentType === 'FP' ? 'Godown Delivery' : bookingState.paymentData.paymentType === 'TP' ? 'Door Delivery' : 'N/A'}</p>
+                    <p><span className="font-medium">Mode:</span> {bookingState.paymentData.modeOfPayment === 'Cash' ? 'Pre-paid' : bookingState.paymentData.modeOfPayment === 'To Pay' ? 'Post-paid' : bookingState.paymentData.modeOfPayment || 'N/A'}</p>
                     {bookingState.detailsData.grandTotal && (
                       <p className="font-semibold text-base mt-2">
                         <span className="font-medium">Total:</span> ₹{bookingState.detailsData.grandTotal}

@@ -72,8 +72,8 @@ export const uploadBookNowDeclaration = upload.single('declarationDocument');
 // Middleware for Force Delivery POD upload
 export const uploadForceDeliveryPOD = upload.single('podFile');
 
-// Middleware for Sales Form image upload (single file)
-export const uploadSalesFormImage = upload.single('uploadedImage');
+// Middleware for Sales Form image upload (multiple files)
+export const uploadSalesFormImage = upload.array('uploadedImages', 10);
 
 // Error handling middleware
 export const handleUploadError = (err, req, res, next) => {

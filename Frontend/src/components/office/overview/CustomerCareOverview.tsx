@@ -1563,6 +1563,7 @@ const CustomerCareOverview = () => {
     if (!token) return;
 
     try {
+      // First, fetch the sales form details
       const response = await fetch(`/api/sales-form/${id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -1570,7 +1571,40 @@ const CustomerCareOverview = () => {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data) {
-          setSelectedSalesForm(data.data);
+          const salesForm = data.data;
+          
+          // If status is "pending", update it to "seen"
+          if (salesForm.status === 'pending') {
+            try {
+              const updateResponse = await fetch(`/api/sales-form/${id}`, {
+                method: 'PATCH',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: 'seen' })
+              });
+
+              if (updateResponse.ok) {
+                const updateData = await updateResponse.json();
+                if (updateData.success) {
+                  // Update the local state to reflect the status change
+                  setSalesForms(prevForms => 
+                    prevForms.map(form => 
+                      form._id === id ? { ...form, status: 'seen' } : form
+                    )
+                  );
+                  // Update the selected form with the new status
+                  salesForm.status = 'seen';
+                }
+              }
+            } catch (updateError) {
+              console.error('Error updating sales form status:', updateError);
+              // Continue to show the form even if status update fails
+            }
+          }
+          
+          setSelectedSalesForm(salesForm);
           setSalesFormDetailDialogOpen(true);
         }
       }
@@ -2611,6 +2645,8 @@ const CustomerCareOverview = () => {
                         className={`ml-2 flex-shrink-0 px-2 py-0.5 text-xs lg:text-[11px] rounded-full ${
                           form.status === 'pending'
                             ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            : form.status === 'seen'
+                            ? 'bg-indigo-50 text-indigo-700 border-indigo-200'
                             : form.status === 'contacted'
                             ? 'bg-blue-50 text-blue-700 border-blue-200'
                             : form.status === 'converted'
@@ -4103,6 +4139,7 @@ const CustomerCareOverview = () => {
                       <TableHead>Phone</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Submitted By</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
@@ -4120,6 +4157,8 @@ const CustomerCareOverview = () => {
                             className={
                               form.status === 'pending'
                                 ? 'bg-amber-100 text-amber-700'
+                                : form.status === 'seen'
+                                ? 'bg-indigo-100 text-indigo-700'
                                 : form.status === 'contacted'
                                 ? 'bg-blue-100 text-blue-700'
                                 : form.status === 'converted'
@@ -4129,6 +4168,9 @@ const CustomerCareOverview = () => {
                           >
                             {form.status || 'pending'}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-gray-600">
+                          {form.submittedByName || 'N/A'}
                         </TableCell>
                         <TableCell className="text-xs text-gray-600">
                           {formatDateTime(form.createdAt)}
@@ -4295,22 +4337,51 @@ const CustomerCareOverview = () => {
                 </div>
               </div>
 
-              {/* Uploaded Image */}
-              {selectedSalesForm.uploadedImage && (
+              {/* Uploaded Images */}
+              {((selectedSalesForm.uploadedImages && selectedSalesForm.uploadedImages.length > 0) || selectedSalesForm.uploadedImage) && (
                 <div>
                   <h3 className="text-xs font-semibold text-slate-900 mb-3 flex items-center gap-2">
                     <Upload className="h-3.5 w-3.5" />
-                    Uploaded Image
+                    Uploaded Images
                   </h3>
-                  <div className="flex justify-center">
-                    <img
-                      src={selectedSalesForm.uploadedImage}
-                      alt="Uploaded"
-                      className="max-w-full h-auto max-h-64 rounded-lg border border-slate-200"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).style.display = 'none';
-                      }}
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {/* Display multiple images if available */}
+                    {selectedSalesForm.uploadedImages && selectedSalesForm.uploadedImages.length > 0 ? (
+                      selectedSalesForm.uploadedImages.map((imageUrl: string, index: number) => (
+                        <div key={index} className="relative group">
+                          <img
+                            src={imageUrl}
+                            alt={`Uploaded ${index + 1}`}
+                            className="w-full h-48 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => window.open(imageUrl, '_blank')}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Eye className="h-4 w-4 text-white drop-shadow-lg" />
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      /* Fallback to single image for backward compatibility */
+                      selectedSalesForm.uploadedImage && (
+                        <div className="relative group">
+                          <img
+                            src={selectedSalesForm.uploadedImage}
+                            alt="Uploaded"
+                            className="w-full h-48 object-cover rounded-lg border border-slate-200 cursor-pointer hover:opacity-90 transition-opacity"
+                            onClick={() => window.open(selectedSalesForm.uploadedImage, '_blank')}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Eye className="h-4 w-4 text-white drop-shadow-lg" />
+                          </div>
+                        </div>
+                      )
+                    )}
                   </div>
                 </div>
               )}
@@ -4325,6 +4396,8 @@ const CustomerCareOverview = () => {
                       className={
                         selectedSalesForm.status === 'pending'
                           ? 'bg-amber-100 text-amber-700'
+                          : selectedSalesForm.status === 'seen'
+                          ? 'bg-indigo-100 text-indigo-700'
                           : selectedSalesForm.status === 'contacted'
                           ? 'bg-blue-100 text-blue-700'
                           : selectedSalesForm.status === 'converted'
@@ -4339,6 +4412,12 @@ const CustomerCareOverview = () => {
                     <p className="text-[10px] text-slate-500 mb-1">Submitted On</p>
                     <p className="text-xs font-medium text-slate-900">{formatDateTime(selectedSalesForm.createdAt)}</p>
                   </div>
+                  {selectedSalesForm.submittedByName && (
+                    <div>
+                      <p className="text-[10px] text-slate-500 mb-1">Submitted By</p>
+                      <p className="text-xs font-medium text-slate-900">{selectedSalesForm.submittedByName}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

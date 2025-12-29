@@ -13,9 +13,12 @@ import {
   X,
   AlertCircle,
   Eye,
-  MapPin
+  MapPin,
+  CheckCircle
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
@@ -353,7 +356,7 @@ interface FormData {
   typeOfVehicleRequired: string;
 
   // Section 5: Attachments
-  uploadedImage: File | null;
+  uploadedImages: File[];
 }
 
 const SalesForm = () => {
@@ -385,14 +388,21 @@ const SalesForm = () => {
     currentIssues: '',
     vehiclesNeededPerMonth: '',
     typeOfVehicleRequired: '',
-    uploadedImage: null,
+    uploadedImages: [],
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imagePreviews, setImagePreviews] = useState<Array<{ file: File; preview: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableAreas, setAvailableAreas] = useState<string[]>([]);
   const [isLoadingPincode, setIsLoadingPincode] = useState(false);
+  const [customTypeOfBusiness, setCustomTypeOfBusiness] = useState<string>('');
+  const [customTypeOfShipments, setCustomTypeOfShipments] = useState<string>('');
+  const [customTypeOfVehicleRequired, setCustomTypeOfVehicleRequired] = useState<string>('');
+  const [nameDialogOpen, setNameDialogOpen] = useState(false);
+  const [submittedByName, setSubmittedByName] = useState<string>('');
+  const [nameError, setNameError] = useState<string>('');
+  const [successDialogOpen, setSuccessDialogOpen] = useState(false);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     // For phone number, only allow digits and limit to 10
@@ -402,6 +412,17 @@ const SalesForm = () => {
       setFormData(prev => ({ ...prev, [field]: limitedValue }));
     } else {
       setFormData(prev => ({ ...prev, [field]: value }));
+      
+      // Clear custom values when switching away from "Other"
+      if (field === 'typeOfBusiness' && value !== 'Other') {
+        setCustomTypeOfBusiness('');
+      }
+      if (field === 'typeOfShipments' && value !== 'Other') {
+        setCustomTypeOfShipments('');
+      }
+      if (field === 'typeOfVehicleRequired' && value !== 'Others') {
+        setCustomTypeOfVehicleRequired('');
+      }
     }
     // Clear error when user starts typing
     if (errors[field]) {
@@ -410,42 +431,70 @@ const SalesForm = () => {
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const validFiles: File[] = [];
+    const invalidFiles: string[] = [];
+
+    // Validate each file
+    Array.from(files).forEach((file) => {
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        toast({
-          title: "Invalid file type",
-          description: "Please upload an image file.",
-          variant: "destructive"
-        });
+        invalidFiles.push(`${file.name} - Invalid file type`);
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        toast({
-          title: "File too large",
-          description: "Please upload an image smaller than 5MB.",
-          variant: "destructive"
-        });
+        invalidFiles.push(`${file.name} - File too large (max 5MB)`);
         return;
       }
 
-      setFormData(prev => ({ ...prev, uploadedImage: file }));
-      
-      // Create preview
+      validFiles.push(file);
+    });
+
+    // Show error for invalid files
+    if (invalidFiles.length > 0) {
+      toast({
+        title: "Invalid files",
+        description: invalidFiles.join(', '),
+        variant: "destructive"
+      });
+    }
+
+    if (validFiles.length === 0) return;
+
+    // Add valid files to form data
+    setFormData(prev => ({ 
+      ...prev, 
+      uploadedImages: [...prev.uploadedImages, ...validFiles]
+    }));
+
+    // Create previews for new files
+    validFiles.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setImagePreviews(prev => [...prev, { file, preview: reader.result as string }]);
       };
       reader.readAsDataURL(file);
-    }
+    });
+
+    // Reset input to allow selecting the same files again
+    e.target.value = '';
   };
 
-  const removeImage = () => {
-    setFormData(prev => ({ ...prev, uploadedImage: null }));
-    setImagePreview(null);
+  const removeImage = (index: number) => {
+    setFormData(prev => {
+      const newImages = [...prev.uploadedImages];
+      newImages.splice(index, 1);
+      return { ...prev, uploadedImages: newImages };
+    });
+    setImagePreviews(prev => {
+      const newPreviews = [...prev];
+      newPreviews.splice(index, 1);
+      return newPreviews;
+    });
   };
 
   // Function to lookup pincode and auto-fill state, city, and areas
@@ -551,8 +600,16 @@ const SalesForm = () => {
     if (!formData.state.trim()) newErrors.state = 'State is required';
 
     // Section 2 validation
-    if (!formData.typeOfBusiness.trim()) newErrors.typeOfBusiness = 'Type of business is required';
-    if (!formData.typeOfShipments.trim()) newErrors.typeOfShipments = 'Type of shipments is required';
+    if (!formData.typeOfBusiness.trim()) {
+      newErrors.typeOfBusiness = 'Type of business is required';
+    } else if (formData.typeOfBusiness === 'Other' && !customTypeOfBusiness.trim()) {
+      newErrors.typeOfBusiness = 'Please specify the type of business';
+    }
+    if (!formData.typeOfShipments.trim()) {
+      newErrors.typeOfShipments = 'Type of shipments is required';
+    } else if (formData.typeOfShipments === 'Other' && !customTypeOfShipments.trim()) {
+      newErrors.typeOfShipments = 'Please specify the type of shipments';
+    }
     if (!formData.averageShipmentVolume.trim()) newErrors.averageShipmentVolume = 'Average shipment volume is required';
     if (!formData.mostFrequentRoutes.trim()) newErrors.mostFrequentRoutes = 'Most frequent routes is required';
     if (!formData.weightRange.trim()) newErrors.weightRange = 'Weight range is required';
@@ -564,7 +621,11 @@ const SalesForm = () => {
 
     // Section 4 validation
     if (!formData.vehiclesNeededPerMonth.trim()) newErrors.vehiclesNeededPerMonth = 'Vehicles needed per month is required';
-    if (!formData.typeOfVehicleRequired.trim()) newErrors.typeOfVehicleRequired = 'Type of vehicle required is required';
+    if (!formData.typeOfVehicleRequired.trim()) {
+      newErrors.typeOfVehicleRequired = 'Type of vehicle required is required';
+    } else if (formData.typeOfVehicleRequired === 'Others' && !customTypeOfVehicleRequired.trim()) {
+      newErrors.typeOfVehicleRequired = 'Please specify the type of vehicle';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -582,6 +643,19 @@ const SalesForm = () => {
       return;
     }
 
+    // Show name dialog instead of submitting directly
+    setNameDialogOpen(true);
+  };
+
+  const handleFinalSubmit = async () => {
+    // Validate name
+    if (!submittedByName.trim()) {
+      setNameError('Please enter your name');
+      return;
+    }
+
+    setNameError('');
+    setNameDialogOpen(false);
     setIsSubmitting(true);
 
     try {
@@ -618,8 +692,15 @@ const SalesForm = () => {
       ].filter(part => part.length > 0);
       const fullAddress = fullAddressParts.join(', ');
       submitFormData.append('fullAddress', fullAddress);
-      submitFormData.append('typeOfBusiness', formData.typeOfBusiness.trim());
-      submitFormData.append('typeOfShipments', formData.typeOfShipments.trim());
+      // Use custom value if "Other" is selected, otherwise use the selected value
+      const typeOfBusinessValue = formData.typeOfBusiness === 'Other' && customTypeOfBusiness.trim() 
+        ? customTypeOfBusiness.trim() 
+        : formData.typeOfBusiness.trim();
+      const typeOfShipmentsValue = formData.typeOfShipments === 'Other' && customTypeOfShipments.trim() 
+        ? customTypeOfShipments.trim() 
+        : formData.typeOfShipments.trim();
+      submitFormData.append('typeOfBusiness', typeOfBusinessValue);
+      submitFormData.append('typeOfShipments', typeOfShipmentsValue);
       submitFormData.append('averageShipmentVolume', formData.averageShipmentVolume.trim());
       submitFormData.append('mostFrequentRoutes', formData.mostFrequentRoutes.trim());
       submitFormData.append('weightRange', formData.weightRange.trim());
@@ -627,12 +708,19 @@ const SalesForm = () => {
       submitFormData.append('existingLogisticsPartners', formData.existingLogisticsPartners.trim());
       submitFormData.append('currentIssues', formData.currentIssues.trim());
       submitFormData.append('vehiclesNeededPerMonth', formData.vehiclesNeededPerMonth.trim());
-      submitFormData.append('typeOfVehicleRequired', formData.typeOfVehicleRequired.trim());
+      // Use custom value if "Others" is selected, otherwise use the selected value
+      const typeOfVehicleRequiredValue = formData.typeOfVehicleRequired === 'Others' && customTypeOfVehicleRequired.trim() 
+        ? customTypeOfVehicleRequired.trim() 
+        : formData.typeOfVehicleRequired.trim();
+      submitFormData.append('typeOfVehicleRequired', typeOfVehicleRequiredValue);
       
-      // Append image file if exists
-      if (formData.uploadedImage) {
-        submitFormData.append('uploadedImage', formData.uploadedImage);
-      }
+      // Append submitted by name
+      submitFormData.append('submittedByName', submittedByName.trim());
+      
+      // Append image files if exist
+      formData.uploadedImages.forEach((image, index) => {
+        submitFormData.append('uploadedImages', image);
+      });
 
       const response = await fetch(`${API_BASE}/api/sales-form`, {
         method: 'POST',
@@ -645,10 +733,8 @@ const SalesForm = () => {
         throw new Error(result.message || result.error || 'Failed to submit form');
       }
 
-      toast({
-        title: "Success",
-        description: result.message || "Sales form submitted successfully!",
-      });
+      // Show success dialog
+      setSuccessDialogOpen(true);
 
       // Reset form
       setFormData({
@@ -676,11 +762,15 @@ const SalesForm = () => {
         currentIssues: '',
         vehiclesNeededPerMonth: '',
         typeOfVehicleRequired: '',
-        uploadedImage: null,
+        uploadedImages: [],
       });
       setAvailableAreas([]);
-      setImagePreview(null);
+      setImagePreviews([]);
       setErrors({});
+      setCustomTypeOfBusiness('');
+      setCustomTypeOfShipments('');
+      setCustomTypeOfVehicleRequired('');
+      setSubmittedByName('');
     } catch (error: any) {
       console.error('Error submitting sales form:', error);
       toast({
@@ -719,11 +809,15 @@ const SalesForm = () => {
       currentIssues: '',
       vehiclesNeededPerMonth: '',
       typeOfVehicleRequired: '',
-      uploadedImage: null,
+      uploadedImages: [],
     });
-    setImagePreview(null);
+    setImagePreviews([]);
     setErrors({});
     setAvailableAreas([]);
+    setCustomTypeOfBusiness('');
+    setCustomTypeOfShipments('');
+    setCustomTypeOfVehicleRequired('');
+    setSubmittedByName('');
   };
 
   return (
@@ -906,23 +1000,61 @@ const SalesForm = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FloatingSelect
-                  label="Type of Business / Industry"
-                  value={formData.typeOfBusiness}
-                  onChange={(value) => handleInputChange('typeOfBusiness', value)}
-                  options={['E-commerce', 'Manufacturing', 'Retail', 'Wholesale', 'Pharmaceutical', 'Textiles', 'Electronics', 'Food & Beverages', 'Automotive', 'Other']}
-                  error={errors.typeOfBusiness}
-                  required
-                />
+                <div>
+                  <FloatingSelect
+                    label="Type of Business / Industry"
+                    value={formData.typeOfBusiness}
+                    onChange={(value) => handleInputChange('typeOfBusiness', value)}
+                    options={['E-commerce', 'Manufacturing', 'Retail', 'Wholesale', 'Pharmaceutical', 'Textiles', 'Electronics', 'Food & Beverages', 'Automotive', 'Other']}
+                    error={errors.typeOfBusiness}
+                    required
+                  />
+                  {formData.typeOfBusiness === 'Other' && (
+                    <div className="mt-3">
+                      <FloatingLabelInput
+                        id="customTypeOfBusiness"
+                        value={customTypeOfBusiness}
+                        onChange={(value) => {
+                          setCustomTypeOfBusiness(value);
+                          if (errors.typeOfBusiness) {
+                            setErrors(prev => ({ ...prev, typeOfBusiness: undefined }));
+                          }
+                        }}
+                        placeholder="Please specify type of business"
+                        error={errors.typeOfBusiness}
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
 
-                <FloatingSelect
-                  label="Type of Shipments"
-                  value={formData.typeOfShipments}
-                  onChange={(value) => handleInputChange('typeOfShipments', value)}
-                  options={['Documents', 'Parcels', 'Bulk Cargo', 'Fragile Items', 'Perishable Goods', 'Hazardous Materials', 'Mixed', 'Other']}
-                  error={errors.typeOfShipments}
-                  required
-                />
+                <div>
+                  <FloatingSelect
+                    label="Type of Shipments"
+                    value={formData.typeOfShipments}
+                    onChange={(value) => handleInputChange('typeOfShipments', value)}
+                    options={['Documents', 'Parcels', 'Bulk Cargo', 'Fragile Items', 'Perishable Goods', 'Hazardous Materials', 'Mixed', 'Other']}
+                    error={errors.typeOfShipments}
+                    required
+                  />
+                  {formData.typeOfShipments === 'Other' && (
+                    <div className="mt-3">
+                      <FloatingLabelInput
+                        id="customTypeOfShipments"
+                        value={customTypeOfShipments}
+                        onChange={(value) => {
+                          setCustomTypeOfShipments(value);
+                          if (errors.typeOfShipments) {
+                            setErrors(prev => ({ ...prev, typeOfShipments: undefined }));
+                          }
+                        }}
+                        placeholder="Please specify type of shipments"
+                        error={errors.typeOfShipments}
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
 
                 <FloatingLabelInput
                   id="averageShipmentVolume"
@@ -946,7 +1078,7 @@ const SalesForm = () => {
                   label="Weight Range of Shipments"
                   value={formData.weightRange}
                   onChange={(value) => handleInputChange('weightRange', value)}
-                  options={['0-5 kg', '5-10 kg', '10-25 kg', '25-50 kg', '50-100 kg', '100-500 kg', '500 kg+', 'Mixed']}
+                  options={['0-5 Kg.', '5-10 Kg.', '10-25 Kg.', '25-50 Kg.', '50-100 Kg.', '100-500 Kg.', '500 Kg. +', 'Mixed']}
                   error={errors.weightRange}
                   required
                 />
@@ -1021,69 +1153,93 @@ const SalesForm = () => {
                   required
                 />
 
-                <FloatingSelect
-                  label="Type of Vehicle Required"
-                  value={formData.typeOfVehicleRequired}
-                  onChange={(value) => handleInputChange('typeOfVehicleRequired', value)}
-                  options={['Tata Ace', 'Bolero', 'Pickup', '14ft', '17ft', '19ft', 'Container', 'Mixed', 'Other']}
-                  error={errors.typeOfVehicleRequired}
-                  required
-                />
+                <div>
+                  <FloatingSelect
+                    label="Type of Vehicle Required"
+                    value={formData.typeOfVehicleRequired}
+                    onChange={(value) => handleInputChange('typeOfVehicleRequired', value)}
+                    options={['Tata Ace', 'Pickup Van', '407 Truck','14ft','17ft','1109 Truck', '20ft','22ft','Container','Trailer', 'Mixed', 'Others']}
+                    error={errors.typeOfVehicleRequired}
+                    required
+                  />
+                  {formData.typeOfVehicleRequired === 'Others' && (
+                    <div className="mt-3">
+                      <FloatingLabelInput
+                        id="customTypeOfVehicleRequired"
+                        value={customTypeOfVehicleRequired}
+                        onChange={(value) => {
+                          setCustomTypeOfVehicleRequired(value);
+                          if (errors.typeOfVehicleRequired) {
+                            setErrors(prev => ({ ...prev, typeOfVehicleRequired: undefined }));
+                          }
+                        }}
+                        placeholder="Please specify type of vehicle"
+                        error={errors.typeOfVehicleRequired}
+                        required
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div>
                 <Label className="text-sm font-medium text-gray-700 mb-2 block">
-                  Upload Image (Business Card / Shop Image / Company Photo)
+                  Upload Images (Business Card / Shop Image / Company Photo)
                 </Label>
-                {!imagePreview ? (
-                  <div className={cn(
-                    "border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-6 text-center transition-all duration-200",
-                    "border-gray-300/60 hover:border-blue-400/50 hover:shadow-sm",
-                    "bg-white/50"
-                  )}>
-                    <input
-                      type="file"
-                      id="imageUpload"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                    />
-                    <label
-                      htmlFor="imageUpload"
-                      className="cursor-pointer flex flex-col items-center gap-2"
-                    >
-                      <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
-                      <span className="text-xs sm:text-sm text-gray-600">
-                        Click to upload or drag and drop
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        PNG, JPG, JPEG up to 5MB
-                      </span>
-                    </label>
-                  </div>
-                ) : (
-                  <div className="relative inline-block">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="max-w-xs h-auto max-h-20 rounded-lg"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center gap-3">
-                      <div
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => window.open(imagePreview, '_blank')}
-                        title="View image"
-                      >
-                        <Eye className="h-5 w-5 text-blue-500 drop-shadow-lg" />
+                <div className={cn(
+                  "border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-6 text-center transition-all duration-200",
+                  "border-gray-300/60 hover:border-blue-400/50 hover:shadow-sm",
+                  "bg-white/50"
+                )}>
+                  <input
+                    type="file"
+                    id="imageUpload"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <label
+                    htmlFor="imageUpload"
+                    className="cursor-pointer flex flex-col items-center gap-2"
+                  >
+                    <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
+                    <span className="text-xs sm:text-sm text-gray-600">
+                      Click to upload or drag and drop
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      PNG, JPG, JPEG up to 5MB each (Multiple images allowed)
+                    </span>
+                  </label>
+                </div>
+                
+                {imagePreviews.length > 0 && (
+                  <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {imagePreviews.map((item, index) => (
+                      <div key={index} className="relative group">
+                        <img
+                          src={item.preview}
+                          alt={`Preview ${index + 1}`}
+                          className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                        />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                          <div
+                            className="cursor-pointer p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                            onClick={() => window.open(item.preview, '_blank')}
+                            title="View image"
+                          >
+                            <Eye className="h-4 w-4 text-blue-500" />
+                          </div>
+                          <div
+                            className="cursor-pointer p-1.5 bg-white/90 rounded-full hover:bg-white transition-colors"
+                            onClick={() => removeImage(index)}
+                            title="Remove image"
+                          >
+                            <X className="h-4 w-4 text-red-500" />
+                          </div>
+                        </div>
                       </div>
-                      <div
-                        className="cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={removeImage}
-                        title="Remove image"
-                      >
-                        <X className="h-5 w-5 text-blue-500 drop-shadow-lg" />
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -1116,6 +1272,123 @@ const SalesForm = () => {
           </form>
         </div>
       </div>
+
+      {/* Name Input Dialog */}
+      <Dialog open={nameDialogOpen} onOpenChange={setNameDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Enter Your Name</DialogTitle>
+            <DialogDescription>
+              Please enter your name to submit the form.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="submittedByName">Your Name</Label>
+              <Input
+                id="submittedByName"
+                value={submittedByName}
+                onChange={(e) => {
+                  setSubmittedByName(e.target.value);
+                  if (nameError) setNameError('');
+                }}
+                placeholder="Enter your name"
+                className={nameError ? 'border-red-500' : ''}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && submittedByName.trim()) {
+                    handleFinalSubmit();
+                  }
+                }}
+              />
+              {nameError && (
+                <p className="text-sm text-red-600">{nameError}</p>
+              )}
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setNameDialogOpen(false);
+                  setSubmittedByName('');
+                  setNameError('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleFinalSubmit}
+                disabled={!submittedByName.trim()}
+              >
+                Submit
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Success Dialog with Animation */}
+      <Dialog open={successDialogOpen} onOpenChange={setSuccessDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] p-8">
+          <style>{`
+            @keyframes scale-in {
+              0% {
+                transform: scale(0);
+                opacity: 0;
+              }
+              50% {
+                transform: scale(1.2);
+              }
+              100% {
+                transform: scale(1);
+                opacity: 1;
+              }
+            }
+            .animate-scale-in {
+              animation: scale-in 0.5s ease-out;
+            }
+            @keyframes fade-in-up {
+              0% {
+                opacity: 0;
+                transform: translateY(20px);
+              }
+              100% {
+                opacity: 1;
+                transform: translateY(0);
+              }
+            }
+            .animate-fade-in-up {
+              animation: fade-in-up 0.6s ease-out;
+            }
+          `}</style>
+          <div className="flex flex-col items-center justify-center space-y-4 animate-fade-in-up">
+            {/* Animated Check Circle */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-green-100 rounded-full animate-ping opacity-75"></div>
+              <div className="relative bg-green-100 rounded-full p-4">
+                <CheckCircle className="h-16 w-16 text-green-600 animate-scale-in" />
+              </div>
+            </div>
+            
+            {/* Success Message */}
+            <div className="text-center space-y-2">
+              <DialogTitle className="text-2xl font-bold text-green-600">
+                Success!
+              </DialogTitle>
+              <DialogDescription className="text-base text-gray-600">
+                Your sales form has been submitted successfully!
+              </DialogDescription>
+            </div>
+
+            {/* Close Button */}
+            <Button
+              onClick={() => setSuccessDialogOpen(false)}
+              className="mt-4 bg-green-600 hover:bg-green-700 text-white"
+            >
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>
