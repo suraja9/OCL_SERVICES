@@ -848,79 +848,140 @@ const CustomerCareOverview = () => {
       const allBookings: any[] = [];
 
       // Process tracking data (office endpoint accessible to office users)
+      // This endpoint now returns data from both trackings and customerbookings collections
       if (trackingResponse.ok) {
         const trackingData = await trackingResponse.json();
         if (trackingData.success && Array.isArray(trackingData.data)) {
           const transformed = trackingData.data.map((item: any) => {
-            // Extract origin and destination from booked array (Tracking model structure)
-            const bookedEntry = item.booked?.[0] || {};
-            const originData = bookedEntry.originData || {};
-            const destinationData = bookedEntry.destinationData || {};
-            const invoiceData = bookedEntry.invoiceData || {};
+            // Check if this is from CustomerBooking or Tracking collection
+            const isCustomerBooking = item._source === 'customerbooking';
 
-            // Determine source based on assignmentType (from Tracking model)
-            // assignmentType can be: 'corporate', 'office_user', 'courier_boy', 'medicine', 'online_customer'
-            let source: 'customer' | 'medicine' | 'corporate' = 'customer';
-            if (item.assignmentType === 'medicine') {
-              source = 'medicine';
-            } else if (item.assignmentType === 'corporate' || item.corporateId) {
-              source = 'corporate';
-            } else if (item.assignmentType === 'online_customer') {
-              source = 'customer';
+            if (isCustomerBooking) {
+              // Transform CustomerBooking data
+              const origin = item.origin || {};
+              const destination = item.destination || {};
+
+              // Map payment status from CustomerBooking format
+              const paymentStatus = item.paymentStatus === 'paid' ? 'paid' : 'unpaid';
+
+              // Get total amount from CustomerBooking
+              const totalAmount = item.totalAmount || item.calculatedPrice || 0;
+
+              return {
+                _id: item._id || item.consignmentNumber?.toString() || '',
+                consignmentNumber: item.consignmentNumber,
+                bookingReference: item.bookingReference || item.consignmentNumber?.toString() || '',
+                source: 'customer' as const,
+                origin: {
+                  name: origin.name || 'N/A',
+                  companyName: origin.companyName,
+                  mobileNumber: origin.mobileNumber || '',
+                  email: origin.email,
+                  locality: origin.locality,
+                  flatBuilding: origin.flatBuilding,
+                  landmark: origin.landmark,
+                  pincode: origin.pincode || '',
+                  area: origin.area,
+                  city: origin.city || 'N/A',
+                  district: origin.district,
+                  state: origin.state || '',
+                  gstNumber: origin.gstNumber,
+                  addressType: origin.addressType,
+                },
+                destination: {
+                  name: destination.name || 'N/A',
+                  companyName: destination.companyName,
+                  mobileNumber: destination.mobileNumber || '',
+                  email: destination.email,
+                  locality: destination.locality,
+                  flatBuilding: destination.flatBuilding,
+                  landmark: destination.landmark,
+                  pincode: destination.pincode || '',
+                  area: destination.area,
+                  city: destination.city || 'N/A',
+                  district: destination.district,
+                  state: destination.state || '',
+                  gstNumber: destination.gstNumber,
+                  addressType: destination.addressType,
+                },
+                currentStatus: item.currentStatus || 'booked',
+                paymentStatus: paymentStatus,
+                totalAmount: totalAmount,
+                bookingDate: item.bookingDate || item.BookedAt || item.createdAt,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt || item.createdAt,
+              };
+            } else {
+              // Transform Tracking data (corporate/medicine)
+              const bookedEntry = item.booked?.[0] || {};
+              const originData = bookedEntry.originData || {};
+              const destinationData = bookedEntry.destinationData || {};
+              const invoiceData = bookedEntry.invoiceData || {};
+
+              // Determine source based on assignmentType (from Tracking model)
+              // assignmentType can be: 'corporate', 'office_user', 'courier_boy', 'medicine', 'online_customer'
+              let source: 'customer' | 'medicine' | 'corporate' = 'customer';
+              if (item.assignmentType === 'medicine') {
+                source = 'medicine';
+              } else if (item.assignmentType === 'corporate' || item.corporateId) {
+                source = 'corporate';
+              } else if (item.assignmentType === 'online_customer') {
+                source = 'customer';
+              }
+
+              // Extract payment status from bookedEntry (matching AllBookings.tsx corporate booking structure)
+              const paymentStatus = bookedEntry.paymentStatus === 'paid' ? 'paid' : 'unpaid';
+
+              // Extract total amount from invoiceData.finalPrice (matching AllBookings.tsx corporate booking structure)
+              const totalAmount = invoiceData.finalPrice
+                ? parseFloat(invoiceData.finalPrice.toString())
+                : 0;
+
+              return {
+                _id: item._id || item.consignmentNumber?.toString() || '',
+                consignmentNumber: item.consignmentNumber,
+                bookingReference: item.bookingReference || item.consignmentNumber?.toString() || '',
+                source: source,
+                origin: {
+                  name: originData.name || 'N/A',
+                  companyName: originData.companyName,
+                  mobileNumber: originData.mobileNumber || '',
+                  email: originData.email,
+                  locality: originData.locality,
+                  flatBuilding: originData.flatBuilding,
+                  landmark: originData.landmark,
+                  pincode: originData.pincode || '',
+                  area: originData.area,
+                  city: originData.city || 'N/A',
+                  district: originData.district,
+                  state: originData.state || '',
+                  gstNumber: originData.gstNumber,
+                  addressType: originData.addressType,
+                },
+                destination: {
+                  name: destinationData.name || 'N/A',
+                  companyName: destinationData.companyName,
+                  mobileNumber: destinationData.mobileNumber || '',
+                  email: destinationData.email,
+                  locality: destinationData.locality,
+                  flatBuilding: destinationData.flatBuilding,
+                  landmark: destinationData.landmark,
+                  pincode: destinationData.pincode || '',
+                  area: destinationData.area,
+                  city: destinationData.city || 'N/A',
+                  district: destinationData.district,
+                  state: destinationData.state || '',
+                  gstNumber: destinationData.gstNumber,
+                  addressType: destinationData.addressType,
+                },
+                currentStatus: item.currentStatus || 'booked',
+                paymentStatus: paymentStatus,
+                totalAmount: totalAmount,
+                bookingDate: bookedEntry.bookingDate || item.createdAt,
+                createdAt: item.createdAt,
+                updatedAt: item.updatedAt || item.createdAt,
+              };
             }
-
-            // Extract payment status from bookedEntry (matching AllBookings.tsx corporate booking structure)
-            const paymentStatus = bookedEntry.paymentStatus === 'paid' ? 'paid' : 'unpaid';
-
-            // Extract total amount from invoiceData.finalPrice (matching AllBookings.tsx corporate booking structure)
-            const totalAmount = invoiceData.finalPrice
-              ? parseFloat(invoiceData.finalPrice.toString())
-              : 0;
-
-            return {
-              _id: item._id || item.consignmentNumber?.toString() || '',
-              consignmentNumber: item.consignmentNumber,
-              bookingReference: item.bookingReference || item.consignmentNumber?.toString() || '',
-              source: source,
-              origin: {
-                name: originData.name || 'N/A',
-                companyName: originData.companyName,
-                mobileNumber: originData.mobileNumber || '',
-                email: originData.email,
-                locality: originData.locality,
-                flatBuilding: originData.flatBuilding,
-                landmark: originData.landmark,
-                pincode: originData.pincode || '',
-                area: originData.area,
-                city: originData.city || 'N/A',
-                district: originData.district,
-                state: originData.state || '',
-                gstNumber: originData.gstNumber,
-                addressType: originData.addressType,
-              },
-              destination: {
-                name: destinationData.name || 'N/A',
-                companyName: destinationData.companyName,
-                mobileNumber: destinationData.mobileNumber || '',
-                email: destinationData.email,
-                locality: destinationData.locality,
-                flatBuilding: destinationData.flatBuilding,
-                landmark: destinationData.landmark,
-                pincode: destinationData.pincode || '',
-                area: destinationData.area,
-                city: destinationData.city || 'N/A',
-                district: destinationData.district,
-                state: destinationData.state || '',
-                gstNumber: destinationData.gstNumber,
-                addressType: destinationData.addressType,
-              },
-              currentStatus: item.currentStatus || 'booked',
-              paymentStatus: paymentStatus,
-              totalAmount: totalAmount,
-              bookingDate: bookedEntry.bookingDate || item.createdAt,
-              createdAt: item.createdAt,
-              updatedAt: item.updatedAt || item.createdAt,
-            };
           });
           allBookings.push(...transformed);
         }
@@ -1019,10 +1080,11 @@ const CustomerCareOverview = () => {
       // Map status keys to API status values
       const statusMap: Record<string, string> = {
         'total': 'all',
-        'booked': 'booked',
-        'pickup': 'picked_up',
-        'picked': 'picked_up',
+        'booked': 'booked', // This will include assigned as well
+        'pickup': 'picked',
+        'picked': 'picked',
         'received': 'received',
+        'assigned': 'booked', // Map assigned to booked for query
         'intransit': 'in_transit',
         'in_transit': 'in_transit',
         'reached-hub': 'reached-hub',
@@ -1031,11 +1093,12 @@ const CustomerCareOverview = () => {
         'ofp': 'out_for_delivery',
         'out_for_delivery': 'out_for_delivery',
         'delivered': 'delivered',
+        'undelivered': 'undelivered', // This will include rto, undelivered, and reserve
       };
 
       const apiStatus = statusMap[status.toLowerCase()] || status.toLowerCase();
 
-      // Use office tracking endpoint instead of admin endpoints
+      // Use office tracking endpoint which now fetches from both collections
       const trackingResponse = await fetch(
         `/api/office/tracking${apiStatus !== 'all' ? `?status=${apiStatus}&limit=1000` : '?limit=1000'}`,
         {
@@ -1045,57 +1108,89 @@ const CustomerCareOverview = () => {
 
       const allBookings: UnifiedBooking[] = [];
 
-      // Process tracking data
+      // Process data from both trackings and customerbookings
       if (trackingResponse.ok) {
         const trackingData = await trackingResponse.json();
         if (trackingData.success && Array.isArray(trackingData.data)) {
           const transformed = trackingData.data.map((item: any) => {
-            // Extract data from booked array (Tracking model structure)
-            const bookedEntry = item.booked?.[0] || {};
-            const originData = bookedEntry.originData || {};
-            const destinationData = bookedEntry.destinationData || {};
-            const invoiceData = bookedEntry.invoiceData || {};
+            // Check if this is from CustomerBooking or Tracking collection
+            const isCustomerBooking = item._source === 'customerbooking';
 
-            // Determine source based on assignmentType
-            let source: 'customer' | 'medicine' | 'corporate' = 'customer';
-            if (item.assignmentType === 'medicine') {
-              source = 'medicine';
-            } else if (item.assignmentType === 'corporate' || item.corporateId) {
-              source = 'corporate';
-            } else if (item.assignmentType === 'online_customer') {
-              source = 'customer';
+            if (isCustomerBooking) {
+              // Transform CustomerBooking data
+              const origin = item.origin || {};
+              const destination = item.destination || {};
+
+              return {
+                _id: item._id || item.consignmentNumber?.toString() || '',
+                bookingReference: item.bookingReference || item.consignmentNumber?.toString() || '',
+                consignmentNumber: item.consignmentNumber,
+                source: 'customer' as const,
+                origin: {
+                  name: origin.name || 'N/A',
+                  city: origin.city || 'N/A',
+                  mobileNumber: origin.mobileNumber || '',
+                },
+                destination: {
+                  name: destination.name || 'N/A',
+                  city: destination.city || 'N/A',
+                  mobileNumber: destination.mobileNumber || '',
+                },
+                status: item.currentStatus || 'booked',
+                currentStatus: item.currentStatus || 'booked',
+                paymentStatus: (item.paymentStatus === 'paid' ? 'paid' : 'unpaid') as 'paid' | 'unpaid' | 'pending',
+                totalAmount: item.totalAmount || item.calculatedPrice || 0,
+                bookingDate: item.bookingDate || item.BookedAt || item.createdAt,
+                createdAt: item.createdAt,
+              };
+            } else {
+              // Transform Tracking data (corporate/medicine)
+              const bookedEntry = item.booked?.[0] || {};
+              const originData = bookedEntry.originData || {};
+              const destinationData = bookedEntry.destinationData || {};
+              const invoiceData = bookedEntry.invoiceData || {};
+
+              // Determine source based on assignmentType
+              let source: 'customer' | 'medicine' | 'corporate' = 'customer';
+              if (item.assignmentType === 'medicine') {
+                source = 'medicine';
+              } else if (item.assignmentType === 'corporate' || item.corporateId) {
+                source = 'corporate';
+              } else if (item.assignmentType === 'online_customer') {
+                source = 'customer';
+              }
+
+              // Extract payment status from bookedEntry
+              const paymentStatus = bookedEntry.paymentStatus === 'paid' ? 'paid' : 'unpaid';
+
+              // Extract total amount from invoiceData.finalPrice
+              const totalAmount = invoiceData.finalPrice
+                ? parseFloat(invoiceData.finalPrice.toString())
+                : 0;
+
+              return {
+                _id: item._id || item.consignmentNumber?.toString() || '',
+                bookingReference: item.bookingReference || item.consignmentNumber?.toString() || '',
+                consignmentNumber: item.consignmentNumber,
+                source: source,
+                origin: {
+                  name: originData.name || 'N/A',
+                  city: originData.city || 'N/A',
+                  mobileNumber: originData.mobileNumber || '',
+                },
+                destination: {
+                  name: destinationData.name || 'N/A',
+                  city: destinationData.city || 'N/A',
+                  mobileNumber: destinationData.mobileNumber || '',
+                },
+                status: item.currentStatus || 'booked',
+                currentStatus: item.currentStatus || 'booked',
+                paymentStatus: paymentStatus as 'paid' | 'unpaid' | 'pending',
+                totalAmount: totalAmount,
+                bookingDate: bookedEntry.bookingDate || item.createdAt,
+                createdAt: item.createdAt,
+              };
             }
-
-            // Extract payment status from bookedEntry (matching AllBookings.tsx structure)
-            const paymentStatus = bookedEntry.paymentStatus === 'paid' ? 'paid' : 'unpaid';
-
-            // Extract total amount from invoiceData.finalPrice (matching AllBookings.tsx structure)
-            const totalAmount = invoiceData.finalPrice
-              ? parseFloat(invoiceData.finalPrice.toString())
-              : 0;
-
-            return {
-              _id: item._id || item.consignmentNumber?.toString() || '',
-              bookingReference: item.bookingReference || item.consignmentNumber?.toString() || '',
-              consignmentNumber: item.consignmentNumber,
-              source: source,
-              origin: {
-                name: originData.name || 'N/A',
-                city: originData.city || 'N/A',
-                mobileNumber: originData.mobileNumber || '',
-              },
-              destination: {
-                name: destinationData.name || 'N/A',
-                city: destinationData.city || 'N/A',
-                mobileNumber: destinationData.mobileNumber || '',
-              },
-              status: item.currentStatus || 'booked',
-              currentStatus: item.currentStatus || 'booked',
-              paymentStatus: paymentStatus,
-              totalAmount: totalAmount,
-              bookingDate: bookedEntry.bookingDate || item.createdAt,
-              createdAt: item.createdAt,
-            };
           });
           allBookings.push(...transformed);
         }
@@ -2149,6 +2244,9 @@ const CustomerCareOverview = () => {
       'OFP': MapPin,
       'out_for_delivery': MapPin,
       'delivered': CheckCircle,
+      'undelivered': AlertTriangle,
+      'rto': AlertTriangle,
+      'reserve': AlertTriangle,
     };
     return iconMap[statusKey] || Package;
   };
@@ -2168,6 +2266,9 @@ const CustomerCareOverview = () => {
       'OFP': { cardBgColor: 'bg-sky-50', textColor: 'text-sky-700', iconColor: 'text-sky-600' },
       'out_for_delivery': { cardBgColor: 'bg-sky-50', textColor: 'text-sky-700', iconColor: 'text-sky-600' },
       'delivered': { cardBgColor: 'bg-emerald-50', textColor: 'text-emerald-700', iconColor: 'text-emerald-600' },
+      'undelivered': { cardBgColor: 'bg-red-50', textColor: 'text-red-700', iconColor: 'text-red-600' },
+      'rto': { cardBgColor: 'bg-red-50', textColor: 'text-red-700', iconColor: 'text-red-600' },
+      'reserve': { cardBgColor: 'bg-red-50', textColor: 'text-red-700', iconColor: 'text-red-600' },
     };
     return colorMap[statusKey] || { cardBgColor: 'bg-slate-50', textColor: 'text-slate-700', iconColor: 'text-slate-600' };
   };
@@ -2175,8 +2276,31 @@ const CustomerCareOverview = () => {
   const keyMetrics = useMemo(() => {
     const total = activeTotal ?? activeOrders.length;
 
+    // Define the order for status cards (backend normalizes statuses, so we use normalized keys)
+    const statusOrder = [
+      'total',
+      'booked',
+      'picked',
+      'in_transit',
+      'reached-hub',
+      'out_for_delivery',
+      'delivered',
+      'undelivered'
+    ];
+
     // Total metric
-    const metrics = [{
+    const metrics: Array<{
+      key: string;
+      label: string;
+      value: number;
+      icon: any;
+      cardBgColor: string;
+      textColor: string;
+      iconColor: string;
+    }> = [];
+
+    // Add total first
+    metrics.push({
       key: 'total',
       label: 'Total',
       value: total,
@@ -2184,12 +2308,16 @@ const CustomerCareOverview = () => {
       cardBgColor: 'bg-blue-50',
       textColor: 'text-blue-700',
       iconColor: 'text-blue-600',
-    }];
+    });
 
-    // Dynamically build metrics from status counts (opaque - no assumptions)
+    // Build metrics from status counts in the specified order
     if (statusSummary && typeof statusSummary === 'object') {
-      Object.entries(statusSummary).forEach(([statusKey, value]) => {
-        if (statusKey !== 'total' && typeof value === 'number') {
+      // First, add metrics in the specified order
+      statusOrder.forEach((statusKey) => {
+        if (statusKey === 'total') return; // Already added
+        
+        const value = statusSummary[statusKey];
+        if (value !== undefined && typeof value === 'number' && value > 0) {
           const colors = getStatusColors(statusKey);
           metrics.push({
             key: statusKey,
@@ -2200,6 +2328,27 @@ const CustomerCareOverview = () => {
             textColor: colors.textColor,
             iconColor: colors.iconColor,
           });
+        }
+      });
+
+      // Then add any remaining statuses that weren't in the order list
+      // But exclude merged statuses: assigned (merged into booked), rto/reserve (merged into undelivered)
+      const excludedStatuses = ['assigned', 'rto', 'reserve', 'total'];
+      Object.entries(statusSummary).forEach(([statusKey, value]) => {
+        if (statusKey !== 'total' && typeof value === 'number' && value > 0) {
+          // Skip if already added or if it's a merged status
+          if (!metrics.find(m => m.key === statusKey) && !excludedStatuses.includes(statusKey)) {
+            const colors = getStatusColors(statusKey);
+            metrics.push({
+              key: statusKey,
+              label: resolveDisplayStatus(statusKey),
+              value: value || 0,
+              icon: getStatusIcon(statusKey),
+              cardBgColor: colors.cardBgColor,
+              textColor: colors.textColor,
+              iconColor: colors.iconColor,
+            });
+          }
         }
       });
     }

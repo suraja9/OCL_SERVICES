@@ -1215,7 +1215,141 @@ router.get('/courier-boys/list', authenticateOfficeUser, async (req, res) => {
   }
 });
 
-// Get tracking records from trackings table (for office users)
+// Get dashboard summary (aggregates from trackings and customerbookings)
+router.get('/dashboard/summary', authenticateOfficeUser, async (req, res) => {
+  try {
+    const CustomerBooking = (await import('../models/CustomerBooking.js')).default;
+    
+    // Get today's date range for todayCount
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Helper function to normalize status values
+    // Maps various status formats to a consistent standard
+    const normalizeStatus = (status) => {
+      if (!status) return 'booked';
+      
+      // Normalize status values to standard format
+      const statusMap = {
+        'pickup': 'picked',           // CustomerBooking 'pickup' -> standard 'picked'
+        'intransit': 'in_transit',    // CustomerBooking 'intransit' -> standard 'in_transit'
+        'OFP': 'out_for_delivery',    // Both collections 'OFP' -> standard 'out_for_delivery'
+        'assigned': 'booked',         // Merge 'assigned' into 'booked'
+      };
+      
+      return statusMap[status] || status;
+    };
+
+    // Aggregate status counts from Tracking collection
+    const trackingStatusCounts = await Tracking.aggregate([
+      {
+        $match: {
+          currentStatus: { $exists: true, $ne: null, $nin: ['cancelled', 'returned'] }
+        }
+      },
+      {
+        $group: {
+          _id: '$currentStatus',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Aggregate status counts from CustomerBooking collection
+    const customerBookingStatusCounts = await CustomerBooking.aggregate([
+      {
+        $match: {
+          currentStatus: { $exists: true, $ne: null, $nin: ['cancelled', 'returned'] }
+        }
+      },
+      {
+        $group: {
+          _id: '$currentStatus',
+          count: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Combine and normalize status counts
+    const statusCounts = {};
+    
+    // Process Tracking status counts
+    trackingStatusCounts.forEach(({ _id, count }) => {
+      const normalizedStatus = normalizeStatus(_id);
+      statusCounts[normalizedStatus] = (statusCounts[normalizedStatus] || 0) + count;
+    });
+
+    // Process CustomerBooking status counts
+    customerBookingStatusCounts.forEach(({ _id, count }) => {
+      const normalizedStatus = normalizeStatus(_id);
+      statusCounts[normalizedStatus] = (statusCounts[normalizedStatus] || 0) + count;
+    });
+
+    // Merge "assigned" into "booked"
+    if (statusCounts['assigned']) {
+      statusCounts['booked'] = (statusCounts['booked'] || 0) + statusCounts['assigned'];
+      delete statusCounts['assigned'];
+    }
+
+    // Merge RTO, undelivered, and pending unreachable (reserve) into "undelivered"
+    const undeliveredCount = 
+      (statusCounts['rto'] || 0) + 
+      (statusCounts['undelivered'] || 0) + 
+      (statusCounts['reserve'] || 0); // reserve is pending unreachable
+    
+    // Always merge into undelivered, even if count is 0
+    statusCounts['undelivered'] = undeliveredCount;
+    // Remove individual statuses after merging (always delete, even if count was 0)
+    delete statusCounts['rto'];
+    delete statusCounts['reserve'];
+
+    // Calculate total shipments (excluding cancelled/returned)
+    const [totalTrackings, totalCustomerBookings] = await Promise.all([
+      Tracking.countDocuments({
+        currentStatus: { $nin: ['cancelled', 'returned'] }
+      }),
+      CustomerBooking.countDocuments({
+        currentStatus: { $nin: ['cancelled', 'returned'] }
+      })
+    ]);
+
+    const totalShipments = totalTrackings + totalCustomerBookings;
+
+    // Calculate today's count (bookings created today)
+    const [todayTrackings, todayCustomerBookings] = await Promise.all([
+      Tracking.countDocuments({
+        createdAt: { $gte: today, $lt: tomorrow },
+        currentStatus: { $nin: ['cancelled', 'returned'] }
+      }),
+      CustomerBooking.countDocuments({
+        createdAt: { $gte: today, $lt: tomorrow },
+        currentStatus: { $nin: ['cancelled', 'returned'] }
+      })
+    ]);
+
+    const todayCount = todayTrackings + todayCustomerBookings;
+
+    res.json({
+      success: true,
+      data: {
+        totalShipments,
+        statusCounts,
+        todayCount
+      }
+    });
+  } catch (error) {
+    console.error('Dashboard summary error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch dashboard summary',
+      message: error.message
+    });
+  }
+});
+
+// Get tracking records from trackings and customerbookings tables (for office users)
 router.get('/tracking', authenticateOfficeUser, async (req, res) => {
   try {
     // Check if user has permission to access address forms (tracking data)
@@ -1227,31 +1361,68 @@ router.get('/tracking', authenticateOfficeUser, async (req, res) => {
       });
     }
 
+    const CustomerBooking = (await import('../models/CustomerBooking.js')).default;
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 100;
     const skip = (page - 1) * limit;
 
-    // Build query - no status filter by default to get all records
-    const query = {};
+    // Build query for both collections
+    const trackingQuery = {};
+    const customerBookingQuery = {};
 
-    // Optional status filter
+    // Handle status filter - map "undelivered" to include rto, undelivered, and reserve
     if (req.query.status) {
-      query.currentStatus = req.query.status;
+      let statusFilter = req.query.status;
+      
+      // If status is "undelivered", include rto, undelivered, and reserve
+      if (statusFilter === 'undelivered') {
+        trackingQuery.currentStatus = { $in: ['rto', 'undelivered', 'reserve'] };
+        customerBookingQuery.currentStatus = { $in: ['rto', 'undelivered', 'reserve'] };
+      } else if (statusFilter === 'booked') {
+        // If status is "booked", include assigned as well
+        trackingQuery.currentStatus = { $in: ['booked', 'assigned'] };
+        customerBookingQuery.currentStatus = { $in: ['booked', 'assigned'] };
+      } else {
+        trackingQuery.currentStatus = statusFilter;
+        customerBookingQuery.currentStatus = statusFilter;
+      }
     }
 
-    // Fetch all tracking records from trackings table
-    const [records, totalCount] = await Promise.all([
-      Tracking.find(query)
+    // For large limits (like status popup with 1000), fetch all records
+    // For smaller limits, fetch enough to ensure proper pagination after sorting
+    const fetchLimit = limit >= 1000 ? 10000 : limit * 3; // Fetch more for proper sorting
+    
+    const [trackingRecords, customerBookingRecords, trackingCount, customerBookingCount] = await Promise.all([
+      Tracking.find(trackingQuery)
         .sort({ updatedAt: -1 })
-        .skip(skip)
-        .limit(limit)
+        .limit(fetchLimit)
         .lean(),
-      Tracking.countDocuments(query)
+      CustomerBooking.find(customerBookingQuery)
+        .sort({ updatedAt: -1 })
+        .limit(fetchLimit)
+        .lean(),
+      Tracking.countDocuments(trackingQuery),
+      CustomerBooking.countDocuments(customerBookingQuery)
     ]);
+
+    // Combine and sort all records
+    const allRecords = [
+      ...trackingRecords.map(record => ({ ...record, _source: 'tracking' })),
+      ...customerBookingRecords.map(record => ({ ...record, _source: 'customerbooking' }))
+    ].sort((a, b) => {
+      const dateA = new Date(a.updatedAt || a.createdAt).getTime();
+      const dateB = new Date(b.updatedAt || b.createdAt).getTime();
+      return dateB - dateA;
+    });
+
+    const totalCount = trackingCount + customerBookingCount;
+    
+    // Apply pagination after sorting
+    const paginatedRecords = allRecords.slice(skip, skip + limit);
 
     res.json({
       success: true,
-      data: records,
+      data: paginatedRecords,
       pagination: {
         currentPage: page,
         totalPages: Math.ceil(totalCount / limit),
@@ -1265,7 +1436,7 @@ router.get('/tracking', authenticateOfficeUser, async (req, res) => {
     console.error('Get tracking records error:', error);
     res.status(500).json({ 
       success: false,
-      error: 'Failed to fetch tracking records from trackings table.' 
+      error: 'Failed to fetch tracking records.' 
     });
   }
 });
