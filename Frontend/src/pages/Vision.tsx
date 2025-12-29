@@ -12,6 +12,7 @@ import visionImg from "@/assets/vision.png";
 import about1Img from "@/assets/about-1.png";
 import about2Img from "@/assets/about-2.png";
 import about3Img from "@/assets/about-3.png";
+import coreImg from "@/assets/core.png";
 
 const Vision = () => {
   // Mission section data
@@ -348,7 +349,15 @@ const Vision = () => {
       />
 
       {/* Section 3 - Core Values */}
-      <section className="pt-6 pb-10 md:pt-12 md:pb-20 bg-black">
+      <section 
+        className="pt-6 pb-10 md:pt-12 md:pb-20 bg-black"
+        style={{
+          backgroundImage: `url(${coreImg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}

@@ -57,7 +57,7 @@ const Navbar = () => {
       {/* Glass container wrapper (90% width, centered, margins) */}
       <div ref={navRef} className="w-[96%] mt-2">
         <div 
-          className="pointer-events-auto flex items-center justify-between h-[48px] rounded-[50px] px-4 sm:px-6 border border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
+          className="pointer-events-auto flex items-center justify-between h-[48px] rounded-[50px] px-4 sm:px-6 lg:px-4 lg:pr-2 border border-white/15 shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
           style={{
             background: "rgba(255, 255, 255, 0.3)",
             backdropFilter: "blur(8px)",
@@ -78,7 +78,7 @@ const Navbar = () => {
           </Link>
 
           {/* Right Section - Menu Items */}
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 sm:gap-4 lg:gap-2">
             {/* Mobile Phone Icon */}
             <a
               href="tel:8453994809"
@@ -123,7 +123,7 @@ const Navbar = () => {
                 </Link>
               ))}
             {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
+            <div className="hidden lg:flex items-center space-x-0 lg:space-x-0 xl:space-x-0.5 ml-auto lg:mr-0">
             {navData.navigation.map((item) => (
               <div 
                 key={item.label} 
@@ -133,9 +133,12 @@ const Navbar = () => {
               >
                 {item.type === "dropdown" ? (
                   <>
-                    <button className="flex items-center space-x-1 px-3 py-2 text-black font-medium transition-colors duration-200">
+                    <button 
+                      className="flex items-center space-x-1 px-2 py-2 text-black font-normal transition-colors duration-200 group" 
+                      style={{ fontFamily: "'Value Serif Pro Regular', serif", fontSize: '13px' }}
+                    >
                       <span>{item.label}</span>
-                      <ChevronDown className="h-4 w-4 transition-transform duration-200 group-hover:rotate-180" />
+                      <ChevronDown className="h-4 w-4 transition-all duration-200 group-hover:rotate-180 group-hover:text-[#FFA019]" />
                     </button>
                     
                     {/* Dropdown Menu */}
@@ -156,9 +159,9 @@ const Navbar = () => {
                 ) : (
                   <Link
                     to={item.href}
-                    className={`px-3.5 py-2 font-semibold transition-all duration-200 ${
+                    className={`px-2 py-2 font-normal transition-colors duration-200 ${
                       item.type === "cta" 
-                        ? "rounded-full text-white ship-now-btn"
+                        ? "rounded-full text-white ship-now-btn ship-now-btn-desktop"
                         : "text-black rounded-full"
                     }`}
                     style={
@@ -169,13 +172,14 @@ const Navbar = () => {
                             fontWeight: 600,
                             border: "none",
                             borderRadius: "30px",
-                            padding: "10px 25px",
+                            padding: "8px 18px",
+                            fontSize: "12px",
                             cursor: "pointer",
                             boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
                             transition: "all 0.3s ease",
                             animation: "gradientShift 4s ease infinite",
                           }
-                        : undefined
+                        : { fontFamily: "'Value Serif Pro Regular', serif", fontSize: '13px' }
                     }
                     onMouseEnter={(e) => {
                       if (item.type === "cta") {
@@ -321,6 +325,7 @@ const Navbar = () => {
           100% { background-position: 0% 50%; }
         }
 
+
         @keyframes menuSlideDown {
           0% {
             opacity: 0;
@@ -403,6 +408,16 @@ const Navbar = () => {
           background: linear-gradient(90deg, #ff8c00, #ffbb33, #0078ff);
           background-size: 200% auto;
           animation: gradientShift 4s ease infinite;
+        }
+
+        @media (min-width: 1024px) {
+          .ship-now-btn-desktop {
+            padding: 10px 24px !important;
+            font-size: 14px !important;
+            margin-top: 0 !important;
+            margin-right: 0 !important;
+            margin-bottom: 0 !important;
+          }
         }
       `}</style>
     </nav>

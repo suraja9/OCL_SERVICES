@@ -135,10 +135,10 @@ const Journey = () => {
             viewport={{ once: true, margin: "-10%" }}
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
           >
-            <p className="text-base sm:text-lg text-gray-600">
+            <p className="hidden md:block text-base sm:text-lg text-gray-600">
               Key milestones that shaped our growth from a local courier to a nationwide logistics leader
             </p>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 text-center md:text-center">
+            <h2 className="text-[30px] md:text-4xl lg:text-5xl font-bold text-gray-900 text-center md:text-center">
               <span className="text-[#FFA019]">Our</span> Journey
             </h2>
           </motion.div>
