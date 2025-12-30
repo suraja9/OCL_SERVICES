@@ -12,13 +12,40 @@ const Footer = () => {
   const currentYear = new Date().getFullYear();
   const [email, setEmail] = useState("");
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleNewsletterSubmit = (e: React.FormEvent) => {
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Replace with Supabase integration for newsletter signup
-    setShowSuccess(true);
-    setEmail("");
-    setTimeout(() => setShowSuccess(false), 5000);
+    setIsLoading(true);
+    setError("");
+    
+    try {
+      const response = await fetch('/api/news-email/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setShowSuccess(true);
+        setEmail("");
+        setTimeout(() => setShowSuccess(false), 5000);
+      } else {
+        setError(data.error || 'Failed to subscribe. Please try again.');
+        setTimeout(() => setError(""), 5000);
+      }
+    } catch (err) {
+      console.error('Error subscribing to newsletter:', err);
+      setError('Failed to subscribe. Please try again later.');
+      setTimeout(() => setError(""), 5000);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -183,9 +210,10 @@ const Footer = () => {
                   />
                   <Button 
                     type="submit" 
-                    className="w-full rounded-full bg-gradient-to-r from-[#FD9C13] to-[#F49610] hover:from-[#e58f12] hover:to-[#d8820f] text-white font-semibold h-12 transition-all duration-300 hover:scale-105"
+                    disabled={isLoading}
+                    className="w-full rounded-full bg-gradient-to-r from-[#FD9C13] to-[#F49610] hover:from-[#e58f12] hover:to-[#d8820f] text-white font-semibold h-12 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Subscribe
+                    {isLoading ? 'Subscribing...' : 'Subscribe'}
                   </Button>
                 </form>
 
@@ -193,6 +221,13 @@ const Footer = () => {
                 {showSuccess && (
                   <div className="text-[#FFC043] text-sm font-medium animate-fade-in">
                     Thanks for subscribing!
+                  </div>
+                )}
+
+                {/* Error Message */}
+                {error && (
+                  <div className="text-red-400 text-sm font-medium animate-fade-in">
+                    {error}
                   </div>
                 )}
 
@@ -204,37 +239,37 @@ const Footer = () => {
                       href="https://www.linkedin.com/company/our-courier-and-logistics/" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
                       style={{ backgroundColor: "transparent" }}
                     >
-                      <img src={linkedinIcon} alt="LinkedIn" className="w-8 h-8 md:w-[14px] md:h-[14px]" />
+                      <img src={linkedinIcon} alt="LinkedIn" className="w-6 h-6 md:w-8 md:h-8" />
                     </a>
                     <a 
                       href="https://www.instagram.com/ocl_services/" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
                       style={{ backgroundColor: "transparent" }}
                     >
-                      <img src={instagramIcon} alt="Instagram" className="w-8 h-8 md:w-[14px] md:h-[14px]" />
+                      <img src={instagramIcon} alt="Instagram" className="w-6 h-6 md:w-8 md:h-8" />
                     </a>
                     <a 
                       href="https://twitter.com/oclservices" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
                       style={{ backgroundColor: "transparent" }}
                     >
-                      <img src={twitterIcon} alt="Twitter" className="w-8 h-8 md:w-[14px] md:h-[14px]" />
+                      <img src={twitterIcon} alt="Twitter" className="w-6 h-6 md:w-8 md:h-8" />
                     </a>
                     <a 
                       href="https://www.facebook.com/oclservices" 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                      className="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
                       style={{ backgroundColor: "transparent" }}
                     >
-                      <img src={facebookIcon} alt="Facebook" className="w-8 h-8 md:w-[14px] md:h-[14px]" />
+                      <img src={facebookIcon} alt="Facebook" className="w-6 h-6 md:w-8 md:h-8" />
                     </a>
                   </div>
                 </div>
@@ -255,9 +290,10 @@ const Footer = () => {
                 <div className="flex justify-center">
                   <Button 
                     type="submit" 
-                    className="w-auto px-12 rounded-full bg-gradient-to-r from-[#FD9C13] to-[#F49610] hover:from-[#e58f12] hover:to-[#d8820f] text-white font-semibold h-12 transition-all duration-300 hover:scale-105"
+                    disabled={isLoading}
+                    className="w-auto px-12 rounded-full bg-gradient-to-r from-[#FD9C13] to-[#F49610] hover:from-[#e58f12] hover:to-[#d8820f] text-white font-semibold h-12 transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Subscribe
+                    {isLoading ? 'Subscribing...' : 'Subscribe'}
                   </Button>
                 </div>
               </form>
@@ -266,6 +302,13 @@ const Footer = () => {
               {showSuccess && (
                 <div className="text-[#FFC043] text-sm font-medium animate-fade-in">
                   Thanks for subscribing!
+                </div>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <div className="text-red-400 text-sm font-medium animate-fade-in">
+                  {error}
                 </div>
               )}
 

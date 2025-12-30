@@ -54,6 +54,11 @@
       ]
     },
     {
+      "label": "News",
+      "href": "/news",
+      "type": "link"
+    },
+    {
       "label": "Login",
       "type": "dropdown",
       "items": [

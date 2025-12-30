@@ -31,6 +31,7 @@ import ViewBills from "./pages/ViewBills";
 import Courier from "./pages/services/Courier";
 import Logistics from "./pages/services/Logistics";
 import OCLNews from "./pages/OCLNews";
+import NewsPost from "./pages/NewsPost";
 import MyShipments from "./pages/MyShipments";
 import CreditAccount from "./pages/CreditAccount";
 import ContactOCL from "./pages/support/ContactOCL";
@@ -110,6 +111,7 @@ const App = () => {
           <Route path="/services/courier" element={<Courier />} />
           <Route path="/services/logistics" element={<Logistics />} />
           <Route path="/news" element={<OCLNews />} />
+          <Route path="/news/:slug" element={<NewsPost />} />
           <Route path="/my-shipments" element={<MyShipments />} />
           <Route path="/tracking" element={<MyShipments />} />
           <Route path="/credit-account" element={<CreditAccount />} />

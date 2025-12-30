@@ -30,6 +30,8 @@ import onlineCustomerRoutes from "./routes/online-customer.js";
 import coldCallingRoutes from "./routes/cold-calling.js";
 import publicTrackingRoutes from "./routes/public-tracking.js";
 import salesFormRoutes from "./routes/sales-form.js";
+import newsEmailRoutes from "./routes/news-email.js";
+import oclNewsRoutes from "./routes/ocl-news.js";
 import FormData from "./models/FormData.js";
 import PinCodeArea from "./models/PinCodeArea.js";
 import CorporateData from "./models/CorporateData.js";
@@ -139,12 +141,17 @@ app.use("/api/online-customer", onlineCustomerRoutes);
 app.use("/api/cold-calling", coldCallingRoutes);
 app.use("/api/tracking", publicTrackingRoutes);
 app.use("/api/sales-form", salesFormRoutes);
+app.use("/api/news-email", newsEmailRoutes);
+app.use("/api/ocl-news", oclNewsRoutes);
 
 // Serve corporate logos
 app.use('/uploads/corporate-logos', express.static(path.join(__dirname, 'uploads/corporate-logos')));
 
 // Serve employee documents
 app.use('/uploads/employee-docs', express.static(path.join(__dirname, 'uploads/employee-docs')));
+
+// Serve news images
+app.use('/uploads/news-images', express.static(path.join(__dirname, 'uploads/news-images')));
 
 // FORM DATA ROUTES
 

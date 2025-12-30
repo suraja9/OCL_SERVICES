@@ -35,6 +35,7 @@ import {
   TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
+  Newspaper,
 } from 'lucide-react';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Bar, BarChart, Line, LineChart, Pie, PieChart, Cell, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend } from 'recharts';
@@ -78,6 +79,7 @@ import MedicineBookingOverview from '@/components/admin/medicineBookingOverview'
 import CustomerBookingOverview from '@/components/admin/CustomerBookingOverview';
 import AllBookings from '@/components/admin/AllBookings';
 import Undelivered from '@/components/admin/Undelivered';
+import News from '@/components/admin/News';
 import { OfficeBookingPanel } from '@/components/officeBooking';
 
 interface AdminInfo {
@@ -788,6 +790,18 @@ const AdminDashboard = () => {
               {!isSidebarCollapsed && <span className="font-medium text-sm">Sales Forms</span>}
             </button>
 
+            <button
+              onClick={() => setActiveTab('news')}
+              className={`w-full ${isSidebarCollapsed ? 'flex justify-center p-2' : 'text-left flex items-center gap-3 px-3 py-2'} rounded-xl transition ${activeTab === 'news'
+                ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              title={isSidebarCollapsed ? "News" : ""}
+            >
+              <Newspaper className="h-5 w-5" />
+              {!isSidebarCollapsed && <span className="font-medium text-sm">News</span>}
+            </button>
+
             {adminInfo?.role === 'super_admin' && (
               <button
                 onClick={() => setActiveTab('admins')}
@@ -1482,6 +1496,7 @@ const AdminDashboard = () => {
           {activeTab === 'payments' && <PaymentStatus />}
           {activeTab === 'collectPayment' && <CollectPayment />}
           {activeTab === 'salesForms' && <SalesForms />}
+          {activeTab === 'news' && <News />}
           {activeTab === 'admins' && adminInfo?.role === 'super_admin' && (
             <AdminManagement />
           )}
