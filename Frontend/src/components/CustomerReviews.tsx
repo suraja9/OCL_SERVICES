@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import amitSharmaImg from "@/assets/Amit-Sharma.png";
 import rituAgarwalImg from "@/assets/Ritu-Agarwal.png";
 import manojVermaImg from "@/assets/Manoj.png";
@@ -73,33 +72,14 @@ const CustomerReviews = () => {
     }
   ];
 
-  const handlePrev = () => {
-    setCurrentIndex((prev) => {
-      if (prev === 0) {
-        return Math.max(0, reviews.length - cardsPerView);
-      }
-      return prev - 1;
-    });
-  };
-
-  const handleNext = () => {
-    setCurrentIndex((prev) => {
-      const maxIndex = Math.max(0, reviews.length - cardsPerView);
-      if (prev >= maxIndex) {
-        return 0;
-      }
-      return prev + 1;
-    });
-  };
-
   return (
     <section
-      className="w-full pt-8 md:pt-12 pb-12 md:pb-16 lg:pb-20 px-4 sm:px-6 lg:px-8"
+      className="w-full pt-4 md:pt-12 pb-6 md:pb-16 lg:pb-20 px-4 sm:px-6 lg:px-8"
       style={{ backgroundColor: "#f9f9f9" }}
     >
       <div className="max-w-7xl mx-auto">
         {/* Section Header */}
-        <div className="mb-8 md:mb-12 text-center">
+        <div className="mb-4 md:mb-12 text-center">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -138,78 +118,13 @@ const CustomerReviews = () => {
               fontFamily: "'Value Serif Pro Bold', serif"
             }}
           >
-            ⭐ Customer Feedback – Verified by OCL Services
+            ⭐ Customer Feedback - Verified by OCL Services
           </motion.p>
         </div>
 
-        {/* Main Content - Sidebar + Reviews */}
-        <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-          {/* Left Sidebar */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="lg:w-1/4 flex flex-col"
-          >
-            {/* Large Quotation Mark Icon */}
-            <div
-              className="text-8xl md:text-9xl font-bold mb-4"
-              style={{ 
-                color: "#888888", 
-                fontFamily: "serif",
-                lineHeight: "1",
-                fontWeight: "bold"
-              }}
-            >
-              "
-            </div>
-            
-            {/* Title */}
-            <h3
-            className="text-xl md:text-2xl font-medium mb-6"
-            style={{
-              color: "#000000",
-              fontFamily: "'Value Serif Pro Bold', serif"
-            }}
-            >
-              What our customers are saying
-            </h3>
-
-            {/* Progress Bar with Navigation Arrows */}
-            <div className="flex items-center gap-1.5 mt-4">
-              {/* Left Arrow */}
-              <button
-                onClick={handlePrev}
-                className="flex-shrink-0 p-0 hover:opacity-70 transition-opacity"
-                style={{ color: "#CCCCCC" }}
-              >
-                <ChevronLeft className="w-3 h-3" />
-              </button>
-
-              {/* Progress Bar */}
-              <div className="flex-1 h-0.5 bg-gray-300 rounded-full overflow-hidden relative" style={{ maxWidth: "200px" }}>
-                <div
-                  className="h-full bg-gray-800 rounded-full transition-all duration-300"
-                  style={{
-                    width: `${Math.max(0, Math.min(100, ((currentIndex + 1) / Math.max(1, reviews.length - cardsPerView + 1)) * 100))}%`
-                  }}
-                />
-              </div>
-
-              {/* Right Arrow */}
-              <button
-                onClick={handleNext}
-                className="flex-shrink-0 p-0 hover:opacity-70 transition-opacity"
-                style={{ color: "#333333" }}
-              >
-                <ChevronRight className="w-3 h-3" />
-              </button>
-            </div>
-          </motion.div>
-
-          {/* Review Cards Carousel */}
-          <div className="lg:w-3/4 relative" style={{ overflowX: "hidden", overflowY: "visible", paddingTop: "5rem", paddingBottom: "2rem", scrollbarWidth: "none", msOverflowStyle: "none", height: "auto", maxHeight: "none" }}>
+        {/* Review Cards Carousel - Centered */}
+        <div className="w-full flex justify-center px-4 md:px-6">
+          <div className="w-full max-w-sm md:max-w-5xl relative customer-reviews-carousel" style={{ overflowX: "hidden", overflowY: "visible", scrollbarWidth: "none", msOverflowStyle: "none", height: "auto", maxHeight: "none" }}>
             <div
               className="flex transition-transform duration-500 ease-in-out"
               style={{
@@ -223,20 +138,23 @@ const CustomerReviews = () => {
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="flex-shrink-0 px-3 overflow-visible"
-                  style={{ width: `${100 / cardsPerView}%` }}
+                  className="flex-shrink-0 overflow-visible customer-review-card-wrapper"
+                  style={{ width: `${100 / cardsPerView}%`, boxSizing: 'border-box' }}
                 >
                   <div
-                    className="bg-white rounded-2xl h-full relative mb-6 overflow-visible p-4 md:p-5"
+                    className="bg-white rounded-xl h-full relative mb-4 overflow-visible customer-review-card mx-auto"
                     style={{
-                      boxShadow: "rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px",
-                      WebkitBoxShadow: "rgba(0, 0, 0, 0.25) 0px 14px 28px, rgba(0, 0, 0, 0.22) 0px 10px 10px",
-                      borderRadius: "16px",
-                      paddingTop: "4rem",
+                      boxShadow:
+                        "rgba(0, 0, 0, 0.12) 0px 2px 4px, rgba(0, 0, 0, 0.15) 0px 2px 4px",
+                      WebkitBoxShadow:
+                        "rgba(0, 0, 0, 0.12) 0px 2px 4px, rgba(0, 0, 0, 0.15) 0px 2px 4px",
+                      borderRadius: "12px",
                       display: "flex",
                       flexDirection: "column",
                       justifyContent: "center",
-                      alignItems: "center"
+                      alignItems: "center",
+                      width: '100%',
+                      maxWidth: '100%'
                     }}
                   >
                     {/* Notch at bottom center (chat bubble effect) */}
@@ -245,24 +163,22 @@ const CustomerReviews = () => {
                       style={{
                         width: "0",
                         height: "0",
-                        borderLeft: "10px solid transparent",
-                        borderRight: "10px solid transparent",
-                        borderTop: "10px solid #FFFFFF",
-                        filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.05))"
+                        borderLeft: "8px solid transparent",
+                        borderRight: "8px solid transparent",
+                        borderTop: "8px solid #FFFFFF",
+                        filter: "none"
                       }}
                     />
                     {/* Floating Photo Icon at Top Center - Fully visible */}
                     <div
-                      className="absolute left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center"
-                      style={{ pointerEvents: "none", top: "-64px" }}
+                      className="absolute left-1/2 transform -translate-x-1/2 z-10 flex flex-col items-center customer-review-avatar"
+                      style={{ pointerEvents: "none" }}
                     >
                       <div
-                        className="rounded-full bg-white flex items-center justify-center mb-2 overflow-hidden"
+                        className="rounded-full bg-white flex items-center justify-center mb-1.5 overflow-hidden customer-review-avatar-img"
                         style={{
-                          boxShadow: "rgba(0, 0, 0, 0.15) 0px 8px 16px, rgba(0, 0, 0, 0.1) 0px 4px 8px",
-                          border: "3px solid #FFFFFF",
-                          width: "64px",
-                          height: "64px"
+                          boxShadow: "rgba(0, 0, 0, 0.12) 0px 4px 8px, rgba(0, 0, 0, 0.08) 0px 2px 4px",
+                          border: "2px solid #FFFFFF"
                         }}
                       >
                         <img
@@ -273,7 +189,7 @@ const CustomerReviews = () => {
                         />
                       </div>
                       <p
-                        className="text-xs md:text-sm font-bold mb-1 text-center"
+                        className="text-[10px] md:text-xs font-bold mb-0.5 text-center"
                         style={{
                           color: "#000000",
                           fontFamily: "'Value Serif Pro Bold', serif"
@@ -282,12 +198,12 @@ const CustomerReviews = () => {
                         {review.name}
                       </p>
                       <p
-                        className="text-xs text-center"
+                        className="text-[9px] md:text-[10px] text-center"
                         style={{
                           color: "#666666",
                           fontFamily: "'Value Serif Pro Bold', serif",
                           fontWeight: "normal",
-                          lineHeight: "1.4",
+                          lineHeight: "1.3",
                           whiteSpace: "nowrap"
                         }}
                       >
@@ -297,11 +213,11 @@ const CustomerReviews = () => {
 
                     {/* Review Text */}
                     <p
-                      className="text-sm md:text-base mb-3 text-center italic"
+                      className="text-xs md:text-sm mb-2 text-center italic"
                       style={{
                         color: "#333333",
                         fontFamily: "'Value Serif Pro Bold', serif",
-                        lineHeight: "1.6"
+                        lineHeight: "1.5"
                       }}
                     >
                       {review.text}
@@ -322,6 +238,96 @@ const CustomerReviews = () => {
         .lg\\:w-3\\/4 {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        
+        /* Mobile-specific styles */
+        @media (max-width: 767px) {
+          .customer-reviews-carousel {
+            padding-top: 2.5rem;
+            padding-bottom: 1rem;
+            overflow-x: hidden !important;
+          }
+
+          .customer-reviews-carousel .flex {
+            gap: 0 !important;
+          }
+          
+          .customer-review-card-wrapper {
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+            box-sizing: border-box !important;
+          }
+          
+          .customer-review-card-wrapper:first-child {
+            padding-left: 1rem !important;
+          }
+          
+          .customer-review-card-wrapper:last-child {
+            padding-right: 1rem !important;
+          }
+          
+          .customer-review-card {
+            padding: 0.75rem;
+            padding-top: 2.5rem;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+          }
+          
+          .customer-review-avatar {
+            top: -40px;
+          }
+          
+          .customer-review-avatar-img {
+            width: 40px;
+            height: 40px;
+          }
+        }
+        
+        /* Desktop styles */
+        @media (min-width: 768px) {
+          .customer-reviews-carousel {
+            padding-top: 3.5rem;
+            padding-bottom: 1.5rem;
+          }
+          
+          .customer-review-card {
+            padding: 1rem;
+            padding-top: 3rem;
+          }
+          
+          .customer-review-avatar {
+            top: -48px;
+          }
+          
+          .customer-review-avatar-img {
+            width: 48px;
+            height: 48px;
+          }
+
+          /* Add gaps between cards on desktop */
+          .customer-review-card-wrapper {
+            padding-left: 1.5rem !important;
+            padding-right: 1.5rem !important;
+          }
+
+          .customer-review-card-wrapper:first-child {
+            padding-left: 1rem !important;
+            padding-right: 1.5rem !important;
+          }
+
+          .customer-review-card-wrapper:last-child {
+            padding-right: 1rem !important;
+            padding-left: 1.5rem !important;
+          }
+
+          .customer-review-card-wrapper .customer-review-card {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+          }
+
+          .customer-reviews-carousel {
+            overflow-x: visible !important;
+          }
         }
       `}</style>
     </section>
