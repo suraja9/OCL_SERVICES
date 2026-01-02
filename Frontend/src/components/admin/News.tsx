@@ -16,6 +16,7 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -531,164 +532,167 @@ const News: React.FC = () => {
 
       {/* Create/Edit Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingPost ? 'Edit News Post' : 'Create New News Post'}</DialogTitle>
-            <DialogDescription>
-              {editingPost ? 'Update the news post details below' : 'Fill in the details to create a new news post'}
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="max-w-4xl max-h-[90vh] bg-gray-50">
+          
 
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Title *</label>
-              <Input
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="Enter news title"
-              />
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Excerpt *</label>
-              <Textarea
-                value={formData.excerpt}
-                onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
-                placeholder="Enter a short excerpt (max 500 characters)"
-                rows={3}
-                maxLength={500}
-              />
-              <p className="text-xs text-gray-500 mt-1">{formData.excerpt.length}/500 characters</p>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Content *</label>
-              <Textarea
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                placeholder="Enter the full news content"
-                rows={10}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <div className="max-h-[55vh] overflow-y-auto space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Category</label>
-                <Select
-                  value={formData.category}
-                  onValueChange={(value) => setFormData({ ...formData, category: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="General">General</SelectItem>
-                    <SelectItem value="Expansion">Expansion</SelectItem>
-                    <SelectItem value="Technology">Technology</SelectItem>
-                    <SelectItem value="Sustainability">Sustainability</SelectItem>
-                    <SelectItem value="Announcements">Announcements</SelectItem>
-                    <SelectItem value="Awards">Awards</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-gray-700 mb-1 block">Author</label>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Title *</label>
                 <Input
-                  value={formData.author}
-                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
-                  placeholder="Author name"
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="Enter news title"
+                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Tags (comma-separated)</label>
-              <Input
-                value={formData.tags}
-                onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                placeholder="e.g., logistics, delivery, technology"
-              />
-            </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Excerpt *</label>
+                <Textarea
+                  value={formData.excerpt}
+                  onChange={(e) => setFormData({ ...formData, excerpt: e.target.value })}
+                  placeholder="Enter a short excerpt (max 500 characters)"
+                  rows={3}
+                  maxLength={500}
+                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-1">{formData.excerpt.length}/500 characters</p>
+              </div>
 
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-1 block">Featured Image</label>
-              <div className="flex gap-4">
-                <div className="flex-1">
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Content *</label>
+                <Textarea
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  placeholder="Enter the full news content"
+                  rows={10}
+                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Category</label>
+                  <Select
+                    value={formData.category}
+                    onValueChange={(value) => setFormData({ ...formData, category: value })}
+                  >
+                    <SelectTrigger className="border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="General">General</SelectItem>
+                      <SelectItem value="Expansion">Expansion</SelectItem>
+                      <SelectItem value="Technology">Technology</SelectItem>
+                      <SelectItem value="Sustainability">Sustainability</SelectItem>
+                      <SelectItem value="Announcements">Announcements</SelectItem>
+                      <SelectItem value="Awards">Awards</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-gray-700 mb-1 block">Author</label>
                   <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    className="cursor-pointer"
+                    value={formData.author}
+                    onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                    placeholder="Author name"
+                    className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                   />
                 </div>
-                {imagePreview && (
-                  <div className="w-32 h-32 border rounded-lg overflow-hidden">
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Tags (comma-separated)</label>
+                <Input
+                  value={formData.tags}
+                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                  placeholder="e.g., logistics, delivery, technology"
+                  className="border-gray-300 focus:border-blue-500 focus:ring-blue-500"
+                />
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-700 mb-1 block">Featured Image</label>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="cursor-pointer border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     />
                   </div>
-                )}
+                  {imagePreview && (
+                    <div className="w-32 h-32 border border-gray-300 rounded-lg overflow-hidden">
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
 
-            <div className="flex gap-4 items-center">
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="published"
-                  checked={formData.published}
-                  onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
-                  className="rounded"
-                />
-                <label htmlFor="published" className="text-sm font-medium text-gray-700">
-                  Publish immediately
-                </label>
+              <div className="flex gap-4 items-center pt-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="published"
+                    checked={formData.published}
+                    onChange={(e) => setFormData({ ...formData, published: e.target.checked })}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="published" className="text-sm font-medium text-gray-700">
+                    Publish immediately
+                  </label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="featured"
+                    checked={formData.featured}
+                    onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
+                    className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-gray-300"
+                  />
+                  <label htmlFor="featured" className="text-sm font-medium text-gray-700">
+                    Featured post
+                  </label>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="featured"
-                  checked={formData.featured}
-                  onChange={(e) => setFormData({ ...formData, featured: e.target.checked })}
-                  className="rounded"
-                />
-                <label htmlFor="featured" className="text-sm font-medium text-gray-700">
-                  Featured post
-                </label>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowDialog(false)}
-                disabled={saving}
-              >
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                {saving ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    {editingPost ? 'Update Post' : 'Create Post'}
-                  </>
-                )}
-              </Button>
             </div>
           </div>
+
+          <DialogFooter className="mt-4 pt-4 border-t border-gray-200">
+            <Button
+              variant="outline"
+              onClick={() => setShowDialog(false)}
+              disabled={saving}
+              className="border-gray-300 hover:bg-gray-50"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              {saving ? (
+                <>
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  {editingPost ? 'Update Post' : 'Create Post'}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>

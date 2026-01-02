@@ -1979,7 +1979,7 @@ const OfficeBookingPanel: React.FC = () => {
                         />
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2 mt-6">
+                    <div className="flex justify-end gap-2 mt-3 sm:mt-4 md:mt-6">
                       <Button
                         variant="outline"
                         onClick={() => setEditingSection(null)}
@@ -2227,7 +2227,7 @@ const OfficeBookingPanel: React.FC = () => {
                         />
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2 mt-6">
+                    <div className="flex justify-end gap-2 mt-3 sm:mt-4 md:mt-6">
                       <Button
                         variant="outline"
                         onClick={() => setEditingSection(null)}
@@ -2648,7 +2648,7 @@ const OfficeBookingPanel: React.FC = () => {
                         )}
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2 mt-6">
+                    <div className="flex justify-end gap-2 mt-3 sm:mt-4 md:mt-6">
                       <Button
                         variant="outline"
                         onClick={() => setEditingSection(null)}
@@ -2780,7 +2780,7 @@ const OfficeBookingPanel: React.FC = () => {
                         />
                       </div>
                     </div>
-                    <div className="flex justify-end gap-2 mt-6">
+                    <div className="flex justify-end gap-2 mt-3 sm:mt-4 md:mt-6">
                       <Button
                         variant="outline"
                         onClick={() => setEditingSection(null)}
@@ -2932,7 +2932,7 @@ const OfficeBookingPanel: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <div className="flex justify-end gap-2 mt-6">
+                    <div className="flex justify-end gap-2 mt-3 sm:mt-4 md:mt-6">
                       <Button
                         variant="outline"
                         onClick={() => setEditingSection(null)}
@@ -2955,30 +2955,30 @@ const OfficeBookingPanel: React.FC = () => {
                 </Dialog>
 
                 {/* Navigation Buttons */}
-                <div className="flex flex-row gap-2 pt-2 justify-between">
+                <div className="flex flex-row gap-2 pt-2 sm:pt-3 justify-between">
                   <Button
                     onClick={bookingState.previousStep}
                     className={cn(
-                      'w-auto px-6',
+                      'w-auto px-3 sm:px-4 md:px-6 text-xs sm:text-sm',
                       isDarkMode
                         ? 'bg-blue-500 hover:bg-blue-600 text-white'
                         : 'bg-blue-500 hover:bg-blue-600 text-white'
                     )}
                   >
-                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    <ArrowLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                     Back
                   </Button>
                   <Button
                     onClick={handleReviewNext}
                     className={cn(
-                      'w-auto px-6',
+                      'w-auto px-3 sm:px-4 md:px-6 text-xs sm:text-sm',
                       isDarkMode
                         ? 'bg-green-500 hover:bg-green-600 text-white'
                         : 'bg-green-500 hover:bg-green-600 text-white'
                     )}
                   >
                     Next
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>
@@ -3352,24 +3352,24 @@ const OfficeBookingPanel: React.FC = () => {
               </div>
 
               {/* Navigation Buttons */}
-              <div className="flex flex-row gap-2 pt-2 justify-between">
+              <div className="flex flex-row gap-2 pt-2 sm:pt-3 justify-between">
                 <Button
                   onClick={bookingState.previousStep}
                   className={cn(
-                    'w-auto px-6',
+                    'w-auto px-3 sm:px-4 md:px-6 text-xs sm:text-sm',
                     isDarkMode
                       ? 'bg-blue-500 hover:bg-blue-600 text-white'
                       : 'bg-blue-500 hover:bg-blue-600 text-white'
                   )}
                 >
-                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  <ArrowLeft className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                   Back
                 </Button>
                 <Button
                   onClick={handleFinalReviewSubmit}
                   disabled={bookingState.isSubmitting}
                   className={cn(
-                    'w-auto px-6',
+                    'w-auto px-3 sm:px-4 md:px-6 text-xs sm:text-sm',
                     isDarkMode
                       ? 'bg-green-500 hover:bg-green-600 text-white'
                       : 'bg-green-500 hover:bg-green-600 text-white'
@@ -3377,13 +3377,15 @@ const OfficeBookingPanel: React.FC = () => {
                 >
                   {bookingState.isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Completing Booking...
+                      <Loader2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
+                      <span className="hidden sm:inline">Completing Booking...</span>
+                      <span className="sm:hidden">Submitting...</span>
                     </>
                   ) : (
                     <>
-                      Complete Booking
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                      <span className="hidden sm:inline">Complete Booking</span>
+                      <span className="sm:hidden">Complete</span>
+                      <ArrowRight className="ml-1 sm:ml-2 h-3 w-3 sm:h-4 sm:w-4" />
                     </>
                   )}
                 </Button>
@@ -3404,40 +3406,40 @@ const OfficeBookingPanel: React.FC = () => {
       
       case 11: // Success
         return (
-          <div className={`p-4 sm:p-6 lg:p-8 space-y-6 ${isDarkMode ? 'text-slate-100' : ''}`}>
+          <div className={`p-0 sm:p-2 md:p-4 lg:p-6 space-y-3 sm:space-y-4 md:space-y-6 ${isDarkMode ? 'text-slate-100' : ''}`}>
             {/* Success Header */}
             <div className="text-center">
               <motion.div
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                className="relative inline-block mb-4"
+                className="relative inline-block mb-2 sm:mb-3 md:mb-4"
               >
-                <div className={`w-20 h-20 rounded-full flex items-center justify-center mx-auto ${
+                <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-full flex items-center justify-center mx-auto ${
                   isDarkMode ? 'bg-green-500/20' : 'bg-green-100'
                 }`}>
-                  <CheckCircle className={`w-12 h-12 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
+                  <CheckCircle className={`w-10 h-10 sm:w-12 sm:h-12 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
                 </div>
                 <div className={`absolute inset-0 rounded-full ${
                   isDarkMode ? 'bg-green-500/30' : 'bg-green-200'
                 } animate-ping opacity-75`}></div>
               </motion.div>
-              <h2 className={`text-3xl font-bold mb-2 ${isDarkMode ? 'text-slate-100' : 'text-gray-900'}`}>
+              <h2 className={`text-xl sm:text-2xl md:text-3xl font-bold mb-2 ${isDarkMode ? 'text-slate-100' : 'text-gray-900'}`}>
                 Shipment Confirmed 
                 <br/>
               </h2>
               
               {/* Consignment Number - Most Important */}
               {bookingResult?.consignmentNumber && (
-                <div className={`inline-block rounded-2xl p-6 mb-6 ${
+                <div className={`inline-block rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 mb-3 sm:mb-4 md:mb-6 ${
                   isDarkMode 
                     ? 'bg-gradient-to-r from-blue-600/20 to-cyan-600/20 border border-blue-500/30' 
                     : 'bg-gradient-to-r from-blue-50 to-cyan-50 border-2 border-blue-200'
                 } shadow-lg`}>
-                  <p className={`text-sm font-medium mb-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                  <p className={`text-xs sm:text-sm font-medium mb-1 sm:mb-2 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
                     Consignment Number
                   </p>
-                  <p className={`text-4xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+                  <p className={`text-2xl sm:text-3xl md:text-4xl font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
                     {bookingResult.consignmentNumber}
                   </p>
                  
@@ -3446,25 +3448,25 @@ const OfficeBookingPanel: React.FC = () => {
             </div>
 
             {/* Booking Preview Summary */}
-            <div className={`rounded-2xl border ${
+            <div className={`rounded-xl sm:rounded-2xl border ${
               isDarkMode 
                 ? 'border-slate-700 bg-slate-800/50' 
                 : 'border-slate-200 bg-white'
-            } p-6 shadow-sm`}>
-              <h3 className={`text-xl font-bold mb-4 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+            } p-3 sm:p-4 md:p-6 shadow-sm`}>
+              <h3 className={`text-lg sm:text-xl font-bold mb-2 sm:mb-3 md:mb-4 ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
                 Booking Summary
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 {/* Origin */}
-                <div className={`rounded-xl p-4 ${
+                <div className={`rounded-lg sm:rounded-xl p-3 sm:p-4 ${
                   isDarkMode ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-100'
                 }`}>
                   <div className="flex items-center gap-2 mb-2">
                     <MapPin className={`w-4 h-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
-                    <h4 className={`font-semibold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>Origin</h4>
+                    <h4 className={`text-sm sm:text-base font-semibold ${isDarkMode ? 'text-blue-300' : 'text-blue-800'}`}>Origin</h4>
                   </div>
-                  <div className={`space-y-1 text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                  <div className={`space-y-1 text-xs sm:text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                     <p className="font-medium">{bookingState.originData.name}</p>
                     <p>{bookingState.originData.mobileNumber}</p>
                     <p className="text-xs">{bookingState.originData.city}, {bookingState.originData.state}</p>
@@ -3473,14 +3475,14 @@ const OfficeBookingPanel: React.FC = () => {
                 </div>
 
                 {/* Destination */}
-                <div className={`rounded-xl p-4 ${
+                <div className={`rounded-lg sm:rounded-xl p-3 sm:p-4 ${
                   isDarkMode ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-50 border border-green-100'
                 }`}>
                   <div className="flex items-center gap-2 mb-2">
                     <MapPin className={`w-4 h-4 ${isDarkMode ? 'text-green-400' : 'text-green-600'}`} />
-                    <h4 className={`font-semibold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>Destination</h4>
+                    <h4 className={`text-sm sm:text-base font-semibold ${isDarkMode ? 'text-green-300' : 'text-green-800'}`}>Destination</h4>
                   </div>
-                  <div className={`space-y-1 text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                  <div className={`space-y-1 text-xs sm:text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                     <p className="font-medium">{bookingState.destinationData.name}</p>
                     <p>{bookingState.destinationData.mobileNumber}</p>
                     <p className="text-xs">{bookingState.destinationData.city}, {bookingState.destinationData.state}</p>
@@ -3489,7 +3491,7 @@ const OfficeBookingPanel: React.FC = () => {
                 </div>
 
                 {/* Shipment Details */}
-                <div className={`rounded-xl p-4 ${
+                <div className={`rounded-lg sm:rounded-xl p-3 sm:p-4 ${
                   isDarkMode ? 'bg-orange-500/10 border border-orange-500/20' : 'bg-orange-50 border border-orange-100'
                 }`}>
                   <div className="flex items-center gap-2 mb-2">
@@ -3509,17 +3511,17 @@ const OfficeBookingPanel: React.FC = () => {
                 </div>
 
                 {/* Payment Details */}
-                <div className={`rounded-xl p-4 ${
+                <div className={`rounded-lg sm:rounded-xl p-3 sm:p-4 ${
                   isDarkMode ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-purple-50 border border-purple-100'
                 }`}>
                   <div className="flex items-center gap-2 mb-2">
                     <DollarSign className={`w-4 h-4 ${isDarkMode ? 'text-purple-400' : 'text-purple-600'}`} />
-                    <h4 className={`font-semibold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>Payment</h4>
+                    <h4 className={`text-sm sm:text-base font-semibold ${isDarkMode ? 'text-purple-300' : 'text-purple-800'}`}>Payment</h4>
                   </div>
-                  <div className={`space-y-1 text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                  <div className={`space-y-1 text-xs sm:text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                     <p><span className="font-medium">Mode:</span> {bookingState.paymentData.modeOfPayment === 'Cash' ? 'Pre-paid' : bookingState.paymentData.modeOfPayment === 'To Pay' ? 'Post-paid' : bookingState.paymentData.modeOfPayment || 'N/A'}</p>
                     {bookingState.detailsData.grandTotal && (
-                      <p className="font-semibold text-base mt-2">
+                      <p className="font-semibold text-sm sm:text-base mt-2">
                         <span className="font-medium">Total:</span> ₹{bookingState.detailsData.grandTotal}
                       </p>
                     )}
@@ -3527,14 +3529,14 @@ const OfficeBookingPanel: React.FC = () => {
                 </div>
 
                 {/* Invoice Information */}
-                <div className={`rounded-xl p-4 ${
+                <div className={`rounded-lg sm:rounded-xl p-3 sm:p-4 ${
                   isDarkMode ? 'bg-amber-500/10 border border-amber-500/20' : 'bg-amber-50 border border-amber-100'
                 }`}>
                   <div className="flex items-center gap-2 mb-2">
                     <FileText className={`w-4 h-4 ${isDarkMode ? 'text-amber-400' : 'text-amber-600'}`} />
-                    <h4 className={`font-semibold ${isDarkMode ? 'text-amber-300' : 'text-amber-800'}`}>Invoice Information</h4>
+                    <h4 className={`text-sm sm:text-base font-semibold ${isDarkMode ? 'text-amber-300' : 'text-amber-800'}`}>Invoice Information</h4>
                   </div>
-                  <div className={`space-y-1 text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
+                  <div className={`space-y-1 text-xs sm:text-sm ${isDarkMode ? 'text-slate-300' : 'text-slate-700'}`}>
                     <p><span className="font-medium">Invoice No.:</span> {bookingState.uploadData.invoiceNumber || 'N/A'}</p>
                     <p><span className="font-medium">Declared Value:</span> {
                       bookingState.uploadData.invoiceValue 
@@ -3553,12 +3555,12 @@ const OfficeBookingPanel: React.FC = () => {
             </div>
 
             {/* Action Buttons */}
-            <div className="text-center pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+            <div className="text-center pt-3 sm:pt-4 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
               <Button
                 onClick={() => setShowInvoiceDialog(true)}
                 variant="outline"
                 className={cn(
-                  "px-8 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2",
+                  "px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-all duration-200 flex items-center gap-2",
                   isDarkMode
                     ? "border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
                     : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 shadow-lg"
@@ -3572,15 +3574,15 @@ const OfficeBookingPanel: React.FC = () => {
                   setBookingResult(null);
                   bookingState.resetBooking();
                 }}
-                className={`px-8 py-3 rounded-xl font-medium transition-all duration-200 flex items-center gap-2 ${
+                className={`px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-medium transition-all duration-200 flex items-center gap-2 ${
                   isDarkMode
                     ? 'bg-blue-600 hover:bg-blue-700 text-white'
                     : 'bg-gradient-to-r from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700 text-white shadow-lg'
                 }`}
               >
-                <Package className="w-5 h-5" />
+                <Package className="w-4 h-4 sm:w-5 sm:h-5" />
                 Book Another Shipment
-                <ArrowRight className="w-5 h-5" />
+                <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
           </div>
@@ -3588,9 +3590,9 @@ const OfficeBookingPanel: React.FC = () => {
       
       default:
         return (
-          <div className="p-8 text-center">
-            <h2 className="text-2xl font-bold mb-4">Step {bookingState.currentStep + 1}</h2>
-            <p className="text-gray-600">Coming soon...</p>
+          <div className="p-3 sm:p-4 md:p-6 lg:p-8 text-center">
+            <h2 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-3 md:mb-4">Step {bookingState.currentStep + 1}</h2>
+            <p className="text-sm sm:text-base text-gray-600">Coming soon...</p>
           </div>
         );
     }
@@ -3609,23 +3611,23 @@ const OfficeBookingPanel: React.FC = () => {
         fontFamily: 'Calibri, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important'
       }}
     >
-      <div className="max-w-6xl mx-auto p-6">
+      <div className="max-w-6xl mx-auto px-2 py-3 sm:px-4 sm:py-4 md:px-6 md:py-6">
         {/* Progress Bar */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-4">
-              <span className={`text-base font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
+        <div className="mb-3 sm:mb-4 md:mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-2 sm:mb-3">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+              <span className={`text-sm sm:text-base font-semibold ${isDarkMode ? 'text-slate-200' : 'text-slate-800'}`}>
                 Booking Progress
               </span>
-              <span className={`text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
+              <span className={`text-xs sm:text-sm ${isDarkMode ? 'text-slate-400' : 'text-slate-600'}`}>
                 Step {bookingState.currentStep + 1} of {totalSteps}
               </span>
             </div>
-            <span className={`text-lg font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
+            <span className={`text-base sm:text-lg font-bold ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`}>
               {progressPercentage}%
             </span>
           </div>
-          <div className={`w-full h-3 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-700' : 'bg-gray-200'}`}>
+          <div className={`w-full h-2 sm:h-3 rounded-full overflow-hidden ${isDarkMode ? 'bg-slate-700' : 'bg-gray-200'}`}>
             <motion.div
               className={`h-full rounded-full ${isDarkMode ? 'bg-gradient-to-r from-blue-500 to-cyan-500' : 'bg-gradient-to-r from-blue-500 to-cyan-600'}`}
               initial={{ width: 0 }}
@@ -3635,7 +3637,7 @@ const OfficeBookingPanel: React.FC = () => {
           </div>
         </div>
         {/* Step Content */}
-        <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-2xl p-8 shadow-sm`}>
+        <div className={`${isDarkMode ? 'bg-slate-800' : 'bg-white'} rounded-xl sm:rounded-2xl p-3 sm:p-4 md:p-6 lg:p-8 shadow-sm`}>
           {renderCurrentStep()}
         </div>
       </div>

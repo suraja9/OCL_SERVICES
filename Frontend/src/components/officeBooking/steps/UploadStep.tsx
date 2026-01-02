@@ -149,9 +149,9 @@ const UploadStep: React.FC<UploadStepProps> = ({
             : 'border-slate-200/70 bg-gradient-to-br from-white via-slate-50 to-blue-50/30'
         )}
       >
-        <div className="space-y-2 p-4">
+        <div className="space-y-2 p-3 sm:p-4">
           <h4 className={cn(
-            'text-sm font-semibold mb-2',
+            'text-xs sm:text-sm font-semibold mb-2',
             isDarkMode ? 'text-slate-200' : 'text-slate-800'
           )}>
             {label}
@@ -174,7 +174,7 @@ const UploadStep: React.FC<UploadStepProps> = ({
             <label
               htmlFor={`${field}-input`}
               className={cn(
-                'cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+                'cursor-pointer rounded-md px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-medium transition-colors',
                 disabled ? 'opacity-50 cursor-not-allowed' : '',
                 isDarkMode
                   ? 'bg-blue-500 text-white hover:bg-blue-600'
@@ -203,14 +203,15 @@ const UploadStep: React.FC<UploadStepProps> = ({
                   if (field === 'declarationImages') setDeclarationImagePreviews([]);
                 }}
                 className={cn(
-                  'rounded-md px-3 py-1.5 text-xs font-medium transition-colors flex items-center gap-1.5',
+                  'rounded-md px-2.5 sm:px-3 py-1 sm:py-1.5 text-xs font-medium transition-colors flex items-center gap-1 sm:gap-1.5',
                   isDarkMode
                     ? 'bg-red-500/90 text-white hover:bg-red-600'
                     : 'bg-red-500 text-white hover:bg-red-600'
                 )}
               >
                 <XCircle className="w-3 h-3" />
-                Remove All
+                <span className="hidden sm:inline">Remove All</span>
+                <span className="sm:hidden">Clear</span>
               </button>
             )}
           </div>
@@ -218,12 +219,12 @@ const UploadStep: React.FC<UploadStepProps> = ({
           {/* File Previews Grid */}
           {files.length > 0 && (
             <div className={cn(
-              "grid gap-2 mt-2",
+              "grid gap-1.5 sm:gap-2 mt-2",
               files.length === 1 ? "grid-cols-1" :
               files.length === 2 ? "grid-cols-2" :
-              files.length === 3 ? "grid-cols-3" :
-              files.length === 4 ? "grid-cols-4" :
-              "grid-cols-5"
+              files.length === 3 ? "grid-cols-2 sm:grid-cols-3" :
+              files.length === 4 ? "grid-cols-2 sm:grid-cols-4" :
+              "grid-cols-2 sm:grid-cols-3 md:grid-cols-5"
             )}>
               {files.map((file, index) => {
                 const preview = previews[index];
@@ -241,28 +242,28 @@ const UploadStep: React.FC<UploadStepProps> = ({
                       <img
                         src={preview}
                         alt={`Preview ${index + 1}`}
-                        className="w-full h-16 object-cover cursor-pointer"
+                        className="w-full h-14 sm:h-16 object-cover cursor-pointer"
                         onClick={() => {
                           setDocumentPreviewUrl(preview);
                           setDocumentPreviewOpen(true);
                         }}
                       />
                     ) : (
-                      <div className="w-full h-16 flex items-center justify-center bg-slate-100 dark:bg-slate-800">
-                        <FileText className={cn('w-6 h-6', isDarkMode ? 'text-slate-400' : 'text-slate-500')} />
+                      <div className="w-full h-14 sm:h-16 flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+                        <FileText className={cn('w-5 h-5 sm:w-6 sm:h-6', isDarkMode ? 'text-slate-400' : 'text-slate-500')} />
                       </div>
                     )}
                     <button
                       type="button"
                       onClick={() => removeImage(index, field)}
                       className={cn(
-                        'absolute top-1 right-1 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity',
+                        'absolute top-0.5 right-0.5 sm:top-1 sm:right-1 p-0.5 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity',
                         isDarkMode
                           ? 'bg-red-500/80 text-white hover:bg-red-600'
                           : 'bg-red-500 text-white hover:bg-red-600'
                       )}
                     >
-                      <XCircle className="w-3 h-3" />
+                      <XCircle className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                     </button>
                     {isImage && preview && (
                       <button
@@ -272,14 +273,14 @@ const UploadStep: React.FC<UploadStepProps> = ({
                           setDocumentPreviewOpen(true);
                         }}
                         className={cn(
-                          'absolute top-1 left-1 p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity',
+                          'absolute top-0.5 left-0.5 sm:top-1 sm:left-1 p-0.5 rounded-full opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity',
                           isDarkMode
                             ? 'bg-blue-500/80 text-white hover:bg-blue-600'
                             : 'bg-blue-500 text-white hover:bg-blue-600'
                         )}
                         title="Preview image"
                       >
-                        <Eye className="w-3 h-3" />
+                        <Eye className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                       </button>
                     )}
                   </div>
@@ -307,19 +308,19 @@ const UploadStep: React.FC<UploadStepProps> = ({
   const isNextDisabled = !hasAnyUpload || !data.acceptTerms || !eWaybillValid;
 
   return (
-    <div className={`space-y-6 ${isDarkMode ? 'text-slate-100' : ''}`}>
+    <div className={`space-y-3 sm:space-y-4 md:space-y-6 ${isDarkMode ? 'text-slate-100' : ''}`}>
     
 
       {/* Invoice Information */}
       <div className={`${data.packageImages.length === 0 ? 'opacity-50 pointer-events-none' : ''}`}>
-        <label className={`block text-lg font-semibold mb-4 ${isDarkMode ? 'text-slate-200' : 'text-blue-700'}`}>
+        <label className={`block text-base sm:text-lg font-semibold mb-2 sm:mb-3 md:mb-4 ${isDarkMode ? 'text-slate-200' : 'text-blue-700'}`}>
           Invoice Information
           {data.packageImages.length === 0 && (
-            <span className="ml-2 text-xs text-red-600 font-normal">(Upload package images first)</span>
+            <span className="ml-1 sm:ml-2 text-xs text-red-600 font-normal">(Upload package images first)</span>
           )}
         </label>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-3 sm:mb-4">
           <FloatingInput
             label="Invoice Number"
             value={data.invoiceNumber}
@@ -347,19 +348,19 @@ const UploadStep: React.FC<UploadStepProps> = ({
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
-            className={`mb-4 p-4 rounded-lg border ${
+            className={`mb-3 sm:mb-4 p-3 sm:p-4 rounded-lg border ${
               isDarkMode
                 ? 'bg-yellow-500/10 border-yellow-500/50'
                 : 'bg-yellow-50 border-yellow-200'
             }`}
           >
-            <div className="flex items-center mb-3">
-              <AlertCircle className={`w-4 h-4 mr-2 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
-              <span className={`text-sm font-medium ${isDarkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
+            <div className="flex items-center mb-2 sm:mb-3">
+              <AlertCircle className={`w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
+              <span className={`text-xs sm:text-sm font-medium ${isDarkMode ? 'text-yellow-300' : 'text-yellow-800'}`}>
                 E-Waybill Required (12 digits)
               </span>
             </div>
-            <div className="flex gap-1 flex-wrap">
+            <div className="flex gap-1 sm:gap-1.5 flex-wrap justify-center sm:justify-start">
               {(data.eWaybillDigits || Array(12).fill('')).map((digit, index) => (
                 <input
                   key={index}
@@ -369,7 +370,7 @@ const UploadStep: React.FC<UploadStepProps> = ({
                   onChange={(e) => handleEWaybillDigitChange(index, e.target.value)}
                   onKeyDown={(e) => handleEWaybillKeyDown(index, e)}
                   disabled={data.packageImages.length === 0}
-                  className={`w-10 h-10 text-center text-sm font-semibold border-2 rounded-xl transition-all duration-200 ${
+                  className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 text-center text-xs sm:text-sm font-semibold border-2 rounded-lg sm:rounded-xl transition-all duration-200 ${
                     isDarkMode
                       ? 'bg-slate-800 border-yellow-500/50 text-slate-100 focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/30'
                       : 'bg-white border-yellow-300 text-gray-800 focus:border-yellow-500 focus:ring-2 focus:ring-yellow-400/30'
@@ -393,7 +394,7 @@ const UploadStep: React.FC<UploadStepProps> = ({
 
       {/* Terms & Conditions */}
       <div className={`${data.packageImages.length === 0 ? 'opacity-50 pointer-events-none' : ''}`}>
-        <div className={`flex items-start space-x-3 rounded-xl py-3 px-4 ${
+        <div className={`flex items-start space-x-2 sm:space-x-3 rounded-lg sm:rounded-xl py-2 sm:py-3 px-3 sm:px-4 ${
           isDarkMode ? 'bg-slate-800/60' : 'bg-white'
         }`}>
           <input
@@ -401,11 +402,11 @@ const UploadStep: React.FC<UploadStepProps> = ({
             id="acceptTerms"
             checked={data.acceptTerms}
             onChange={(e) => handleFieldChange('acceptTerms', e.target.checked)}
-            className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5"
+            className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mt-0.5 flex-shrink-0"
             required
             disabled={data.packageImages.length === 0}
           />
-          <label htmlFor="acceptTerms" className={`text-sm ${isDarkMode ? 'text-slate-200' : 'text-gray-800'}`}>
+          <label htmlFor="acceptTerms" className={`text-xs sm:text-sm ${isDarkMode ? 'text-slate-200' : 'text-gray-800'}`}>
             I accept the{' '}
             <a href="#" className={`${isDarkMode ? 'text-blue-400' : 'text-blue-600'} hover:underline`}>
               Terms & Conditions
@@ -414,7 +415,7 @@ const UploadStep: React.FC<UploadStepProps> = ({
           </label>
         </div>
         {!data.acceptTerms && (
-          <p className={`text-xs mt-2 ml-7 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
+          <p className={`text-xs mt-1 sm:mt-2 ml-6 sm:ml-7 ${isDarkMode ? 'text-red-400' : 'text-red-600'}`}>
             * Required to proceed
           </p>
         )}
@@ -464,22 +465,23 @@ const UploadStep: React.FC<UploadStepProps> = ({
       )}
 
       {/* Navigation Buttons */}
-      <div className="flex justify-between pt-4">
+      <div className="flex justify-between pt-3 sm:pt-4 gap-2">
         <button
           onClick={onPrevious}
-          className={`px-6 py-2.5 rounded-xl font-medium transition-all duration-200 ${
+          className={`px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base font-medium transition-all duration-200 ${
             isDarkMode
               ? 'bg-slate-700 hover:bg-slate-600 text-slate-100'
               : 'bg-gray-200 hover:bg-gray-300 text-gray-700'
           }`}
         >
-          ← Previous Step
+          <span className="hidden sm:inline">← Previous Step</span>
+          <span className="sm:hidden">← Back</span>
         </button>
         <button
           onClick={handleNext}
           disabled={isNextDisabled}
           className={cn(
-            'px-6 py-2.5 rounded-xl font-medium transition-all duration-200 shadow-md',
+            'px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm md:text-base font-medium transition-all duration-200 shadow-md',
             isNextDisabled
               ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : isDarkMode
@@ -487,7 +489,8 @@ const UploadStep: React.FC<UploadStepProps> = ({
                 : 'bg-[#406ab9] hover:bg-[#3059a0] text-white'
           )}
         >
-          Next Step →
+          <span className="hidden sm:inline">Next Step →</span>
+          <span className="sm:hidden">Next →</span>
         </button>
       </div>
     </div>

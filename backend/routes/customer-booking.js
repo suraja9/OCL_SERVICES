@@ -4,6 +4,7 @@ import BookingInvoice from '../models/BookingInvoice.js';
 import { ConsignmentUsage } from '../models/ConsignmentAssignment.js';
 import { getNextGlobalConsignmentNumber } from '../services/consignmentSequenceService.js';
 import emailService from '../services/emailService.js';
+import whatsappService from '../services/whatsappService.js';
 
 const router = express.Router();
 
@@ -263,6 +264,39 @@ router.post('/create', async (req, res) => {
         createdAt: booking.createdAt
       }
     });
+
+    // Send booking confirmation WhatsApp message to sender (origin contact) - run in background (non-blocking)
+    // This runs after the response is sent, so it doesn't delay the booking confirmation
+    (async () => {
+      try {
+        // Get sender's phone number from origin
+        const senderPhoneNumber = booking.origin?.mobileNumber;
+        
+        if (!senderPhoneNumber) {
+          console.warn('⚠️ No sender phone number found, skipping WhatsApp notification');
+          return;
+        }
+
+        // Build tracking URL
+        const trackingUrl = `https://oclservices.com/tracking?view=progress&type=awb&number=${consignmentNumber}`;
+
+        // Send WhatsApp message
+        const whatsappResult = await whatsappService.sendBookingConfirmation({
+          phoneNumber: senderPhoneNumber,
+          consignmentNumber: consignmentNumber.toString(),
+          trackingUrl: trackingUrl
+        });
+
+        if (whatsappResult.success) {
+          console.log('✅ Customer booking confirmation WhatsApp sent successfully for:', bookingReference);
+        } else {
+          console.error('⚠️ Failed to send customer booking confirmation WhatsApp:', whatsappResult.error);
+        }
+      } catch (whatsappError) {
+        console.error('⚠️ Failed to send customer booking confirmation WhatsApp:', whatsappError);
+        // WhatsApp failure doesn't affect the booking - it's already saved and response sent
+      }
+    })(); // IIFE - Immediately Invoked Function Expression, runs in background
 
   } catch (error) {
     console.error('❌ Error creating customer booking:', error);

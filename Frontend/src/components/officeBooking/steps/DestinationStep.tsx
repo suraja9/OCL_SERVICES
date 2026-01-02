@@ -140,46 +140,46 @@ const DestinationStep: React.FC<DestinationStepProps> = ({
       <Dialog open={phoneModalOpen} onOpenChange={() => {}}>
         <DialogContent 
           className={cn(
-            "w-[98%] sm:w-full max-w-xl p-0 rounded-[15px] [&>button]:hidden overflow-hidden",
+            "w-[95vw] sm:w-[98%] md:w-full max-w-xl p-0 rounded-lg sm:rounded-[15px] [&>button]:hidden overflow-hidden mx-2 sm:mx-auto",
             isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
           )}
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
-          <div className="p-3 sm:p-5">
+          <div className="p-3 sm:p-4 md:p-5">
             <DialogTitle className={cn(
-              "text-sm sm:text-base font-bold mb-3 sm:mb-4 text-center sm:text-left",
+              "text-sm sm:text-base font-bold mb-2 sm:mb-3 md:mb-4 text-center sm:text-left",
               isDarkMode ? "text-slate-100" : "text-slate-900"
             )}>
               Enter Recipient Mobile Number
             </DialogTitle>
             
             <div className={cn(
-              "flex items-center gap-1 p-1.5 sm:p-2 rounded-xl border-2 w-full",
+              "flex items-center gap-1 p-1.5 sm:p-2 rounded-lg sm:rounded-xl border-2 w-full",
               isDarkMode ? "bg-slate-800/60 border-slate-700" : "bg-slate-50 border-slate-200"
             )}>
               {/* India Flag +91 */}
               <div className={cn(
-                "flex items-center gap-1 px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-lg flex-shrink-0",
+                "flex items-center gap-0.5 sm:gap-1 px-1 sm:px-1.5 md:px-2 py-0.5 sm:py-1 md:py-1.5 rounded-md sm:rounded-lg flex-shrink-0",
                 isDarkMode ? "bg-slate-700" : "bg-white"
               )}>
-                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" viewBox="0 0 71.42 47.61">
+                <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 md:w-4 md:h-4 flex-shrink-0" viewBox="0 0 71.42 47.61">
                   <rect fill="#FF9933" width="71.42" height="15.87"/>
                   <rect y="15.87" fill="#FFFFFF" width="71.42" height="15.87"/>
                   <rect y="31.74" fill="#138808" width="71.42" height="15.87"/>
                   <circle fill="#000080" cx="35.71" cy="23.8" r="4.76"/>
                 </svg>
-                <span className="text-[10px] sm:text-xs font-bold whitespace-nowrap">+91</span>
+                <span className="text-[9px] sm:text-[10px] md:text-xs font-bold whitespace-nowrap">+91</span>
               </div>
               
               <div className={cn(
-                "h-5 sm:h-6 w-[1px] flex-shrink-0",
+                "h-4 sm:h-5 md:h-6 w-[1px] flex-shrink-0",
                 isDarkMode ? "bg-slate-700" : "bg-slate-200"
               )} />
               
               {/* Phone Number Inputs - Scrollable wrapper */}
-              <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide">
-                <div className="flex items-center gap-0.5 min-w-max">
+              <div className="flex-1 min-w-0 overflow-x-auto scrollbar-hide -mx-1 px-1">
+                <div className="flex items-center gap-0.5 sm:gap-1 min-w-max">
                   {destinationMobileDigits.map((digit, index) => (
                     <input
                       key={index}
@@ -194,7 +194,7 @@ const DestinationStep: React.FC<DestinationStepProps> = ({
                       onPaste={index === 0 ? handleDestinationDigitPaste : undefined}
                       onFocus={(e) => e.target.select()}
                       className={cn(
-                        "h-7 sm:h-8 w-5 sm:w-6 rounded border-2 text-center text-[10px] sm:text-xs font-bold transition-all duration-200 flex-shrink-0",
+                        "h-8 sm:h-9 md:h-10 w-6 sm:w-7 md:w-8 rounded-md sm:rounded-lg border-2 text-center text-xs sm:text-sm md:text-base font-bold transition-all duration-200 flex-shrink-0",
                         "focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200",
                         isDarkMode
                           ? digit
@@ -212,7 +212,7 @@ const DestinationStep: React.FC<DestinationStepProps> = ({
             
             {searchingPhone && (
               <div className={cn(
-                "flex items-center gap-2 mt-3 sm:mt-4 text-xs sm:text-sm",
+                "flex items-center gap-2 mt-2 sm:mt-3 md:mt-4 text-xs sm:text-sm",
                 isDarkMode ? "text-blue-400" : "text-blue-600"
               )}>
                 <div className="animate-spin">⏳</div>

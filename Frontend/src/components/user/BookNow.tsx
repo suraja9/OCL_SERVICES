@@ -2877,10 +2877,22 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
 
   // Calculate prices when service type, mode, or weight changes
   useEffect(() => {
-    if (selectedServiceType && customerPricing && chargeableWeight > 0) {
-      if (selectedServiceType === 'priority') {
+    if (!selectedServiceType || !customerPricing) {
+      setCalculatedPrice(null);
+      return;
+    }
+
+    if (selectedServiceType === 'priority') {
+      // Priority requires weight > 0
+      if (chargeableWeight > 0) {
         calculatePrices();
-      } else if (selectedServiceType === 'standard' && selectedMode) {
+      } else {
+        setCalculatedPrice(null);
+      }
+    } else if (selectedServiceType === 'standard') {
+      // Standard requires mode selection
+      if (selectedMode) {
+        // Calculate price even if weight is 0 (will show minimum charge or ₹0.00)
         calculatePrices();
       } else {
         setCalculatedPrice(null);
@@ -2913,14 +2925,35 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
 
   // Calculate prices based on service type
   const calculatePrices = () => {
-    if (!selectedServiceType || !customerPricing || chargeableWeight <= 0) {
+    // For Standard service, we need mode selection, but we can still show pricing even if weight is 0
+    // For Priority service, we need weight > 0
+    if (!selectedServiceType || !customerPricing) {
+      setCalculatedPrice(null);
       return;
     }
 
-    const weight = chargeableWeight;
-    if (isNaN(weight) || weight <= 0) {
+    // For Standard, require mode selection
+    if (selectedServiceType === 'standard' && !selectedMode) {
+      setCalculatedPrice(null);
       return;
     }
+
+    // For Priority, require weight > 0
+    if (selectedServiceType === 'priority' && chargeableWeight <= 0) {
+      setCalculatedPrice(null);
+      return;
+    }
+
+    // For Standard, allow calculation even with weight 0 (will show minimum charge)
+    // For Priority, weight must be > 0 (already checked above)
+    const weight = selectedServiceType === 'standard' ? Math.max(chargeableWeight, 0) : chargeableWeight;
+    if (isNaN(weight) || weight < 0) {
+      setCalculatedPrice(null);
+      return;
+    }
+    
+    // For Standard with weight 0, we'll still calculate (shows minimum charge)
+    // For Priority, weight > 0 is already enforced above
 
     const isDox = shipmentDetails.natureOfConsignment === 'DOX';
     const route = determineRoute(destinationPincode);
@@ -2971,7 +3004,9 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
           const minWeightGrams = 3000;
           const chargeableWeightGrams = Math.max(weightInGrams, minWeightGrams);
           const doxMode = customerPricing.standardDox?.[mode];
-          if (chargeableWeightGrams <= 250) {
+          if (!doxMode) {
+            price = 0;
+          } else if (chargeableWeightGrams <= 250) {
             price = parseFloat(doxMode?.['01gm-250gm']?.[routeKey] || 0);
           } else if (chargeableWeightGrams <= 500) {
             price = parseFloat(doxMode?.['251gm-500gm']?.[routeKey] || 0);
@@ -2984,7 +3019,9 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
         } else {
           // Air uses weight slabs (no minimum)
           const doxMode = customerPricing.standardDox?.[mode];
-          if (weightInGrams <= 250) {
+          if (!doxMode) {
+            price = 0;
+          } else if (weightInGrams <= 250) {
             price = parseFloat(doxMode?.['01gm-250gm']?.[routeKey] || 0);
           } else if (weightInGrams <= 500) {
             price = parseFloat(doxMode?.['251gm-500gm']?.[routeKey] || 0);
@@ -3008,27 +3045,35 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
           const minWeight = 3;
           const chargeableWeightKg = Math.max(weightInKg, minWeight);
           const nonDoxMode = customerPricing.standardNonDox?.[mode];
-          let pricePerKg = 0;
-          
-          if (chargeableWeightKg >= 1 && chargeableWeightKg <= 5) {
-            pricePerKg = parseFloat(nonDoxMode?.['1kg-5kg']?.[routeKey] || 0);
-          } else if (chargeableWeightKg > 5 && chargeableWeightKg <= 100) {
-            pricePerKg = parseFloat(nonDoxMode?.['5kg-100kg']?.[routeKey] || 0);
+          if (!nonDoxMode) {
+            price = 0;
+          } else {
+            let pricePerKg = 0;
+            
+            if (chargeableWeightKg >= 1 && chargeableWeightKg <= 5) {
+              pricePerKg = parseFloat(nonDoxMode?.['1kg-5kg']?.[routeKey] || 0);
+            } else if (chargeableWeightKg > 5 && chargeableWeightKg <= 100) {
+              pricePerKg = parseFloat(nonDoxMode?.['5kg-100kg']?.[routeKey] || 0);
+            }
+            
+            price = pricePerKg * chargeableWeightKg;
           }
-          
-          price = pricePerKg * chargeableWeightKg;
         } else {
           // Air uses weight slabs (no minimum)
           const nonDoxMode = customerPricing.standardNonDox?.[mode];
-          let pricePerKg = 0;
-          
-          if (weightInKg >= 1 && weightInKg <= 5) {
-            pricePerKg = parseFloat(nonDoxMode?.['1kg-5kg']?.[routeKey] || 0);
-          } else if (weightInKg > 5 && weightInKg <= 100) {
-            pricePerKg = parseFloat(nonDoxMode?.['5kg-100kg']?.[routeKey] || 0);
+          if (!nonDoxMode) {
+            price = 0;
+          } else {
+            let pricePerKg = 0;
+            
+            if (weightInKg >= 1 && weightInKg <= 5) {
+              pricePerKg = parseFloat(nonDoxMode?.['1kg-5kg']?.[routeKey] || 0);
+            } else if (weightInKg > 5 && weightInKg <= 100) {
+              pricePerKg = parseFloat(nonDoxMode?.['5kg-100kg']?.[routeKey] || 0);
+            }
+            
+            price = pricePerKg * weightInKg;
           }
-          
-          price = pricePerKg * weightInKg;
         }
       }
     }
@@ -4773,7 +4818,6 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                           onClick={() => {
                             setSelectedServiceType('standard');
                             setSelectedMode(''); // Reset mode when service type changes
-                            setCalculatedPrice(null);
                           }}
                           className={cn(
                             'w-full text-left rounded-lg border px-3 py-2.5 transition-all duration-200 focus:outline-none',
@@ -4814,7 +4858,6 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                           onClick={() => {
                             setSelectedServiceType('priority');
                             setSelectedMode(''); // No mode needed for priority
-                            setCalculatedPrice(null);
                           }}
                           className={cn(
                             'w-full text-left rounded-lg border px-3 py-2.5 transition-all duration-200 focus:outline-none',
@@ -4876,12 +4919,17 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                         Select Shipping Mode
                       </h4>
                     <div className="grid gap-2 grid-cols-1 md:grid-cols-3">
-                      {(!availableModes || availableModes.byAir) && (
+                      {(() => {
+                        // Always show modes when Standard is selected
+                        // Only hide if explicitly set to false AND other modes are available
+                        if (!availableModes) return true;
+                        if (availableModes.byAir === false && (availableModes.byTrain === true || availableModes.byRoad === true)) return false;
+                        return true;
+                      })() && (
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedMode('byAir');
-                            setCalculatedPrice(null);
                           }}
                           className={cn(
                             'w-full text-left rounded-lg border px-3 py-2.5 transition-all duration-200 focus:outline-none',
@@ -4923,12 +4971,15 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                           </div>
                         </button>
                       )}
-                      {(!availableModes || availableModes.byTrain) && (
+                      {(() => {
+                        if (!availableModes) return true;
+                        if (availableModes.byTrain === false && (availableModes.byAir === true || availableModes.byRoad === true)) return false;
+                        return true;
+                      })() && (
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedMode('byTrain');
-                            setCalculatedPrice(null);
                           }}
                           className={cn(
                             'w-full text-left rounded-lg border px-3 py-2.5 transition-all duration-200 focus:outline-none',
@@ -4970,12 +5021,15 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                           </div>
                         </button>
                       )}
-                      {(!availableModes || availableModes.byRoad) && (
+                      {(() => {
+                        if (!availableModes) return true;
+                        if (availableModes.byRoad === false && (availableModes.byAir === true || availableModes.byTrain === true)) return false;
+                        return true;
+                      })() && (
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedMode('byRoad');
-                            setCalculatedPrice(null);
                           }}
                           className={cn(
                             'w-full text-left rounded-lg border px-3 py-2.5 transition-all duration-200 focus:outline-none',
@@ -6767,30 +6821,60 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
       <Dialog open={phoneModalOpen.type !== null} onOpenChange={() => {}}>
         <DialogContent 
           className={cn(
-            "w-[95vw] sm:w-auto max-w-[400px] sm:max-w-[460px] md:max-w-[530px] [&>button]:hidden px-3 sm:px-4 md:px-4 py-3 sm:py-4 md:py-5 mx-auto rounded-2xl sm:rounded-xl md:rounded-lg [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
+            "w-[95vw] sm:w-auto max-w-[500px] sm:max-w-[580px] md:max-w-[650px] [&>button]:hidden px-4 sm:px-5 md:px-6 py-4 sm:py-5 md:py-6 mx-auto rounded-2xl sm:rounded-xl md:rounded-lg [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
             isDarkMode ? "bg-slate-900 border-slate-800" : "bg-white border-slate-200"
           )}
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
-          <DialogHeader className="pb-0 px-0">
-            <DialogTitle className={cn(
-              "text-sm sm:text-base md:text-lg font-semibold text-left leading-tight mb-0",
-              isDarkMode ? "text-slate-100" : "text-slate-900"
-            )}>
-              {phoneModalOpen.type === 'origin' ? 'Sender' : 'Recipient'} - Phone No.
-            </DialogTitle>
+          <DialogHeader className="pb-2 px-0">
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const currentType = phoneModalOpen.type;
+                  // Clear phone number digits
+                  if (currentType === 'origin') {
+                    setOriginMobileDigits(Array(10).fill(''));
+                    setOriginData(prev => ({ ...prev, mobileNumber: '' }));
+                  } else {
+                    setDestinationMobileDigits(Array(10).fill(''));
+                    setDestinationData(prev => ({ ...prev, mobileNumber: '' }));
+                  }
+                  // Clear search results
+                  setPhoneSearchResults([]);
+                  setPhoneSearchModalOpen({ type: null, phoneNumber: '' });
+                  // Close phone modal
+                  setPhoneModalOpen({ type: null });
+                }}
+                className={cn(
+                  'p-2 rounded-md transition-colors flex-shrink-0 sm:hidden',
+                  isDarkMode
+                    ? 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                    : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                )}
+                aria-label="Back"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <DialogTitle className={cn(
+                "text-base sm:text-lg md:text-xl font-semibold text-left leading-tight mb-0 flex-1",
+                isDarkMode ? "text-slate-100" : "text-slate-900"
+              )}>
+                {phoneModalOpen.type === 'origin' ? 'Sender' : 'Recipient'} - Phone No.
+              </DialogTitle>
+            </div>
           </DialogHeader>
-          <div className="flex items-center justify-start gap-0.5 sm:gap-2 md:gap-1.5 px-0 py-1.5 sm:py-3 md:py-2 w-full overflow-hidden">
+          <div className="flex items-center justify-start gap-1 sm:gap-2 md:gap-2 px-0 py-2 sm:py-3 md:py-3 w-full min-w-0">
                 {/* Country Code */}
                 <div className={cn(
-                  "flex items-center justify-center gap-1 h-8 sm:h-11 md:h-10 w-auto sm:w-auto md:w-auto px-1.5 sm:px-2 md:px-2.5 rounded-md border-2 transition-all duration-200 flex-shrink-0",
+                  "flex items-center justify-center gap-1 h-10 sm:h-12 md:h-11 px-2 sm:px-3 md:px-3 rounded-md border-2 transition-all duration-200 flex-shrink-0",
                   isDarkMode
                     ? "border-slate-700 bg-slate-800/60 text-slate-300"
                     : "border-slate-200 bg-slate-50 text-slate-700 shadow-sm"
                 )}>
                   <svg 
-                    className="w-3 h-2 sm:w-4 sm:h-3 md:w-5 md:h-3.5 flex-shrink-0" 
+                    className="w-4 h-3 sm:w-4.5 sm:h-3.5 md:w-5 md:h-4 flex-shrink-0" 
                     viewBox="0 0 122.88 85.48" 
                     xmlns="http://www.w3.org/2000/svg"
                   >
@@ -6850,17 +6934,17 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                     <path d="M71.82,41.37c-0.04-0.27-0.29-0.46-0.56-0.43c-0.27,0.04-0.46,0.29-0.43,0.56c0.04,0.27,0.29,0.46,0.56,0.43 C71.67,41.9,71.86,41.65,71.82,41.37L71.82,41.37z"/>
                     <polygon points="64.02,52.37 62.8,46.51 61.73,43.84 62.14,46.68 64.02,52.37"/>
                   </svg>
-                  <span className="text-[10px] sm:text-base md:text-base font-bold">+91</span>
+                  <span className="text-xs sm:text-sm md:text-base font-bold whitespace-nowrap">+91</span>
                 </div>
                 
                 {/* Divider */}
                 <div className={cn(
-                  "h-6 sm:h-9 md:h-8 w-[1px] flex-shrink-0",
+                  "h-10 sm:h-12 md:h-11 w-[1px] flex-shrink-0",
                   isDarkMode ? "bg-slate-700" : "bg-slate-200"
                 )} />
                 
                 {/* Phone Number Inputs */}
-                <div className="flex items-center gap-0.5 sm:gap-1.5 md:gap-1 flex-shrink-0 overflow-hidden">
+                <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2 flex-1 min-w-0 justify-start">
                   {(phoneModalOpen.type === 'origin' ? originMobileDigits : destinationMobileDigits).map((digit, index) => (
                     <input
                       key={index}
@@ -6893,7 +6977,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                       }}
                       onFocus={(e) => e.target.select()}
                       className={cn(
-                        "h-8 sm:h-11 md:h-10 w-7 sm:w-10 md:w-9 rounded-md border-2 text-center text-[10px] sm:text-base md:text-base font-bold transition-all duration-200 flex-shrink-0",
+                        "h-10 sm:h-12 md:h-11 w-8 sm:w-10 md:w-10 rounded-md border-2 text-center text-sm sm:text-base md:text-lg font-bold transition-all duration-200 flex-shrink-0",
                         "focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-200",
                         isDarkMode
                           ? digit
@@ -6905,7 +6989,7 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                       )}
                     />
                   ))}
-            </div>
+                </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -6925,12 +7009,48 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
             <>
           {/* Simple Header */}
           <div className="px-6 pt-6 pb-2">
-            <DialogTitle className={cn(
-              "text-xl font-bold",
-              isDarkMode ? "text-slate-100" : "text-slate-900"
-            )}>
-              {formModalOpen.type === 'origin' ? "Sender's (Consigner)" : "Recipent's ( Consignee )" } Address : 
-            </DialogTitle>
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  const currentType = formModalOpen.type;
+                  // Close form modal
+                  setFormModalOpen({ type: null });
+                  // Clear phone number digits to allow re-entry
+                  if (currentType === 'origin') {
+                    setOriginMobileDigits(Array(10).fill(''));
+                    setOriginData(prev => ({ ...prev, mobileNumber: '' }));
+                  } else {
+                    setDestinationMobileDigits(Array(10).fill(''));
+                    setDestinationData(prev => ({ ...prev, mobileNumber: '' }));
+                  }
+                  // Clear search results
+                  setPhoneSearchResults([]);
+                  setPhoneSearchModalOpen({ type: null, phoneNumber: '' });
+                  // Reopen phone modal after a short delay
+                  setTimeout(() => {
+                    if (currentType) {
+                      setPhoneModalOpen({ type: currentType });
+                    }
+                  }, 300);
+                }}
+                className={cn(
+                  'p-2 rounded-md transition-colors flex-shrink-0',
+                  isDarkMode
+                    ? 'text-slate-300 hover:bg-slate-800 hover:text-slate-100'
+                    : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                )}
+                aria-label="Back to phone number entry"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+              <DialogTitle className={cn(
+                "text-xl font-bold flex-1",
+                isDarkMode ? "text-slate-100" : "text-slate-900"
+              )}>
+                {formModalOpen.type === 'origin' ? "Sender's (Consigner)" : "Recipent's ( Consignee )" } Address : 
+              </DialogTitle>
+            </div>
           </div>
 
           <div className="px-5 py-5 space-y-3">
@@ -7254,12 +7374,49 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                   <div className="space-y-2 sm:space-y-3">
                     {/* Title - Outside the box */}
                     <div className="flex items-center justify-between gap-2">
-                      <h3 className={cn(
-                        'text-xs sm:text-sm font-semibold',
-                        isDarkMode ? 'text-slate-200' : 'text-slate-800'
-                      )}>
-                        {cardTitle}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const currentType = formModalOpen.type;
+                            // Close form modal
+                            setFormModalOpen({ type: null });
+                            setShowPreviewInModal(false);
+                            // Clear phone number digits to allow re-entry
+                            if (currentType === 'origin') {
+                              setOriginMobileDigits(Array(10).fill(''));
+                              setOriginData(prev => ({ ...prev, mobileNumber: '' }));
+                            } else {
+                              setDestinationMobileDigits(Array(10).fill(''));
+                              setDestinationData(prev => ({ ...prev, mobileNumber: '' }));
+                            }
+                            // Clear search results
+                            setPhoneSearchResults([]);
+                            setPhoneSearchModalOpen({ type: null, phoneNumber: '' });
+                            // Reopen phone modal after a short delay
+                            setTimeout(() => {
+                              if (currentType) {
+                                setPhoneModalOpen({ type: currentType });
+                              }
+                            }, 300);
+                          }}
+                          className={cn(
+                            'p-1.5 rounded-md transition-colors flex-shrink-0',
+                            isDarkMode
+                              ? 'text-slate-300 hover:bg-slate-700 hover:text-slate-100'
+                              : 'text-slate-600 hover:bg-slate-200 hover:text-slate-900'
+                          )}
+                          aria-label="Back to phone number entry"
+                        >
+                          <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                        </button>
+                        <h3 className={cn(
+                          'text-xs sm:text-sm font-semibold',
+                          isDarkMode ? 'text-slate-200' : 'text-slate-800'
+                        )}>
+                          {cardTitle}
+                        </h3>
+                      </div>
                       <button
                         type="button"
                         onClick={() => {
