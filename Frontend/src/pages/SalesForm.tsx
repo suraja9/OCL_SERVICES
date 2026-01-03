@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import imageCompression from 'browser-image-compression';
 
 // Floating Label Input Component
 interface FloatingLabelInputProps {
@@ -418,6 +419,7 @@ const SalesForm = () => {
   const [submittedByName, setSubmittedByName] = useState<string>('');
   const [nameError, setNameError] = useState<string>('');
   const [successDialogOpen, setSuccessDialogOpen] = useState(false);
+  const [isCompressingImages, setIsCompressingImages] = useState(false);
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     // For phone number, only allow digits and limit to 10
@@ -445,7 +447,92 @@ const SalesForm = () => {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Function to compress and convert image to WebP
+  const compressAndConvertToWebP = async (file: File): Promise<File> => {
+    // First, compress the image using browser-image-compression
+    const compressionOptions = {
+      maxSizeMB: 1, // Target 1MB max size
+      maxWidthOrHeight: 1920,
+      useWebWorker: true,
+      initialQuality: 0.8,
+    };
+
+    try {
+      const compressedFile = await imageCompression(file, compressionOptions);
+
+      // Check if browser supports WebP
+      const canvas = document.createElement('canvas');
+      const supportsWebP = canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
+
+      if (!supportsWebP) {
+        // Browser doesn't support WebP, return compressed file as fallback
+        console.warn('WebP not supported, using compressed original format');
+        return compressedFile;
+      }
+
+      // Convert to WebP using Canvas API
+      return new Promise((resolve, reject) => {
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = () => {
+          // Set canvas dimensions
+          canvas.width = img.width;
+          canvas.height = img.height;
+
+          // Draw image on canvas
+          ctx?.drawImage(img, 0, 0);
+
+          // Convert to WebP blob
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                // Create new File with .webp extension
+                const webpFile = new File(
+                  [blob],
+                  file.name.replace(/\.[^/.]+$/, '') + '.webp',
+                  {
+                    type: 'image/webp',
+                    lastModified: Date.now()
+                  }
+                );
+                resolve(webpFile);
+              } else {
+                // Fallback to compressed file if WebP conversion fails
+                console.warn('WebP conversion failed, using compressed original format');
+                resolve(compressedFile);
+              }
+            },
+            'image/webp',
+            0.85 // WebP quality (0.85 = 85%)
+          );
+        };
+
+        img.onerror = () => {
+          // Fallback to compressed file if image load fails
+          console.warn('Image load failed, using compressed original format');
+          resolve(compressedFile);
+        };
+
+        // Load the compressed image
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          img.src = reader.result as string;
+        };
+        reader.onerror = () => {
+          // Fallback to compressed file if read fails
+          console.warn('File read failed, using compressed original format');
+          resolve(compressedFile);
+        };
+        reader.readAsDataURL(compressedFile);
+      });
+    } catch (error) {
+      // If compression fails, throw error
+      throw new Error(`Image compression failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -460,7 +547,7 @@ const SalesForm = () => {
         return;
       }
 
-      // Validate file size (max 5MB)
+      // Validate file size (max 5MB before compression)
       if (file.size > 5 * 1024 * 1024) {
         invalidFiles.push(`${file.name} - File too large (max 5MB)`);
         return;
@@ -480,23 +567,77 @@ const SalesForm = () => {
 
     if (validFiles.length === 0) return;
 
-    // Add valid files to form data
-    setFormData(prev => ({
-      ...prev,
-      uploadedImages: [...prev.uploadedImages, ...validFiles]
-    }));
+    // Show compression loading state
+    setIsCompressingImages(true);
 
-    // Create previews for new files
-    validFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews(prev => [...prev, { file, preview: reader.result as string }]);
-      };
-      reader.readAsDataURL(file);
-    });
+    try {
+      // Compress and convert all valid files to WebP
+      const processedFiles: File[] = [];
+      const processedPreviews: Array<{ file: File; preview: string }> = [];
 
-    // Reset input to allow selecting the same files again
-    e.target.value = '';
+      for (const file of validFiles) {
+        try {
+          const webpFile = await compressAndConvertToWebP(file);
+          processedFiles.push(webpFile);
+
+          // Create preview for the WebP file
+          const preview = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+              resolve(reader.result as string);
+            };
+            reader.onerror = () => {
+              reject(new Error('Failed to create preview'));
+            };
+            reader.readAsDataURL(webpFile);
+          });
+
+          processedPreviews.push({
+            file: webpFile,
+            preview: preview
+          });
+        } catch (error: any) {
+          console.error(`Error processing ${file.name}:`, error);
+          invalidFiles.push(`${file.name} - ${error.message || 'Processing failed'}`);
+        }
+      }
+
+      // Show error for files that failed processing
+      if (invalidFiles.length > 0) {
+        toast({
+          title: "Some files could not be processed",
+          description: invalidFiles.join(', '),
+          variant: "destructive"
+        });
+      }
+
+      if (processedFiles.length > 0) {
+        // Add processed WebP files to form data
+        setFormData(prev => ({
+          ...prev,
+          uploadedImages: [...prev.uploadedImages, ...processedFiles]
+        }));
+
+        // Update previews
+        setImagePreviews(prev => [...prev, ...processedPreviews]);
+
+        toast({
+          title: "Images processed",
+          description: `${processedFiles.length} image(s) compressed and converted to WebP format.`,
+        });
+      }
+    } catch (error: any) {
+      console.error('Error processing images:', error);
+      toast({
+        title: "Error",
+        description: "Failed to process images. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsCompressingImages(false);
+      // Reset input to allow selecting the same files again
+      e.target.value = '';
+    }
   };
 
   const removeImage = (index: number) => {
@@ -1271,7 +1412,8 @@ const SalesForm = () => {
                 <div className={cn(
                   "border-2 border-dashed rounded-lg sm:rounded-xl p-4 sm:p-6 text-center transition-all duration-200",
                   "border-gray-300/60 hover:border-blue-400/50 hover:shadow-sm",
-                  "bg-white/50"
+                  "bg-white/50",
+                  isCompressingImages && "opacity-50 pointer-events-none"
                 )}>
                   <input
                     type="file"
@@ -1279,19 +1421,37 @@ const SalesForm = () => {
                     accept="image/*"
                     multiple
                     onChange={handleImageUpload}
+                    disabled={isCompressingImages}
                     className="hidden"
                   />
                   <label
                     htmlFor="imageUpload"
-                    className="cursor-pointer flex flex-col items-center gap-2"
+                    className={cn(
+                      "cursor-pointer flex flex-col items-center gap-2",
+                      isCompressingImages && "cursor-not-allowed"
+                    )}
                   >
-                    <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
-                    <span className="text-xs sm:text-sm text-gray-600">
-                      Click to upload or drag and drop
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      PNG, JPG, JPEG up to 5MB each (Multiple images allowed)
-                    </span>
+                    {isCompressingImages ? (
+                      <>
+                        <div className="animate-spin h-6 w-6 sm:h-8 sm:w-8 border-2 border-blue-500 border-t-transparent rounded-full"></div>
+                        <span className="text-xs sm:text-sm text-blue-600 font-medium">
+                          Compressing and converting images...
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          Please wait while we optimize your images
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="h-6 w-6 sm:h-8 sm:w-8 text-gray-400" />
+                        <span className="text-xs sm:text-sm text-gray-600">
+                          Click to upload or drag and drop
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          PNG, JPG, JPEG up to 5MB each (Will be compressed and converted to WebP)
+                        </span>
+                      </>
+                    )}
                   </label>
                 </div>
 
@@ -1457,7 +1617,7 @@ const SalesForm = () => {
                 Success!
               </DialogTitle>
               <DialogDescription className="text-base text-gray-600">
-                Your sales form has been submitted successfully!
+                Your sales lead uploaded successfully!
               </DialogDescription>
             </div>
 

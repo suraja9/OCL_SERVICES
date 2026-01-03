@@ -39,6 +39,7 @@ import {
   Loader2
 } from 'lucide-react';
 import imageCompression from 'browser-image-compression';
+import { compressAndConvertToWebP } from '@/utils/imageCompression';
 import ImageUploadWithPreview from './ImageUploadWithPreview';
 import InvoicePopup from './InvoicePopup';
 import BookingConfirmation from './BookingConfirmation';
@@ -1439,39 +1440,28 @@ const BookingPanel: React.FC = () => {
   // Image compression utility
   const compressImage = async (file: File): Promise<File> => {
     const MAX_SIZE_MB = 20;
-    const TARGET_SIZE_MB = 10;
     const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
-    const TARGET_SIZE_BYTES = TARGET_SIZE_MB * 1024 * 1024;
 
     // Check if file exceeds maximum allowed size (20MB)
     if (file.size > MAX_SIZE_BYTES) {
       throw new Error(`Image size exceeds 20 MB. Please upload a smaller image. Current size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
     }
 
-    // If file is already under 10MB, return as is
-    if (file.size <= TARGET_SIZE_BYTES) {
+    // If not an image, return as is
+    if (!file.type.startsWith('image/')) {
       return file;
     }
 
-    // Compression options
-    const options = {
-      maxSizeMB: 10,
-      maxWidthOrHeight: 1920,
-      useWebWorker: true,
-      fileType: file.type,
-      initialQuality: 0.8,
-    };
-
     try {
       setIsCompressing(true);
-      setCompressionMessage('Compressing image...');
+      setCompressionMessage('Compressing and converting image to WebP...');
       
-      const compressedFile = await imageCompression(file, options);
-      
-      // Check if compressed file is still too large
-      if (compressedFile.size > TARGET_SIZE_BYTES) {
-        throw new Error('Image size too large even after compression. Please upload a smaller image.');
-      }
+      // Use the shared compression utility with WebP conversion
+      const compressedFile = await compressAndConvertToWebP(file, {
+        maxSizeMB: 10,
+        maxWidthOrHeight: 1920,
+        quality: 0.85
+      });
 
       setIsCompressing(false);
       setCompressionMessage('');

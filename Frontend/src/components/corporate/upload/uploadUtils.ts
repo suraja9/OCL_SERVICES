@@ -1,4 +1,5 @@
 // Upload utility functions for corporate booking
+import { compressAndConvertToWebP } from '@/utils/imageCompression';
 
 export interface UploadedFileData {
   filename: string;
@@ -66,53 +67,18 @@ export const validateFile = (file: File): { valid: boolean; error?: string } => 
   return { valid: true };
 };
 
-// Compress image file
-export const compressImage = (file: File, quality: number = 0.8): Promise<File> => {
-  return new Promise((resolve, reject) => {
-    if (!file.type.startsWith('image/')) {
-      resolve(file);
-      return;
-    }
+// Compress image file and convert to WebP
+export const compressImage = async (file: File, quality: number = 0.85): Promise<File> => {
+  // If not an image, return as is
+  if (!file.type.startsWith('image/')) {
+    return file;
+  }
 
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-
-    img.onload = () => {
-      // Calculate new dimensions (max width 1920px)
-      const maxWidth = 1920;
-      let { width, height } = img;
-
-      if (width > maxWidth) {
-        height = (height * maxWidth) / width;
-        width = maxWidth;
-      }
-
-      canvas.width = width;
-      canvas.height = height;
-
-      // Draw and compress
-      ctx?.drawImage(img, 0, 0, width, height);
-      
-      canvas.toBlob(
-        (blob) => {
-          if (blob) {
-            const compressedFile = new File([blob], file.name, {
-              type: file.type,
-              lastModified: Date.now()
-            });
-            resolve(compressedFile);
-          } else {
-            reject(new Error('Failed to compress image'));
-          }
-        },
-        file.type,
-        quality
-      );
-    };
-
-    img.onerror = () => reject(new Error('Failed to load image'));
-    img.src = URL.createObjectURL(file);
+  // Use the shared compression utility
+  return compressAndConvertToWebP(file, {
+    maxSizeMB: 1,
+    maxWidthOrHeight: 1920,
+    quality
   });
 };
 

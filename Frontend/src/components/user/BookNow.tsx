@@ -82,6 +82,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useUserAuth } from '@/contexts/UserAuthContext';
 import UserLogin from './UserLogin';
+import { compressAndConvertToWebP } from '@/utils/imageCompression';
 
 const API_BASE: string = (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:5000';
 const VOLUMETRIC_DIVISOR = 5000; // Standard volumetric conversion factor (cm³ to kg)
@@ -4409,27 +4410,45 @@ const BookNow: React.FC<BookNowProps> = ({ isDarkMode = false }) => {
                     accept="image/*"
                     multiple
                             className="hidden"
-                            onChange={(event) => {
+                            onChange={async (event) => {
                               const files = Array.from(event.target.files || []);
                       if (files.length + uploadedImages.length > 5) {
                         alert('Maximum 5 images allowed');
                         return;
                       }
-                      const newFiles = [...uploadedImages, ...files];
-                      setUploadedImages(newFiles);
                       
-                      // Create previews for new files only
-                      const newPreviews: string[] = [...imagePreviews];
-                      files.forEach((file) => {
-                        const reader = new FileReader();
-                        reader.onloadend = () => {
-                          newPreviews.push(reader.result as string);
-                          if (newPreviews.length === newFiles.length) {
-                            setImagePreviews(newPreviews);
-                          }
-                        };
-                        reader.readAsDataURL(file);
-                      });
+                      // Compress and convert images to WebP
+                      const processedFiles: File[] = [];
+                      const processedPreviews: string[] = [];
+                      
+                      for (const file of files) {
+                        try {
+                          const webpFile = await compressAndConvertToWebP(file, { maxSizeMB: 1, maxWidthOrHeight: 1920 });
+                          processedFiles.push(webpFile);
+                          
+                          // Create preview
+                          const preview = await new Promise<string>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onloadend = () => resolve(reader.result as string);
+                            reader.onerror = () => reject(new Error('Failed to create preview'));
+                            reader.readAsDataURL(webpFile);
+                          });
+                          processedPreviews.push(preview);
+                        } catch (error: any) {
+                          console.error(`Error processing ${file.name}:`, error);
+                          // Still add the file even if compression fails
+                          processedFiles.push(file);
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            processedPreviews.push(reader.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }
+                      
+                      const newFiles = [...uploadedImages, ...processedFiles];
+                      setUploadedImages(newFiles);
+                      setImagePreviews([...imagePreviews, ...processedPreviews]);
                     }}
                   />
                   <label

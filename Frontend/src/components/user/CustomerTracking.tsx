@@ -3,8 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import { useUserAuth } from "@/contexts/UserAuthContext";
+import UserLogin from "./UserLogin";
 import {
   Search,
   Package,
@@ -194,7 +202,9 @@ const CustomerTracking: React.FC<CustomerTrackingProps> = ({ isDarkMode }) => {
   const [activeOrderId, setActiveOrderId] = useState<string | null>(null);
   const [isTrackingInputFocused, setIsTrackingInputFocused] = useState(false);
   const [selectedOrderSteps, setSelectedOrderSteps] = useState<Record<string, TrackerStep["key"]>>({});
+  const [showLoginDialog, setShowLoginDialog] = useState(false);
   const { toast } = useToast();
+  const { isAuthenticated, customer, isLoading: authLoading } = useUserAuth();
 
   const API_BASE: string =
     (import.meta as any).env?.VITE_API_BASE_URL || "http://localhost:5000";
@@ -531,10 +541,17 @@ const CustomerTracking: React.FC<CustomerTrackingProps> = ({ isDarkMode }) => {
   };
 
   const fetchOrders = useCallback(async () => {
+    if (!customer?._id) {
+      setOrdersError(null);
+      setIsLoadingOrders(false);
+      setOrders([]);
+      return;
+    }
+
     setIsLoadingOrders(true);
     setOrdersError(null);
     try {
-      const response = await fetch(`${API_BASE}/api/customer-booking?limit=100`);
+      const response = await fetch(`${API_BASE}/api/customer-booking?onlineCustomerId=${customer._id}&limit=100`);
       const result = await response.json();
 
       if (!response.ok) {
@@ -559,11 +576,20 @@ const CustomerTracking: React.FC<CustomerTrackingProps> = ({ isDarkMode }) => {
     } finally {
       setIsLoadingOrders(false);
     }
-  }, [API_BASE, toast]);
+  }, [API_BASE, customer?._id, toast]);
 
   useEffect(() => {
+    if (authLoading) return;
+    
+    if (!isAuthenticated) {
+      setShowLoginDialog(true);
+      setIsLoadingOrders(false);
+      setOrders([]);
+      return;
+    }
+    
     fetchOrders();
-  }, [fetchOrders]);
+  }, [isAuthenticated, authLoading, fetchOrders]);
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -1849,6 +1875,18 @@ const CustomerTracking: React.FC<CustomerTrackingProps> = ({ isDarkMode }) => {
         </div>
       </div>
 
+      {/* Login Dialog */}
+      <Dialog open={showLoginDialog} onOpenChange={setShowLoginDialog}>
+        <DialogContent className="max-w-md p-0 border-0 bg-transparent">
+          <UserLogin
+            isDarkMode={isDarkMode}
+            onLoginSuccess={() => {
+              setShowLoginDialog(false);
+              fetchOrders();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

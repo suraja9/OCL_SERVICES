@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { Camera, Upload, X, Eye, Trash2 } from 'lucide-react';
+import { compressAndConvertToWebP } from '@/utils/imageCompression';
 
 interface UploadedFile {
   id: string;
@@ -31,6 +32,7 @@ const ImageUploadWithPreview: React.FC<ImageUploadWithPreviewProps> = ({
   fieldName
 }) => {
   const [isUploading, setIsUploading] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -38,35 +40,50 @@ const ImageUploadWithPreview: React.FC<ImageUploadWithPreviewProps> = ({
     if (!selectedFiles) return;
 
     const newFiles: UploadedFile[] = [];
+    setIsCompressing(true);
     
-    for (let i = 0; i < selectedFiles.length; i++) {
-      const file = selectedFiles[i];
-      
-      // Check file size (10MB limit)
-      if (file.size > 10 * 1024 * 1024) {
-        alert(`File ${file.name} is too large. Maximum size is 10MB.`);
-        continue;
-      }
-      
-      // Check if we've reached max files
-      if (files.length + newFiles.length >= maxFiles) {
-        alert(`Maximum ${maxFiles} files allowed.`);
-        break;
+    try {
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const file = selectedFiles[i];
+        
+        // Check file size (10MB limit before compression)
+        if (file.size > 10 * 1024 * 1024) {
+          alert(`File ${file.name} is too large. Maximum size is 10MB.`);
+          continue;
+        }
+        
+        // Check if we've reached max files
+        if (files.length + newFiles.length >= maxFiles) {
+          alert(`Maximum ${maxFiles} files allowed.`);
+          break;
+        }
+
+        try {
+          // Compress and convert to WebP if it's an image
+          const processedFile = file.type.startsWith('image/')
+            ? await compressAndConvertToWebP(file, { maxSizeMB: 1, maxWidthOrHeight: 1920 })
+            : file;
+
+          const id = Date.now() + Math.random().toString(36);
+          const preview = URL.createObjectURL(processedFile);
+          
+          newFiles.push({
+            id,
+            file: processedFile,
+            preview,
+            uploaded: false
+          });
+        } catch (error: any) {
+          console.error(`Error processing ${file.name}:`, error);
+          alert(`Failed to process ${file.name}: ${error.message || 'Unknown error'}`);
+        }
       }
 
-      const id = Date.now() + Math.random().toString(36);
-      const preview = URL.createObjectURL(file);
-      
-      newFiles.push({
-        id,
-        file,
-        preview,
-        uploaded: false
-      });
-    }
-
-    if (newFiles.length > 0) {
-      onFilesChange([...files, ...newFiles]);
+      if (newFiles.length > 0) {
+        onFilesChange([...files, ...newFiles]);
+      }
+    } finally {
+      setIsCompressing(false);
     }
   };
 
@@ -172,7 +189,7 @@ const ImageUploadWithPreview: React.FC<ImageUploadWithPreviewProps> = ({
           accept={accept}
           onChange={handleFileInputChange}
           className="hidden"
-          disabled={isUploading}
+          disabled={isUploading || isCompressing}
         />
         <div
           onClick={() => fileInputRef.current?.click()}
@@ -180,10 +197,10 @@ const ImageUploadWithPreview: React.FC<ImageUploadWithPreviewProps> = ({
         >
           <Upload className="w-8 h-8 text-gray-400 mb-2" />
           <p className="text-sm text-gray-600 mb-1">
-            {isUploading ? 'Uploading...' : 'Click to upload images'}
+            {isUploading ? 'Uploading...' : isCompressing ? 'Compressing images...' : 'Click to upload images'}
           </p>
           <p className="text-xs text-gray-500">
-            Multiple images supported, max 10MB each
+            Multiple images supported, max 10MB each (will be compressed and converted to WebP)
           </p>
         </div>
       </div>

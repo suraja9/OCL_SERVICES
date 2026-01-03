@@ -36,6 +36,7 @@ import {
   Loader2
 } from 'lucide-react';
 import med2Image from '../../assets/med-2.png';
+import { compressAndConvertToWebP } from '@/utils/imageCompression';
 
 const IndianFlagIcon = ({ className = "w-6 h-4" }: { className?: string }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 225 150" className={className}>
@@ -551,7 +552,7 @@ interface UploadBoxProps {
 const UploadBox: React.FC<UploadBoxProps> = ({ label, files, onFilesChange, maxFiles = 5 }) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
       const validFiles = newFiles.filter(file => {
@@ -563,7 +564,25 @@ const UploadBox: React.FC<UploadBoxProps> = ({ label, files, onFilesChange, maxF
       const remainingSlots = maxFiles - files.length;
       const filesToAdd = validFiles.slice(0, remainingSlots);
 
-      onFilesChange([...files, ...filesToAdd]);
+      // Compress and convert images to WebP
+      const processedFiles: File[] = [];
+      for (const file of filesToAdd) {
+        try {
+          if (file.type.startsWith('image/')) {
+            const processedFile = await compressAndConvertToWebP(file, { maxSizeMB: 1, maxWidthOrHeight: 1920 });
+            processedFiles.push(processedFile);
+          } else {
+            // PDF files, keep as is
+            processedFiles.push(file);
+          }
+        } catch (error: any) {
+          console.error(`Error processing ${file.name}:`, error);
+          // Still add the file even if compression fails
+          processedFiles.push(file);
+        }
+      }
+
+      onFilesChange([...files, ...processedFiles]);
     }
   };
 

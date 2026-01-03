@@ -10,6 +10,7 @@ import { FloatingInput } from '../shared';
 import { UploadData } from '../types';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { compressAndConvertToWebP } from '@/utils/imageCompression';
 
 interface UploadStepProps {
   data: UploadData;
@@ -74,11 +75,30 @@ const UploadStep: React.FC<UploadStepProps> = ({
     generatePreviews(data.declarationImages, setDeclarationImagePreviews);
   }, [data.invoiceImages, data.panImages, data.declarationImages]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'invoiceImages' | 'panImages' | 'declarationImages') => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: 'invoiceImages' | 'panImages' | 'declarationImages') => {
     const files = Array.from(e.target.files || []);
     if (files.length > 0) {
       const maxFiles = field === 'invoiceImages' ? 10 : 5; // Invoice can have more
-      const newImages = [...data[field], ...files];
+      
+      // Process images: compress and convert to WebP
+      const processedFiles: File[] = [];
+      for (const file of files) {
+        try {
+          if (file.type.startsWith('image/')) {
+            const processedFile = await compressAndConvertToWebP(file, { maxSizeMB: 1, maxWidthOrHeight: 1920 });
+            processedFiles.push(processedFile);
+          } else {
+            // PDF files, keep as is
+            processedFiles.push(file);
+          }
+        } catch (error: any) {
+          console.error(`Error processing ${file.name}:`, error);
+          // Still add the file even if compression fails
+          processedFiles.push(file);
+        }
+      }
+      
+      const newImages = [...data[field], ...processedFiles];
       handleFieldChange(field, newImages.slice(0, maxFiles));
     }
   };

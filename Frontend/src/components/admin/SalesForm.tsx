@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { compressAndConvertToWebP } from "@/utils/imageCompression";
 
 // Floating Label Input Component
 interface FloatingLabelInputProps {
@@ -412,7 +413,7 @@ const SalesForm = () => {
     }
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
@@ -427,7 +428,7 @@ const SalesForm = () => {
         return;
       }
 
-      // Validate file size (max 5MB)
+      // Validate file size (max 5MB before compression)
       if (file.size > 5 * 1024 * 1024) {
         invalidFiles.push(`${file.name} - File too large (max 5MB)`);
         return;
@@ -447,20 +448,52 @@ const SalesForm = () => {
 
     if (validFiles.length === 0) return;
 
-    // Add valid files to form data
-    setFormData(prev => ({ 
-      ...prev, 
-      uploadedImages: [...prev.uploadedImages, ...validFiles]
-    }));
+    // Compress and convert images to WebP
+    const processedFiles: File[] = [];
+    const processedPreviews: Array<{ file: File; preview: string }> = [];
 
-    // Create previews for new files
-    validFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews(prev => [...prev, { file, preview: reader.result as string }]);
-      };
-      reader.readAsDataURL(file);
-    });
+    for (const file of validFiles) {
+      try {
+        const webpFile = await compressAndConvertToWebP(file, { maxSizeMB: 1, maxWidthOrHeight: 1920 });
+        processedFiles.push(webpFile);
+
+        // Create preview
+        const preview = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => {
+            resolve(reader.result as string);
+          };
+          reader.onerror = () => {
+            reject(new Error('Failed to create preview'));
+          };
+          reader.readAsDataURL(webpFile);
+        });
+
+        processedPreviews.push({
+          file: webpFile,
+          preview: preview
+        });
+      } catch (error: any) {
+        console.error(`Error processing ${file.name}:`, error);
+        invalidFiles.push(`${file.name} - ${error.message || 'Processing failed'}`);
+      }
+    }
+
+    if (processedFiles.length > 0) {
+      // Add processed WebP files to form data
+      setFormData(prev => ({ 
+        ...prev, 
+        uploadedImages: [...prev.uploadedImages, ...processedFiles]
+      }));
+
+      // Update previews
+      setImagePreviews(prev => [...prev, ...processedPreviews]);
+
+      toast({
+        title: "Images processed",
+        description: `${processedFiles.length} image(s) compressed and converted to WebP format.`,
+      });
+    }
 
     // Reset input to allow selecting the same files again
     e.target.value = '';
@@ -1266,7 +1299,7 @@ const SalesForm = () => {
                 Success!
               </DialogTitle>
               <DialogDescription className="text-base text-gray-600">
-                Your sales form has been submitted successfully!
+                Your sales lead uploaded successfully!
               </DialogDescription>
             </div>
 

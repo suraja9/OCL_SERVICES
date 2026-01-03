@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Upload, X, Eye, FileText, Image as ImageIcon } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { compressAndConvertToWebP } from '@/utils/imageCompression';
 
 interface UploadedFile {
   file: File;
@@ -26,6 +27,7 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
   label = "Upload Documents"
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [previewFile, setPreviewFile] = useState<UploadedFile | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -53,7 +55,7 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
     }
   };
 
-  const handleFiles = (newFiles: File[]) => {
+  const handleFiles = async (newFiles: File[]) => {
     const validFiles = newFiles.filter(file => {
       if (file.type.startsWith('image/')) return true;
       if (file.type === 'application/pdf') return true;
@@ -65,13 +67,37 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
     const remainingSlots = maxFiles - files.length;
     const filesToAdd = validFiles.slice(0, remainingSlots);
 
-    const newUploadedFiles: UploadedFile[] = filesToAdd.map(file => ({
-      file,
-      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
-      id: Math.random().toString(36).substr(2, 9)
-    }));
+    setIsCompressing(true);
+    try {
+      const newUploadedFiles: UploadedFile[] = [];
 
-    onFilesChange([...files, ...newUploadedFiles]);
+      for (const file of filesToAdd) {
+        try {
+          // Compress and convert to WebP if it's an image
+          const processedFile = file.type.startsWith('image/')
+            ? await compressAndConvertToWebP(file, { maxSizeMB: 1, maxWidthOrHeight: 1920 })
+            : file;
+
+          newUploadedFiles.push({
+            file: processedFile,
+            preview: processedFile.type.startsWith('image/') ? URL.createObjectURL(processedFile) : '',
+            id: Math.random().toString(36).substr(2, 9)
+          });
+        } catch (error: any) {
+          console.error(`Error processing ${file.name}:`, error);
+          // Still add the file even if compression fails
+          newUploadedFiles.push({
+            file,
+            preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+            id: Math.random().toString(36).substr(2, 9)
+          });
+        }
+      }
+
+      onFilesChange([...files, ...newUploadedFiles]);
+    } finally {
+      setIsCompressing(false);
+    }
   };
 
   const removeFile = (id: string) => {
@@ -133,17 +159,17 @@ const FileUploadWithPreview: React.FC<FileUploadWithPreviewProps> = ({
           accept={acceptedTypes}
           onChange={handleFileSelect}
           className="hidden"
-          disabled={files.length >= maxFiles}
+          disabled={files.length >= maxFiles || isCompressing}
         />
         
         <div className="flex items-center justify-center space-x-2">
           <Upload className="h-5 w-5 text-gray-400" />
           <div>
             <p className="text-sm text-gray-600 font-medium">
-              {files.length >= maxFiles ? 'Maximum files reached' : 'Click or drag files here'}
+              {files.length >= maxFiles ? 'Maximum files reached' : isCompressing ? 'Compressing images...' : 'Click or drag files here'}
             </p>
             <p className="text-xs text-gray-500">
-              Images, PDF • Max {maxFiles} files
+              Images (will be compressed to WebP), PDF • Max {maxFiles} files
             </p>
           </div>
         </div>
