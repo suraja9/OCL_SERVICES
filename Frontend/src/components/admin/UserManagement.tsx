@@ -105,6 +105,7 @@ interface OfficeUser {
     payments: boolean;
     collectPayment: boolean;
     salesForm: boolean;
+    news: boolean;
   };
   department?: string;
   phone?: string;
@@ -185,7 +186,8 @@ const UserManagement = () => {
     coldCalling: false,
     payments: false,
     collectPayment: false,
-    salesForm: false
+    salesForm: false,
+    news: false
   });
 
   const { toast } = useToast();
@@ -288,7 +290,8 @@ const UserManagement = () => {
       coldCalling: user.permissions.coldCalling !== undefined ? user.permissions.coldCalling : false,
       payments: user.permissions.payments !== undefined ? user.permissions.payments : false,
       collectPayment: user.permissions.collectPayment !== undefined ? user.permissions.collectPayment : false,
-      salesForm: user.permissions.salesForm !== undefined ? user.permissions.salesForm : false
+      salesForm: user.permissions.salesForm !== undefined ? user.permissions.salesForm : false,
+      news: user.permissions.news !== undefined ? user.permissions.news : false
     };
     setPermissions(userPermissions);
     setIsPermissionsModalOpen(true);
@@ -637,6 +640,7 @@ const UserManagement = () => {
     if (permissions.payments) badges.push('Payment Status');
     if (permissions.collectPayment) badges.push('Collect Payment');
     if (permissions.salesForm) badges.push('Sales Form');
+    if (permissions.news) badges.push('News');
     return badges;
   };
 
@@ -1823,6 +1827,31 @@ const UserManagement = () => {
                         checked={permissions.salesForm}
                         onChange={() => { }}
                         className="w-4 h-4 text-pink-600 rounded focus:ring-pink-500 flex-shrink-0"
+                      />
+                    </div>
+                  </div>
+
+                  {/* News */}
+                  <div
+                    className={`relative p-2.5 border rounded-lg cursor-pointer transition-all duration-200 hover:shadow-sm ${permissions.news
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
+                    onClick={() => setPermissions(prev => ({
+                      ...prev,
+                      news: !prev.news
+                    }))}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-xs text-gray-800 leading-tight">News</h3>
+                        <p className="text-[10px] text-gray-500 mt-0.5 leading-tight">Manage news and announcements</p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={permissions.news}
+                        onChange={() => { }}
+                        className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 flex-shrink-0"
                       />
                     </div>
                   </div>

@@ -83,7 +83,8 @@ const officeUserSchema = new mongoose.Schema({
     coldCalling: { type: Boolean, default: false },
     payments: { type: Boolean, default: false },
     collectPayment: { type: Boolean, default: false },
-    salesForm: { type: Boolean, default: false }
+    salesForm: { type: Boolean, default: false },
+    news: { type: Boolean, default: false }
   },
   permissionsUpdatedAt: {
     type: Date,

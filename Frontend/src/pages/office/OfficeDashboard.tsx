@@ -34,6 +34,7 @@ import {
   TrendingDown,
   ArrowUpRight,
   ArrowDownRight,
+  Newspaper,
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import BookingPanel from '@/components/BookingPanel';
@@ -78,6 +79,8 @@ import CorporateBooking from '@/components/admin/CorporateBooking';
 import ColdCalling from '@/components/admin/ColdCalling';
 import PaymentStatus from '@/components/admin/PaymentStatus';
 import CollectPayment from '@/components/admin/CollectPayment';
+import SalesForms from '@/components/admin/SalesForms';
+import News from '@/components/admin/News';
 
 interface PermissionSet {
   dashboard: boolean;
@@ -120,6 +123,8 @@ interface PermissionSet {
   coldCalling: boolean;
   payments: boolean;
   collectPayment: boolean;
+  salesForm: boolean;
+  news: boolean;
 }
 
 interface OfficeUser {
@@ -204,6 +209,8 @@ const OfficeDashboard = () => {
           coldCalling: false,
           payments: false,
           collectPayment: false,
+          salesForm: false,
+          news: false,
         };
 
         if (userData.permissions) {
@@ -353,6 +360,8 @@ const OfficeDashboard = () => {
           coldCalling: false,
           payments: false,
           collectPayment: false,
+          salesForm: false,
+          news: false,
         };
 
         if (userData.permissions) {
@@ -1196,6 +1205,38 @@ const OfficeDashboard = () => {
               </button>
             )}
 
+            {/* Sales Forms - only shown when user has access */}
+            {(user?.permissions?.salesForm || user?.adminInfo?.permissions?.salesForm) && (
+              <button
+                onClick={() => setActiveTab('salesForms')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'salesForms'
+                    ? 'bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "Sales Forms" : ""}
+              >
+                <ClipboardList className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">Sales Forms</span>}
+              </button>
+            )}
+
+            {/* News - only shown when user has access */}
+            {(user?.permissions?.news || user?.adminInfo?.permissions?.news) && (
+              <button
+                onClick={() => setActiveTab('news')}
+                className={`w-full text-left flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-3'} px-3 py-2 rounded-xl transition ${
+                  activeTab === 'news'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                title={isSidebarCollapsed ? "News" : ""}
+              >
+                <Newspaper className="h-5 w-5" />
+                {!isSidebarCollapsed && <span className="font-medium text-sm">News</span>}
+              </button>
+            )}
+
             {/* Admin-only sections */}
             {user?.adminInfo && user?.adminInfo?.role === 'super_admin' && (
               <button
@@ -1623,6 +1664,20 @@ const OfficeDashboard = () => {
           {activeTab === 'collectPayment' && (
             <div className="space-y-6">
               <CollectPayment />
+            </div>
+          )}
+
+          {/* Sales Forms */}
+          {activeTab === 'salesForms' && (
+            <div className="space-y-6">
+              <SalesForms />
+            </div>
+          )}
+
+          {/* News */}
+          {activeTab === 'news' && (
+            <div className="space-y-6">
+              <News />
             </div>
           )}
 
