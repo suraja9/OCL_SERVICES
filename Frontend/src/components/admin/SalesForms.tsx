@@ -82,6 +82,7 @@ interface SalesForm {
   submissionCity?: string;
   submissionState?: string;
   submissionCountry?: string;
+  submissionFullAddress?: string;
   submissionIpAddress?: string;
 }
 
@@ -265,6 +266,7 @@ const SalesForms = () => {
         'Submission City',
         'Submission State',
         'Submission Country',
+        'Submission Full Address',
         'Submission IP Address'
       ];
 
@@ -300,6 +302,7 @@ const SalesForms = () => {
           escapeCSV(form.submissionCity || ''),
           escapeCSV(form.submissionState || ''),
           escapeCSV(form.submissionCountry || ''),
+          escapeCSV(form.submissionFullAddress || ''),
           escapeCSV(form.submissionIpAddress || '')
         ];
         csvRows.push(row.join(','));
@@ -511,8 +514,18 @@ const SalesForms = () => {
                       </TableCell>
                       <TableCell className="py-3 px-4">
                         <div className="text-sm">
-                          <div className="text-gray-900">{form.submissionCity || 'N/A'}</div>
-                          <div className="text-xs text-gray-500">{form.submissionState || form.submissionCountry || ''}</div>
+                          {form.submissionFullAddress ? (
+                            <div className="text-gray-900" title={form.submissionFullAddress}>
+                              {form.submissionFullAddress.length > 50 
+                                ? `${form.submissionFullAddress.substring(0, 50)}...` 
+                                : form.submissionFullAddress}
+                            </div>
+                          ) : (
+                            <>
+                              <div className="text-gray-900">{form.submissionCity || 'N/A'}</div>
+                              <div className="text-xs text-gray-500">{form.submissionState || form.submissionCountry || ''}</div>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                       <TableCell className="py-3 px-4">
@@ -756,12 +769,18 @@ const SalesForms = () => {
           )}
 
           {/* Location Information */}
-          {(selectedForm?.submissionCity || selectedForm?.submissionState || selectedForm?.submissionCountry) && (
+          {(selectedForm?.submissionFullAddress || selectedForm?.submissionCity || selectedForm?.submissionState || selectedForm?.submissionCountry) && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-gray-900">
                 <Navigation className="h-5 w-5 text-blue-600" />
                 Submission Location
               </h3>
+              {selectedForm?.submissionFullAddress && (
+                <div className="mb-4">
+                  <p className="text-sm font-medium text-gray-500 mb-1">Full Address</p>
+                  <p className="text-gray-900">{selectedForm.submissionFullAddress}</p>
+                </div>
+              )}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500 mb-1">City</p>

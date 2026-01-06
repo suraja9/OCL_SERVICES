@@ -367,6 +367,7 @@ interface FormData {
   submissionCity?: string;
   submissionState?: string;
   submissionCountry?: string;
+  submissionFullAddress?: string;
   submissionIpAddress?: string;
 }
 
@@ -404,6 +405,7 @@ const SalesForm = () => {
     submissionCity: '',
     submissionState: '',
     submissionCountry: '',
+    submissionFullAddress: '',
     submissionIpAddress: '',
   });
 
@@ -835,6 +837,17 @@ const SalesForm = () => {
       );
       const locationInfo = await response.json();
 
+      // Build full address from available fields
+      const addressParts = [];
+      if (locationInfo.street) addressParts.push(locationInfo.street);
+      if (locationInfo.locality) addressParts.push(locationInfo.locality);
+      if (locationInfo.city) addressParts.push(locationInfo.city);
+      if (locationInfo.postcode) addressParts.push(locationInfo.postcode);
+      if (locationInfo.principalSubdivision) addressParts.push(locationInfo.principalSubdivision);
+      if (locationInfo.countryName) addressParts.push(locationInfo.countryName);
+      
+      const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : '';
+
       locationData = {
         submissionLocation: {
           type: 'Point',
@@ -843,6 +856,7 @@ const SalesForm = () => {
         submissionCity: locationInfo.city || locationInfo.locality || '',
         submissionState: locationInfo.principalSubdivision || '',
         submissionCountry: locationInfo.countryName || '',
+        submissionFullAddress: fullAddress,
         submissionIpAddress: '' // IP address would need backend API to fetch
       };
 
@@ -859,6 +873,7 @@ const SalesForm = () => {
         submissionCity: '',
         submissionState: '',
         submissionCountry: '',
+        submissionFullAddress: '',
         submissionIpAddress: ''
       };
     }
@@ -929,6 +944,7 @@ const SalesForm = () => {
       submitFormData.append('submissionCity', formData.submissionCity || '');
       submitFormData.append('submissionState', formData.submissionState || '');
       submitFormData.append('submissionCountry', formData.submissionCountry || '');
+      submitFormData.append('submissionFullAddress', formData.submissionFullAddress || '');
       submitFormData.append('submissionIpAddress', formData.submissionIpAddress || '');
 
       // Append image files if exist
@@ -981,6 +997,7 @@ const SalesForm = () => {
         submissionCity: '',
         submissionState: '',
         submissionCountry: '',
+        submissionFullAddress: '',
         submissionIpAddress: '',
       });
       setAvailableAreas([]);
@@ -1033,6 +1050,7 @@ const SalesForm = () => {
       submissionCity: '',
       submissionState: '',
       submissionCountry: '',
+      submissionFullAddress: '',
       submissionIpAddress: '',
     });
     setImagePreviews([]);
@@ -1228,7 +1246,7 @@ const SalesForm = () => {
                     label="Type of Business / Industry"
                     value={formData.typeOfBusiness}
                     onChange={(value) => handleInputChange('typeOfBusiness', value)}
-                    options={['E-commerce', 'Manufacturing', 'Retail', 'Wholesale', 'Pharmaceutical', 'Textiles', 'Electronics', 'Food & Beverages', 'Automotive', 'Other']}
+                    options={['E-commerce', 'Manufacturing', 'Retail', 'Wholesale', 'Pharmaceutical', 'Textiles', 'Electronics', 'Food & Beverages','Computer', 'Automotive', 'Other']}
                     error={errors.typeOfBusiness}
                     required
                   />
