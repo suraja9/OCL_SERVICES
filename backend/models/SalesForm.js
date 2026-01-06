@@ -215,6 +215,11 @@ const salesFormSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  submissionFullAddress: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   submissionIpAddress: {
     type: String,
     trim: true,

@@ -41,7 +41,9 @@ import {
   Truck,
   AlertCircle,
   Download,
-  Navigation
+  Navigation,
+  ExternalLink,
+  CloudUpload
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -99,17 +101,35 @@ interface SalesFormsResponse {
 
 const SalesForms = () => {
   const { toast } = useToast();
+  
+  // Initialize date filters with current date
+  const getCurrentDateFilters = () => {
+    const now = new Date();
+    return {
+      day: now.getDate().toString(),
+      month: (now.getMonth() + 1).toString(), // getMonth() returns 0-11
+      year: now.getFullYear().toString()
+    };
+  };
+
+  const currentDate = getCurrentDateFilters();
+  
   const [salesForms, setSalesForms] = useState<SalesForm[]>([]);
   const [filteredForms, setFilteredForms] = useState<SalesForm[]>([]);
   const [loading, setLoading] = useState(true);
+  const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [dayFilter, setDayFilter] = useState<string>(currentDate.day);
+  const [monthFilter, setMonthFilter] = useState<string>(currentDate.month);
+  const [yearFilter, setYearFilter] = useState<string>(currentDate.year);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [selectedForm, setSelectedForm] = useState<SalesForm | null>(null);
   const [showViewDialog, setShowViewDialog] = useState(false);
   const [error, setError] = useState('');
+  const [sheetsUrl, setSheetsUrl] = useState<string | null>(null);
 
   const token = localStorage.getItem('adminToken');
 
@@ -119,7 +139,7 @@ const SalesForms = () => {
 
   useEffect(() => {
     filterForms();
-  }, [salesForms, searchTerm]);
+  }, [salesForms, searchTerm, dayFilter, monthFilter, yearFilter]);
 
   const fetchSalesForms = async () => {
     try {
@@ -168,25 +188,86 @@ const SalesForms = () => {
   };
 
   const filterForms = () => {
-    if (!searchTerm.trim()) {
-      setFilteredForms(salesForms);
-      return;
+    let filtered = salesForms;
+
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter(form =>
+        form.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        form.concernPersonName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        form.emailAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        form.phoneNumber.includes(searchTerm) ||
+        form.typeOfBusiness.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
-    const filtered = salesForms.filter(form =>
-      form.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      form.concernPersonName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      form.emailAddress.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      form.phoneNumber.includes(searchTerm) ||
-      form.typeOfBusiness.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Apply date filters
+    if (dayFilter !== 'all' || monthFilter !== 'all' || yearFilter !== 'all') {
+      filtered = filtered.filter(form => {
+        const formDate = new Date(form.createdAt);
+        const formDay = formDate.getDate();
+        const formMonth = formDate.getMonth() + 1; // getMonth() returns 0-11
+        const formYear = formDate.getFullYear();
+
+        const dayMatch = dayFilter === 'all' || formDay === parseInt(dayFilter);
+        const monthMatch = monthFilter === 'all' || formMonth === parseInt(monthFilter);
+        const yearMatch = yearFilter === 'all' || formYear === parseInt(yearFilter);
+
+        return dayMatch && monthMatch && yearMatch;
+      });
+    }
 
     setFilteredForms(filtered);
   };
 
-  const handleViewForm = (form: SalesForm) => {
+  const updateFormStatus = async (formId: string, newStatus: string) => {
+    try {
+      const response = await fetch(`${API_BASE}/api/sales-form/${formId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update status');
+      }
+
+      const result = await response.json();
+      
+      if (result.success) {
+        // Update the form in the local state
+        setSalesForms(prevForms =>
+          prevForms.map(form =>
+            form._id === formId ? { ...form, status: newStatus } : form
+          )
+        );
+        
+        // Update selected form if it's the same one
+        setSelectedForm(prevForm =>
+          prevForm && prevForm._id === formId ? { ...prevForm, status: newStatus } : prevForm
+        );
+      }
+    } catch (error: any) {
+      console.error('Error updating form status:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update form status",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleViewForm = async (form: SalesForm) => {
     setSelectedForm(form);
     setShowViewDialog(true);
+    
+    // If status is pending, update it to seen
+    if (form.status === 'pending') {
+      await updateFormStatus(form._id, 'seen');
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -202,6 +283,7 @@ const SalesForms = () => {
   const getStatusBadge = (status: string) => {
     const statusColors: Record<string, string> = {
       pending: 'bg-yellow-100 text-yellow-800',
+      seen: 'bg-purple-100 text-purple-800',
       in_progress: 'bg-blue-100 text-blue-800',
       completed: 'bg-green-100 text-green-800',
       rejected: 'bg-red-100 text-red-800'
@@ -212,6 +294,43 @@ const SalesForms = () => {
         {status.charAt(0).toUpperCase() + status.slice(1).replace('_', ' ')}
       </Badge>
     );
+  };
+
+  const getDays = () => {
+    return Array.from({ length: 31 }, (_, i) => i + 1);
+  };
+
+  const getMonths = () => {
+    return [
+      { value: '1', label: 'January' },
+      { value: '2', label: 'February' },
+      { value: '3', label: 'March' },
+      { value: '4', label: 'April' },
+      { value: '5', label: 'May' },
+      { value: '6', label: 'June' },
+      { value: '7', label: 'July' },
+      { value: '8', label: 'August' },
+      { value: '9', label: 'September' },
+      { value: '10', label: 'October' },
+      { value: '11', label: 'November' },
+      { value: '12', label: 'December' }
+    ];
+  };
+
+  const getYears = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    // Generate years from 5 years ago to current year
+    for (let i = 0; i <= 5; i++) {
+      years.push((currentYear - i).toString());
+    }
+    return years;
+  };
+
+  const clearDateFilters = () => {
+    setDayFilter('all');
+    setMonthFilter('all');
+    setYearFilter('all');
   };
 
   const escapeCSV = (value: any): string => {
@@ -338,6 +457,109 @@ const SalesForms = () => {
     }
   };
 
+  const syncToSheets = async () => {
+    try {
+      setSyncing(true);
+      const response = await fetch(`${API_BASE}/api/sales-form/sync-to-sheets`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to sync to Google Sheets');
+      }
+
+      // Store the spreadsheet URL
+      if (result.data?.spreadsheetUrl) {
+        setSheetsUrl(result.data.spreadsheetUrl);
+      }
+
+      toast({
+        title: "Sync Successful",
+        description: result.message || `Synced ${result.data?.totalForms || 0} sales form(s) to Google Sheets`,
+        variant: "default"
+      });
+    } catch (error: any) {
+      console.error('Error syncing to Google Sheets:', error);
+      toast({
+        title: "Sync Failed",
+        description: error.message || "Failed to sync sales forms to Google Sheets",
+        variant: "destructive"
+      });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const openSheets = async () => {
+    try {
+      // If we already have the URL, use it
+      if (sheetsUrl) {
+        window.open(sheetsUrl, '_blank');
+        return;
+      }
+
+      // Otherwise, fetch it from the API
+      const response = await fetch(`${API_BASE}/api/sales-form/sheets-url`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Failed to get Google Sheets URL');
+      }
+
+      if (result.data?.spreadsheetUrl) {
+        setSheetsUrl(result.data.spreadsheetUrl);
+        window.open(result.data.spreadsheetUrl, '_blank');
+      } else {
+        throw new Error('Google Sheets URL not available');
+      }
+    } catch (error: any) {
+      console.error('Error opening Google Sheets:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to open Google Sheets. Please sync first.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Fetch sheets URL on component mount
+  useEffect(() => {
+    const fetchSheetsUrl = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/sales-form/sheets-url`, {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+
+        const result = await response.json();
+        if (result.success && result.data?.spreadsheetUrl) {
+          setSheetsUrl(result.data.spreadsheetUrl);
+        }
+      } catch (error) {
+        // Silently fail - URL will be fetched when needed
+        console.warn('Could not fetch Google Sheets URL:', error);
+      }
+    };
+
+    if (token) {
+      fetchSheetsUrl();
+    }
+  }, [token]);
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-6xl mx-auto space-y-4">
@@ -365,6 +587,26 @@ const SalesForms = () => {
                 Export CSV
               </Button>
               <Button
+                onClick={syncToSheets}
+                variant="outline"
+                size="sm"
+                disabled={loading || syncing || (filteredForms.length === 0 && salesForms.length === 0)}
+                className="border-green-300 hover:bg-green-50 text-green-700"
+              >
+                <CloudUpload className={`h-4 w-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+                {syncing ? 'Syncing...' : 'Sync to Sheets'}
+              </Button>
+              <Button
+                onClick={openSheets}
+                variant="outline"
+                size="sm"
+                disabled={!sheetsUrl}
+                className="border-blue-300 hover:bg-blue-50 text-blue-700"
+              >
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Open Sheets
+              </Button>
+              <Button
                 onClick={fetchSalesForms}
                 disabled={loading}
                 className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
@@ -384,31 +626,86 @@ const SalesForms = () => {
 
         {/* Compact Filters */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input
-                  placeholder="Search by company name, contact person, email, phone, or business type..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 h-9 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md"
-                />
+          <div className="flex flex-col gap-2">
+            {/* First Row: Search, Status, and Date Filters */}
+            <div className="flex flex-col sm:flex-row gap-2 items-center">
+              <div className="flex-1 w-full">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search by company name, contact person, email, phone, or business type..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-9 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md"
+                  />
+                </div>
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-48 h-9 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="in_progress">In Progress</SelectItem>
+                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="flex items-center gap-2">
+                <Select value={dayFilter} onValueChange={setDayFilter}>
+                  <SelectTrigger className="w-20 h-9 text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md">
+                    <SelectValue placeholder="Day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {getDays().map(day => (
+                      <SelectItem key={day} value={day.toString()}>
+                        {day}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={monthFilter} onValueChange={setMonthFilter}>
+                  <SelectTrigger className="w-24 h-9 text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md">
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {getMonths().map(month => (
+                      <SelectItem key={month.value} value={month.value}>
+                        {month.label.substring(0, 3)}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={yearFilter} onValueChange={setYearFilter}>
+                  <SelectTrigger className="w-20 h-9 text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    {getYears().map(year => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {(dayFilter !== 'all' || monthFilter !== 'all' || yearFilter !== 'all') && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearDateFilters}
+                    className="h-9 px-2 text-xs border-gray-300 hover:bg-gray-50"
+                  >
+                    Clear
+                  </Button>
+                )}
               </div>
             </div>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-48 h-9 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="in_progress">In Progress</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="rejected">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-            <div className="flex items-center gap-4 text-sm text-gray-600">
+            {/* Second Row: Status Counts */}
+            <div className="flex items-center justify-end gap-4 text-sm text-gray-600">
               <span className="flex items-center gap-1">
                 <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
                 {salesForms.filter(f => f.status === 'pending').length} Pending
@@ -520,11 +817,19 @@ const SalesForms = () => {
                                 ? `${form.submissionFullAddress.substring(0, 50)}...` 
                                 : form.submissionFullAddress}
                             </div>
-                          ) : (
+                          ) : form.submissionCity ? (
                             <>
-                              <div className="text-gray-900">{form.submissionCity || 'N/A'}</div>
+                              <div className="text-gray-900">{form.submissionCity}</div>
                               <div className="text-xs text-gray-500">{form.submissionState || form.submissionCountry || ''}</div>
                             </>
+                          ) : form.fullAddress ? (
+                            <div className="text-gray-900" title={form.fullAddress}>
+                              {form.fullAddress.length > 50 
+                                ? `${form.fullAddress.substring(0, 50)}...` 
+                                : form.fullAddress}
+                            </div>
+                          ) : (
+                            <div className="text-gray-500">N/A</div>
                           )}
                         </div>
                       </TableCell>

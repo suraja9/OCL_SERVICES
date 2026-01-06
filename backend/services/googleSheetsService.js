@@ -678,8 +678,10 @@ class GoogleSheetsService {
    * Format the medicine bookings sheet with styling
    * @param {string} sheetName - Name of the sheet
    * @param {number} numRows - Number of rows
+   * @param {number} totalWeightSum - Total weight sum (optional)
+   * @param {number} totalToPaySum - Total to pay sum (optional)
    */
-  async formatMedicineSheet(sheetName, numRows) {
+  async formatMedicineSheet(sheetName, numRows, totalWeightSum = 0, totalToPaySum = 0) {
     try {
       const response = await this.sheets.spreadsheets.get({
         spreadsheetId: this.spreadsheetId,
@@ -834,6 +836,421 @@ class GoogleSheetsService {
       });
     } catch (error) {
       console.error('Error formatting medicine sheet:', error);
+      // Don't throw error for formatting issues
+    }
+  }
+
+  /**
+   * Sync sales forms data to Google Sheets
+   * @param {Array} salesForms - Array of sales form documents
+   */
+  async syncSalesForms(salesForms) {
+    try {
+      if (!salesForms || salesForms.length === 0) {
+        throw new Error('No sales forms provided to sync');
+      }
+
+      if (!this.sheets) {
+        await this.initialize();
+      }
+
+      if (!this.spreadsheetId) {
+        throw new Error('GOOGLE_SHEETS_SPREADSHEET_ID not configured in environment variables');
+      }
+
+      const sheetName = 'Sales_Forms';
+
+      // Check if sheet exists, create if not
+      await this.ensureSheetExists(sheetName);
+
+      // Prepare header row
+      const headers = [
+        'Submission Date',
+        'Company Name',
+        'Concern Person',
+        'Designation',
+        'Phone Number',
+        'Alternate Phone',
+        'Email Address',
+        'Website',
+        'Full Address',
+        'City',
+        'State',
+        'Pincode',
+        'Type of Business',
+        'Type of Shipments',
+        'Average Shipment Volume',
+        'Most Frequent Routes',
+        'Weight Range',
+        'Packing Required',
+        'Existing Logistics Partners',
+        'Current Issues',
+        'Vehicles Needed/Month',
+        'Type of Vehicle Required',
+        'Status',
+        'Submitted By',
+        'Submission City',
+        'Submission State',
+        'Submission Country',
+        'Submission Full Address',
+        'Submission IP',
+        'Notes',
+        'Updated Date'
+      ];
+
+      // Prepare data rows
+      const rows = salesForms.map(form => {
+        const submissionDate = form.createdAt 
+          ? new Date(form.createdAt).toLocaleString('en-IN', { 
+              day: '2-digit', 
+              month: 'short', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : '';
+        
+        const updatedDate = form.updatedAt 
+          ? new Date(form.updatedAt).toLocaleString('en-IN', { 
+              day: '2-digit', 
+              month: 'short', 
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          : '';
+
+        return [
+          submissionDate,
+          form.companyName || '',
+          form.concernPersonName || '',
+          form.designation || '',
+          form.phoneNumber || '',
+          form.alternatePhoneNumber || '',
+          form.emailAddress || '',
+          form.website || '',
+          form.fullAddress || '',
+          form.city || '',
+          form.state || '',
+          form.pincode || '',
+          form.typeOfBusiness || '',
+          form.typeOfShipments || '',
+          form.averageShipmentVolume || '',
+          form.mostFrequentRoutes || '',
+          form.weightRange || '',
+          form.packingRequired || '',
+          form.existingLogisticsPartners || '',
+          form.currentIssues || '',
+          form.vehiclesNeededPerMonth || '',
+          form.typeOfVehicleRequired || '',
+          form.status || 'pending',
+          form.submittedByName || '',
+          form.submissionCity || '',
+          form.submissionState || '',
+          form.submissionCountry || '',
+          form.submissionFullAddress || '',
+          form.submissionIpAddress || '',
+          form.notes || '',
+          updatedDate
+        ];
+      });
+
+      // Clear existing content
+      try {
+        await this.sheets.spreadsheets.values.clear({
+          spreadsheetId: this.spreadsheetId,
+          range: `${sheetName}!A:Z`,
+        });
+      } catch (error) {
+        console.log('Sheet might be empty, proceeding...');
+      }
+
+      // Write header and data
+      const allRows = [headers, ...rows];
+      await this.sheets.spreadsheets.values.update({
+        spreadsheetId: this.spreadsheetId,
+        range: `${sheetName}!A1`,
+        valueInputOption: 'USER_ENTERED',
+        resource: {
+          values: allRows,
+        },
+      });
+
+      // Format the sheet
+      await this.formatSalesFormsSheet(sheetName, allRows.length);
+
+      return {
+        success: true,
+        message: `Synced ${salesForms.length} sales forms to Google Sheets: ${sheetName}`,
+        sheetName,
+        rowsAdded: allRows.length,
+        spreadsheetUrl: `https://docs.google.com/spreadsheets/d/${this.spreadsheetId}`
+      };
+    } catch (error) {
+      console.error('Error syncing sales forms to Google Sheets:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Format the sales forms sheet with styling
+   * @param {string} sheetName - Name of the sheet
+   * @param {number} numRows - Number of rows
+   */
+  async formatSalesFormsSheet(sheetName, numRows) {
+    try {
+      const response = await this.sheets.spreadsheets.get({
+        spreadsheetId: this.spreadsheetId,
+      });
+
+      const sheet = response.data.sheets.find(s => s.properties.title === sheetName);
+      if (!sheet) return;
+
+      const sheetId = sheet.properties.gridProperties?.sheetId || sheet.properties.sheetId;
+
+      const requests = [
+        // Freeze header row
+        {
+          updateSheetProperties: {
+            properties: {
+              sheetId: sheetId,
+              gridProperties: {
+                frozenRowCount: 1
+              }
+            },
+            fields: 'gridProperties.frozenRowCount'
+          }
+        },
+        // Format header row - blue background with bold white text
+        {
+          repeatCell: {
+            range: {
+              sheetId: sheetId,
+              startRowIndex: 0,
+              endRowIndex: 1,
+              startColumnIndex: 0,
+              endColumnIndex: 31,
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: { red: 0.2, green: 0.4, blue: 0.8 },
+                textFormat: { bold: true, foregroundColor: { red: 1, green: 1, blue: 1 }, fontSize: 11 },
+                horizontalAlignment: 'CENTER',
+                verticalAlignment: 'MIDDLE',
+                wrapStrategy: 'WRAP'
+              },
+            },
+            fields: 'userEnteredFormat(backgroundColor,textFormat,horizontalAlignment,verticalAlignment,wrapStrategy)',
+          },
+        },
+        // Format status column (column 23, index 22) with color coding
+        {
+          repeatCell: {
+            range: {
+              sheetId: sheetId,
+              startRowIndex: 1,
+              endRowIndex: numRows,
+              startColumnIndex: 22,
+              endColumnIndex: 23,
+            },
+            cell: {
+              userEnteredFormat: {
+                textFormat: { bold: true },
+                horizontalAlignment: 'CENTER',
+              },
+            },
+            fields: 'userEnteredFormat(textFormat,horizontalAlignment)',
+          },
+        },
+        // Add alternating row colors for better readability
+        ...Array.from({ length: Math.ceil((numRows - 1) / 2) }, (_, i) => ({
+          repeatCell: {
+            range: {
+              sheetId: sheetId,
+              startRowIndex: 1 + (i * 2),
+              endRowIndex: Math.min(2 + (i * 2), numRows),
+              startColumnIndex: 0,
+              endColumnIndex: 31,
+            },
+            cell: {
+              userEnteredFormat: {
+                backgroundColor: { red: 0.95, green: 0.95, blue: 0.95 },
+              },
+            },
+            fields: 'userEnteredFormat.backgroundColor',
+          },
+        })),
+        // Auto-resize all columns
+        {
+          autoResizeDimensions: {
+            dimensions: {
+              sheetId: sheetId,
+              dimension: 'COLUMNS',
+              startIndex: 0,
+              endIndex: 31,
+            },
+          },
+        },
+        // Set column widths for better visibility
+        {
+          updateDimensionProperties: {
+            range: {
+              sheetId: sheetId,
+              dimension: 'COLUMNS',
+              startIndex: 0,
+              endIndex: 31,
+            },
+            properties: {
+              pixelSize: 120
+            },
+            fields: 'pixelSize'
+          }
+        }
+      ];
+
+      await this.sheets.spreadsheets.batchUpdate({
+        spreadsheetId: this.spreadsheetId,
+        resource: { requests },
+      });
+
+      // Apply conditional formatting for status column (only if there are data rows)
+      if (numRows <= 1) {
+        return; // No data rows to format
+      }
+
+      const statusConditionalFormatting = [
+        {
+          addConditionalFormatRule: {
+            rule: {
+              ranges: [{
+                sheetId: sheetId,
+                startRowIndex: 1,
+                endRowIndex: numRows,
+                startColumnIndex: 22,
+                endColumnIndex: 23,
+              }],
+              booleanRule: {
+                condition: {
+                  type: 'TEXT_EQ',
+                  values: [{ userEnteredValue: 'pending' }]
+                },
+                format: {
+                  backgroundColor: { red: 1, green: 0.9, blue: 0.1 }, // Yellow
+                  textFormat: { foregroundColor: { red: 0, green: 0, blue: 0 }, bold: true }
+                }
+              }
+            },
+            index: 0
+          }
+        },
+        {
+          addConditionalFormatRule: {
+            rule: {
+              ranges: [{
+                sheetId: sheetId,
+                startRowIndex: 1,
+                endRowIndex: numRows,
+                startColumnIndex: 22,
+                endColumnIndex: 23,
+              }],
+              booleanRule: {
+                condition: {
+                  type: 'TEXT_EQ',
+                  values: [{ userEnteredValue: 'seen' }]
+                },
+                format: {
+                  backgroundColor: { red: 0.7, green: 0.5, blue: 0.9 }, // Purple
+                  textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true }
+                }
+              }
+            },
+            index: 1
+          }
+        },
+        {
+          addConditionalFormatRule: {
+            rule: {
+              ranges: [{
+                sheetId: sheetId,
+                startRowIndex: 1,
+                endRowIndex: numRows,
+                startColumnIndex: 22,
+                endColumnIndex: 23,
+              }],
+              booleanRule: {
+                condition: {
+                  type: 'TEXT_EQ',
+                  values: [{ userEnteredValue: 'in_progress' }]
+                },
+                format: {
+                  backgroundColor: { red: 0.2, green: 0.6, blue: 1 }, // Blue
+                  textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true }
+                }
+              }
+            },
+            index: 2
+          }
+        },
+        {
+          addConditionalFormatRule: {
+            rule: {
+              ranges: [{
+                sheetId: sheetId,
+                startRowIndex: 1,
+                endRowIndex: numRows,
+                startColumnIndex: 22,
+                endColumnIndex: 23,
+              }],
+              booleanRule: {
+                condition: {
+                  type: 'TEXT_EQ',
+                  values: [{ userEnteredValue: 'completed' }]
+                },
+                format: {
+                  backgroundColor: { red: 0.1, green: 0.8, blue: 0.3 }, // Green
+                  textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true }
+                }
+              }
+            },
+            index: 3
+          }
+        },
+        {
+          addConditionalFormatRule: {
+            rule: {
+              ranges: [{
+                sheetId: sheetId,
+                startRowIndex: 1,
+                endRowIndex: numRows,
+                startColumnIndex: 22,
+                endColumnIndex: 23,
+              }],
+              booleanRule: {
+                condition: {
+                  type: 'TEXT_EQ',
+                  values: [{ userEnteredValue: 'rejected' }]
+                },
+                format: {
+                  backgroundColor: { red: 1, green: 0.3, blue: 0.3 }, // Red
+                  textFormat: { foregroundColor: { red: 1, green: 1, blue: 1 }, bold: true }
+                }
+              }
+            },
+            index: 4
+          }
+        }
+      ];
+
+      try {
+        await this.sheets.spreadsheets.batchUpdate({
+          spreadsheetId: this.spreadsheetId,
+          resource: { requests: statusConditionalFormatting },
+        });
+      } catch (error) {
+        console.warn('Could not apply conditional formatting:', error);
+      }
+    } catch (error) {
+      console.error('Error formatting sales forms sheet:', error);
       // Don't throw error for formatting issues
     }
   }

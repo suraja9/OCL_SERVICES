@@ -817,65 +817,101 @@ const SalesForm = () => {
     setIsSubmitting(true);
 
     // Capture user's location
-    let locationData = {};
+    let locationData: {
+      submissionLocation?: { type: string; coordinates: [number, number] };
+      submissionCity: string;
+      submissionState: string;
+      submissionCountry: string;
+      submissionFullAddress: string;
+      submissionIpAddress: string;
+    } = {
+      submissionCity: '',
+      submissionState: '',
+      submissionCountry: '',
+      submissionFullAddress: '',
+      submissionIpAddress: ''
+    };
+
     try {
+      // Get IP address first
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        if (ipResponse.ok) {
+          const ipData = await ipResponse.json();
+          locationData.submissionIpAddress = ipData.ip || '';
+        }
+      } catch (ipError) {
+        console.warn('Could not get IP address:', ipError);
+      }
+
+      // Get geolocation
       const position = await new Promise<GeolocationPosition>((resolve, reject) => {
         if (!navigator.geolocation) {
           reject(new Error('Geolocation is not supported by this browser'));
           return;
         }
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000, // 10 seconds
-          maximumAge: 300000 // 5 minutes
+          enableHighAccuracy: false, // Changed to false for better compatibility
+          timeout: 15000, // Increased to 15 seconds
+          maximumAge: 600000 // 10 minutes
         });
       });
 
       // Get location details using reverse geocoding
-      const response = await fetch(
+      const geocodeResponse = await fetch(
         `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
       );
-      const locationInfo = await response.json();
-
-      // Build full address from available fields
-      const addressParts = [];
-      if (locationInfo.street) addressParts.push(locationInfo.street);
-      if (locationInfo.locality) addressParts.push(locationInfo.locality);
-      if (locationInfo.city) addressParts.push(locationInfo.city);
-      if (locationInfo.postcode) addressParts.push(locationInfo.postcode);
-      if (locationInfo.principalSubdivision) addressParts.push(locationInfo.principalSubdivision);
-      if (locationInfo.countryName) addressParts.push(locationInfo.countryName);
       
-      const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : '';
+      if (geocodeResponse.ok) {
+        const locationInfo = await geocodeResponse.json();
 
-      locationData = {
-        submissionLocation: {
+        // Build full address from available fields
+        const addressParts = [];
+        if (locationInfo.street) addressParts.push(locationInfo.street);
+        if (locationInfo.locality) addressParts.push(locationInfo.locality);
+        if (locationInfo.city) addressParts.push(locationInfo.city);
+        if (locationInfo.postcode) addressParts.push(locationInfo.postcode);
+        if (locationInfo.principalSubdivision) addressParts.push(locationInfo.principalSubdivision);
+        if (locationInfo.countryName) addressParts.push(locationInfo.countryName);
+        
+        const fullAddress = addressParts.length > 0 ? addressParts.join(', ') : '';
+
+        locationData = {
+          submissionLocation: {
+            type: 'Point',
+            coordinates: [position.coords.longitude, position.coords.latitude]
+          },
+          submissionCity: locationInfo.city || locationInfo.locality || '',
+          submissionState: locationInfo.principalSubdivision || '',
+          submissionCountry: locationInfo.countryName || '',
+          submissionFullAddress: fullAddress,
+          submissionIpAddress: locationData.submissionIpAddress
+        };
+      } else {
+        // If reverse geocoding fails, still save coordinates
+        locationData.submissionLocation = {
           type: 'Point',
           coordinates: [position.coords.longitude, position.coords.latitude]
-        },
-        submissionCity: locationInfo.city || locationInfo.locality || '',
-        submissionState: locationInfo.principalSubdivision || '',
-        submissionCountry: locationInfo.countryName || '',
-        submissionFullAddress: fullAddress,
-        submissionIpAddress: '' // IP address would need backend API to fetch
-      };
-
-      // Update form data with location
-      setFormData(prev => ({
-        ...prev,
-        ...locationData
-      }));
+        };
+      }
     } catch (locationError) {
       console.warn('Could not get user location:', locationError);
-      // Still proceed with submission, just without location data
-      locationData = {
-        submissionLocation: undefined,
-        submissionCity: '',
-        submissionState: '',
-        submissionCountry: '',
-        submissionFullAddress: '',
-        submissionIpAddress: ''
-      };
+      // Fallback: Use form address data if geolocation fails
+      const formAddressParts = [
+        formData.locality.trim(),
+        formData.buildingFlatNo.trim(),
+        formData.landmark.trim(),
+        formData.area.trim(),
+        formData.city.trim(),
+        formData.state.trim(),
+        formData.pincode.trim()
+      ].filter(part => part.length > 0);
+      
+      locationData.submissionFullAddress = formAddressParts.length > 0 
+        ? formAddressParts.join(', ') 
+        : '';
+      locationData.submissionCity = formData.city.trim();
+      locationData.submissionState = formData.state.trim();
     }
 
     try {
@@ -937,15 +973,15 @@ const SalesForm = () => {
       // Append submitted by name
       submitFormData.append('submittedByName', submittedByName.trim());
 
-      // Append location data
-      if (formData.submissionLocation) {
-        submitFormData.append('submissionLocation', JSON.stringify(formData.submissionLocation));
+      // Append location data (use locationData directly, not from formData state)
+      if (locationData.submissionLocation) {
+        submitFormData.append('submissionLocation', JSON.stringify(locationData.submissionLocation));
       }
-      submitFormData.append('submissionCity', formData.submissionCity || '');
-      submitFormData.append('submissionState', formData.submissionState || '');
-      submitFormData.append('submissionCountry', formData.submissionCountry || '');
-      submitFormData.append('submissionFullAddress', formData.submissionFullAddress || '');
-      submitFormData.append('submissionIpAddress', formData.submissionIpAddress || '');
+      submitFormData.append('submissionCity', locationData.submissionCity || '');
+      submitFormData.append('submissionState', locationData.submissionState || '');
+      submitFormData.append('submissionCountry', locationData.submissionCountry || '');
+      submitFormData.append('submissionFullAddress', locationData.submissionFullAddress || '');
+      submitFormData.append('submissionIpAddress', locationData.submissionIpAddress || '');
 
       // Append image files if exist
       formData.uploadedImages.forEach((image, index) => {

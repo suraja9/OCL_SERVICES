@@ -2,6 +2,8 @@ import express from 'express';
 import SalesForm from '../models/SalesForm.js';
 import { uploadSalesFormImage, handleUploadError } from '../middleware/upload.js';
 import S3Service from '../services/s3Service.js';
+import GoogleSheetsService from '../services/googleSheetsService.js';
+import { authenticateAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -40,6 +42,7 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       submissionCity,
       submissionState,
       submissionCountry,
+      submissionFullAddress,
       submissionIpAddress
     } = req.body;
 
@@ -195,10 +198,30 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       uploadedImageOriginalName: uploadedImageOriginalNames.length > 0 ? uploadedImageOriginalNames[0] : '',
       submittedByName: submittedByName?.trim() || '',
       // Location data
-      submissionLocation: submissionLocation || undefined,
+      submissionLocation: (() => {
+        if (!submissionLocation) return undefined;
+        try {
+          // Parse JSON string if it's a string, otherwise use as is
+          const parsed = typeof submissionLocation === 'string' 
+            ? JSON.parse(submissionLocation) 
+            : submissionLocation;
+          // Validate coordinates
+          if (parsed && parsed.coordinates && Array.isArray(parsed.coordinates) && parsed.coordinates.length === 2) {
+            // Check if coordinates are valid (not [0, 0] which is default)
+            if (parsed.coordinates[0] !== 0 || parsed.coordinates[1] !== 0) {
+              return parsed;
+            }
+          }
+          return undefined;
+        } catch (e) {
+          console.warn('Error parsing submissionLocation:', e);
+          return undefined;
+        }
+      })(),
       submissionCity: submissionCity?.trim() || '',
       submissionState: submissionState?.trim() || '',
       submissionCountry: submissionCountry?.trim() || '',
+      submissionFullAddress: submissionFullAddress?.trim() || '',
       submissionIpAddress: submissionIpAddress?.trim() || '',
       status: 'pending'
     });
@@ -350,6 +373,77 @@ router.patch('/:id', async (req, res) => {
       success: false,
       error: 'Failed to update sales form',
       message: error.message
+    });
+  }
+});
+
+// POST /api/sales-form/sync-to-sheets - Sync all sales forms to Google Sheets
+router.post('/sync-to-sheets', authenticateAdmin, async (req, res) => {
+  try {
+    // Fetch all sales forms (no pagination for sync)
+    const salesForms = await SalesForm.find({})
+      .sort({ createdAt: -1 })
+      .select('-__v');
+
+    if (salesForms.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No sales forms found',
+        message: 'There are no sales forms to sync'
+      });
+    }
+
+    // Sync to Google Sheets
+    const result = await GoogleSheetsService.syncSalesForms(salesForms);
+
+    res.json({
+      success: true,
+      message: result.message,
+      data: {
+        sheetName: result.sheetName,
+        rowsAdded: result.rowsAdded,
+        totalForms: salesForms.length,
+        spreadsheetUrl: result.spreadsheetUrl
+      }
+    });
+  } catch (error) {
+    console.error('Error syncing sales forms to Google Sheets:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to sync sales forms to Google Sheets',
+      message: error.message || 'Internal server error'
+    });
+  }
+});
+
+// GET /api/sales-form/sheets-url - Get Google Sheets URL
+router.get('/sheets-url', authenticateAdmin, async (req, res) => {
+  try {
+    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+    
+    if (!spreadsheetId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Google Sheets not configured',
+        message: 'GOOGLE_SHEETS_SPREADSHEET_ID is not set in environment variables'
+      });
+    }
+
+    const spreadsheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}`;
+
+    res.json({
+      success: true,
+      data: {
+        spreadsheetUrl,
+        sheetName: 'Sales_Forms'
+      }
+    });
+  } catch (error) {
+    console.error('Error getting Google Sheets URL:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get Google Sheets URL',
+      message: error.message || 'Internal server error'
     });
   }
 });
