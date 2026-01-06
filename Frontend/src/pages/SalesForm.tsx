@@ -1246,7 +1246,7 @@ const SalesForm = () => {
                     label="Type of Business / Industry"
                     value={formData.typeOfBusiness}
                     onChange={(value) => handleInputChange('typeOfBusiness', value)}
-                    options={['E-commerce', 'Manufacturing', 'Retail', 'Wholesale', 'Pharmaceutical', 'Textiles', 'Electronics', 'Food & Beverages','Computer', 'Automotive', 'Other']}
+                    options={['Automotive', 'Computer', 'E-commerce', 'Electronics', 'Food & Beverages', 'Manufacturing', 'Pharmaceutical', 'Retail', 'Textiles', 'Wholesale', 'Other']}
                     error={errors.typeOfBusiness}
                     required
                   />
