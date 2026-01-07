@@ -333,22 +333,122 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// PATCH /api/sales-form/:id - Update sales form status (for admin)
-router.patch('/:id', async (req, res) => {
+// PATCH /api/sales-form/:id - Update sales form (for admin)
+router.patch('/:id', authenticateAdmin, async (req, res) => {
   try {
-    const { status, notes, handledBy } = req.body;
+    const {
+      companyName,
+      concernPersonName,
+      designation,
+      phoneNumber,
+      emailAddress,
+      alternatePhoneNumber,
+      website,
+      fullAddress,
+      locality,
+      buildingFlatNo,
+      landmark,
+      pincode,
+      city,
+      state,
+      area,
+      typeOfBusiness,
+      typeOfShipments,
+      averageShipmentVolume,
+      mostFrequentRoutes,
+      weightRange,
+      packingRequired,
+      existingLogisticsPartners,
+      currentIssues,
+      vehiclesNeededPerMonth,
+      typeOfVehicleRequired,
+      status,
+      notes,
+      remarks,
+      handledBy
+    } = req.body;
 
+    // Build update data object
     const updateData = {};
-    if (status) {
-      updateData.status = status;
+
+    // Company & Contact Information
+    if (companyName !== undefined) updateData.companyName = companyName.trim();
+    if (concernPersonName !== undefined) updateData.concernPersonName = concernPersonName.trim();
+    if (designation !== undefined) updateData.designation = designation.trim();
+    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber.trim();
+    if (emailAddress !== undefined) {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailAddress)) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid email',
+          message: 'Please enter a valid email address'
+        });
+      }
+      updateData.emailAddress = emailAddress.trim().toLowerCase();
     }
-    if (notes !== undefined) {
-      updateData.notes = notes;
-    }
-    if (handledBy) {
-      updateData.handledBy = handledBy;
+    if (alternatePhoneNumber !== undefined) updateData.alternatePhoneNumber = alternatePhoneNumber.trim();
+    if (website !== undefined) updateData.website = website.trim();
+
+    // Address fields
+    if (locality !== undefined) updateData.locality = locality.trim();
+    if (buildingFlatNo !== undefined) updateData.buildingFlatNo = buildingFlatNo.trim();
+    if (landmark !== undefined) updateData.landmark = landmark.trim();
+    if (pincode !== undefined) updateData.pincode = pincode.trim();
+    if (city !== undefined) updateData.city = city.trim();
+    if (state !== undefined) updateData.state = state.trim();
+    if (area !== undefined) updateData.area = area.trim();
+    if (fullAddress !== undefined) updateData.fullAddress = fullAddress.trim();
+
+    // Generate fullAddress from structured fields if fullAddress is not provided but structured fields are
+    if (!updateData.fullAddress && (locality || buildingFlatNo || city || state || pincode)) {
+      const addressParts = [
+        updateData.locality || locality,
+        updateData.buildingFlatNo || buildingFlatNo,
+        updateData.landmark || landmark,
+        updateData.area || area,
+        updateData.city || city,
+        updateData.state || state,
+        updateData.pincode || pincode
+      ].filter(part => part && part.trim().length > 0);
+      if (addressParts.length > 0) {
+        updateData.fullAddress = addressParts.join(', ');
+      }
     }
 
+    // Business & Shipment Details
+    if (typeOfBusiness !== undefined) updateData.typeOfBusiness = typeOfBusiness.trim();
+    if (typeOfShipments !== undefined) updateData.typeOfShipments = typeOfShipments.trim();
+    if (averageShipmentVolume !== undefined) updateData.averageShipmentVolume = averageShipmentVolume.trim();
+    if (mostFrequentRoutes !== undefined) updateData.mostFrequentRoutes = mostFrequentRoutes.trim();
+    if (weightRange !== undefined) updateData.weightRange = weightRange.trim();
+    if (packingRequired !== undefined) {
+      if (!['yes', 'no'].includes(packingRequired.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid packing option',
+          message: 'Packing required must be either "yes" or "no"'
+        });
+      }
+      updateData.packingRequired = packingRequired.toLowerCase();
+    }
+
+    // Logistics Setup
+    if (existingLogisticsPartners !== undefined) updateData.existingLogisticsPartners = existingLogisticsPartners.trim();
+    if (currentIssues !== undefined) updateData.currentIssues = currentIssues.trim();
+
+    // Vehicle Requirements
+    if (vehiclesNeededPerMonth !== undefined) updateData.vehiclesNeededPerMonth = vehiclesNeededPerMonth.trim();
+    if (typeOfVehicleRequired !== undefined) updateData.typeOfVehicleRequired = typeOfVehicleRequired.trim();
+
+    // Status & Notes & Remarks
+    if (status !== undefined) updateData.status = status;
+    if (notes !== undefined) updateData.notes = notes.trim();
+    if (remarks !== undefined) updateData.remarks = remarks.trim();
+    if (handledBy !== undefined) updateData.handledBy = handledBy;
+
+    // Update the document
     const salesForm = await SalesForm.findByIdAndUpdate(
       req.params.id,
       { $set: updateData },
@@ -369,6 +469,16 @@ router.patch('/:id', async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating sales form:', error);
+    
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(e => e.message);
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: validationErrors
+      });
+    }
+
     res.status(500).json({
       success: false,
       error: 'Failed to update sales form',

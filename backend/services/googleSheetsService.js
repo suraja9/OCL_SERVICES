@@ -895,6 +895,7 @@ class GoogleSheetsService {
         'Submission Full Address',
         'Submission IP',
         'Notes',
+        'Remarks',
         'Updated Date'
       ];
 
@@ -951,6 +952,7 @@ class GoogleSheetsService {
           form.submissionFullAddress || '',
           form.submissionIpAddress || '',
           form.notes || '',
+          form.remarks || '',
           updatedDate
         ];
       });

@@ -182,6 +182,11 @@ const salesFormSchema = new mongoose.Schema({
     trim: true,
     default: ''
   },
+  remarks: {
+    type: String,
+    trim: true,
+    default: ''
+  },
   handledBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Admin',
