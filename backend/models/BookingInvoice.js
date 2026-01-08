@@ -58,7 +58,7 @@ const bookingInvoiceSchema = new mongoose.Schema({
     },
     phone: {
       type: String,
-      default: "+91 76360 96733"
+      default: "+91 0120 323 7111"
     },
     email: {
       type: String,

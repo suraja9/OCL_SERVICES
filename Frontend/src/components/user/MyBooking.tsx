@@ -142,7 +142,7 @@ const COMPANY_DETAILS = {
   gstin: " 18AJRPG5984B1ZV",
   state: "Assam",
   stateCode: "18",
-  phone: "+91 76360 96733",
+  phone: "+91 0120 323 7111",
   email: "info@oclservices.com",
   website: "www.oclservices.com",
 };

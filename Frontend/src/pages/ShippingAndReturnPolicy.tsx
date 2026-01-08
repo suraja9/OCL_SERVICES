@@ -463,7 +463,7 @@ const ShippingAndReturnPolicy = () => {
                 <div className="space-y-2 text-sm md:text-base text-gray-700">
                   <p><strong>OCL</strong></p>
                   <p>Piyali Phukan Road, Rehabari, Guwahati, 781008</p>
-                  <p>Phone: +91 76360 96733</p>
+                  <p>Phone: +91 0120 323 7111</p>
                   <p>Email: info@oclservices.com</p>
                   <p className="mt-3">
                     <strong>Customer Service Hours:</strong> Monday to Saturday ( 9:45 AM to 7:00 PM IST )

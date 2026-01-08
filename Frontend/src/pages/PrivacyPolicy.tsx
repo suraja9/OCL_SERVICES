@@ -228,7 +228,7 @@ delivery and documentation procedures.
                 <div className="space-y-2 text-sm md:text-base text-gray-700">
                   <p><strong>OCL</strong></p>
                   <p>Piyali Phukan Road, Rehabari, Guwahati, 781008</p>
-                  <p>Phone: +91 76360 96733</p>
+                  <p>Phone: +91 0120 323 7111</p>
                   <p>Email: info@oclservices.com</p>
                 </div>
               </div>

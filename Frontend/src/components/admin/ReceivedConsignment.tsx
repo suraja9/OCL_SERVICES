@@ -247,7 +247,6 @@ interface CustomerBookingData {
   originAddressInfo: string;
   destinationAddressInfo: string;
   status: string;
-  currentStatus: string;
   BookedAt: string;
   paymentStatus: string;
   paymentMethod: string;
