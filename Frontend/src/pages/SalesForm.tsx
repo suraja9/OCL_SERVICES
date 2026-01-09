@@ -741,9 +741,8 @@ const SalesForm = () => {
     } else if (!/^\d{10}$/.test(formData.phoneNumber)) {
       newErrors.phoneNumber = 'Phone number must be exactly 10 digits';
     }
-    if (!formData.emailAddress.trim()) {
-      newErrors.emailAddress = 'Email address is required';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.emailAddress)) {
+    // Email is optional, but if provided, it must be valid
+    if (formData.emailAddress.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.emailAddress)) {
       newErrors.emailAddress = 'Please enter a valid email address';
     }
     // Address validation
@@ -923,7 +922,7 @@ const SalesForm = () => {
       submitFormData.append('concernPersonName', formData.concernPersonName.trim());
       submitFormData.append('designation', formData.designation.trim());
       submitFormData.append('phoneNumber', formData.phoneNumber.trim());
-      submitFormData.append('emailAddress', formData.emailAddress.trim().toLowerCase());
+      submitFormData.append('emailAddress', formData.emailAddress?.trim().toLowerCase() || '');
       submitFormData.append('alternatePhoneNumber', formData.alternatePhoneNumber?.trim() || '');
       submitFormData.append('website', formData.website?.trim() || '');
 
@@ -1154,11 +1153,10 @@ const SalesForm = () => {
                   id="emailAddress"
                   value={formData.emailAddress}
                   onChange={(value) => handleInputChange('emailAddress', value)}
-                  placeholder="Email Address"
+                  placeholder="Email Address (Optional)"
                   type="email"
                   icon={<Mail className="h-4 w-4" />}
                   error={errors.emailAddress}
-                  required
                 />
 
                 <FloatingLabelInput

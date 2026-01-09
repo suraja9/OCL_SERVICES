@@ -1492,7 +1492,7 @@ const SalesForms = () => {
                     />
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-xs font-medium text-gray-500 mb-0.5 block">Email Address *</label>
+                    <label className="text-xs font-medium text-gray-500 mb-0.5 block">Email Address (Optional)</label>
                     <Input
                       type="email"
                       value={editFormData.emailAddress || ''}

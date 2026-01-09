@@ -24,10 +24,17 @@ const salesFormSchema = new mongoose.Schema({
   },
   emailAddress: {
     type: String,
-    required: true,
+    required: false,
     trim: true,
     lowercase: true,
-    match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, 'Please enter a valid email address']
+    default: '',
+    validate: {
+      validator: function(v) {
+        // Only validate format if email is provided (not empty)
+        return !v || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+      },
+      message: 'Please enter a valid email address'
+    }
   },
   alternatePhoneNumber: {
     type: String,

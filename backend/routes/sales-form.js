@@ -52,7 +52,7 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       concernPersonName: 'Concern person name is required',
       designation: 'Designation is required',
       phoneNumber: 'Phone number is required',
-      emailAddress: 'Email address is required',
+      // emailAddress is optional - removed from required fields
       typeOfBusiness: 'Type of business is required',
       typeOfShipments: 'Type of shipments is required',
       averageShipmentVolume: 'Average shipment volume is required',
@@ -98,14 +98,16 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailAddress)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid email',
-        message: 'Please enter a valid email address'
-      });
+    // Validate email format (only if email is provided)
+    if (emailAddress && emailAddress.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailAddress.trim())) {
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid email',
+          message: 'Please enter a valid email address'
+        });
+      }
     }
 
     // Validate packingRequired value
@@ -165,7 +167,7 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
       concernPersonName: concernPersonName.trim(),
       designation: designation.trim(),
       phoneNumber: phoneNumber.trim(),
-      emailAddress: emailAddress.trim().toLowerCase(),
+      emailAddress: emailAddress?.trim().toLowerCase() || '',
       alternatePhoneNumber: alternatePhoneNumber?.trim() || '',
       website: website?.trim() || '',
       // Structured address fields
@@ -228,7 +230,7 @@ router.post('/', uploadSalesFormImage, handleUploadError, async (req, res) => {
 
     await salesForm.save();
 
-    console.log(`✅ Sales form submitted successfully: ${companyName} - ${emailAddress}`);
+    console.log(`✅ Sales form submitted successfully: ${companyName}${emailAddress ? ` - ${emailAddress}` : ''}`);
 
     res.status(201).json({
       success: true,
@@ -377,16 +379,21 @@ router.patch('/:id', authenticateAdmin, async (req, res) => {
     if (designation !== undefined) updateData.designation = designation.trim();
     if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber.trim();
     if (emailAddress !== undefined) {
-      // Validate email format
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(emailAddress)) {
-        return res.status(400).json({
-          success: false,
-          error: 'Invalid email',
-          message: 'Please enter a valid email address'
-        });
+      // Validate email format (only if email is provided)
+      if (emailAddress && emailAddress.trim()) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(emailAddress.trim())) {
+          return res.status(400).json({
+            success: false,
+            error: 'Invalid email',
+            message: 'Please enter a valid email address'
+          });
+        }
+        updateData.emailAddress = emailAddress.trim().toLowerCase();
+      } else {
+        // Allow empty email
+        updateData.emailAddress = '';
       }
-      updateData.emailAddress = emailAddress.trim().toLowerCase();
     }
     if (alternatePhoneNumber !== undefined) updateData.alternatePhoneNumber = alternatePhoneNumber.trim();
     if (website !== undefined) updateData.website = website.trim();
