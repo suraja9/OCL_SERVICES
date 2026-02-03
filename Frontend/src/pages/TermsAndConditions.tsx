@@ -60,14 +60,14 @@ const TermsAndConditions = () => {
                     subject to the terms & conditions set out hereunder.
                   </li>
                   <li>
-                    Consignor and Consignee agreed to accept transactional SMS which will send by "OCL" during their transhipment.
+                    Consignor and Consignee agreed to accept transactional SMS and Whatsapp Messages which will send by "OCL" during their transhipment.
                   </li>
                   <li>
                     The "OCL" waybill is non-negotiable and the Consignor acknowledges that it has been prepared by the Consignor or by 
                     "OCL" on the behalf of the Consignor.
                   </li>
                   <li>
-                    All Shipments under this waybill are carried at Owner's risk. "OCL" take third party's team and condition will be accepted 
+                    All Shipments under this waybill are carried at Owner's risk. "OCL" take third party's term's and conditions will be accepted 
                     by the Consignor/ Consignee. No Extra claim will be entertained by "OCL".
                   </li>
                 </ol>
