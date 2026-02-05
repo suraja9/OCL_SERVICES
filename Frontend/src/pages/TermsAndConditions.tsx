@@ -56,19 +56,16 @@ const TermsAndConditions = () => {
                 </h2>
                 <ol className="list-decimal list-inside space-y-3 text-sm md:text-base text-gray-700 leading-relaxed text-justify">
                   <li>
-                    The Shipment is accepted by "OCL" through its employees referred to collectively hereinafter as "OCL" 
-                    subject to the terms & conditions set out hereunder.
+                    The Shipment is accepted by "OCL" through its employees referred to collectively hereinafter as "OCL" subject to the terms & conditions set out hereunder.
                   </li>
                   <li>
-                    Consignor and Consignee agreed to accept transactional SMS and Whatsapp Messages which will send by "OCL" during their transhipment.
+                    Consignor and Consignee agreed to accept transactional SMS which will send by "OCL" during their transshipment.
                   </li>
                   <li>
-                    The "OCL" waybill is non-negotiable and the Consignor acknowledges that it has been prepared by the Consignor or by 
-                    "OCL" on the behalf of the Consignor.
+                    The "OCL" Air waybill is non-negotiable and the Consignor acknowledges that it has been prepared by the Consignor or by "OCL" on behalf of the Consignor.
                   </li>
                   <li>
-                    All Shipments under this waybill are carried at Owner's risk. "OCL" take third party's term's and conditions will be accepted 
-                    by the Consignor/ Consignee. No Extra claim will be entertained by "OCL".
+                    All Shipments under this Air waybill are carried at Owner's risk. "OCL" take third party's terms and condition will be accepted by the Consignor/ Consignee. No Extra claim will be entertained by "OCL".
                   </li>
                 </ol>
               </div>
@@ -84,7 +81,7 @@ const TermsAndConditions = () => {
                     herein.
                   </li>
                   <li>
-                    The consignor warrants that he is the owner of the authorised agent of the owner of the goods transported hereunder and that the.
+                    The consignor warrants that he is the owner of the authorized agent of the owner of the goods transported hereunder and that the.
                   </li>
                   <li>
                     The Consignor hereby accepts "OCL" terms and conditions, both on its own behalf and/or as an agent for any other 
@@ -108,8 +105,7 @@ const TermsAndConditions = () => {
                     shipment as Destined mentioned on the waybill for the maximum period 10 days from the date of shipment. Therefore, 'OCL' reserves the right to destroy the shipment without informing the CONSIGNOR and the CONSIGNOR shall indemnify "OCL" against any claim of liability.
                   </li>
                   <li>
-                    Packing the material rendered for the shipment is the responsibility of the CONSIGNOR including placement of such materials inside the 
-                    containers supplied by "OCL" if any not with standing anything else this terms and conditions.
+                    Packing the material rendered for the shipment is the responsibility of the CONSIGNOR including placement of such materials inside the containers supplied by "OCL" if any notwithstanding anything else this terms and conditions.
                   </li>
                 </ol>
               </div>
@@ -163,12 +159,10 @@ const TermsAndConditions = () => {
                 </h2>
                 <ol className="list-decimal list-inside space-y-3 text-sm md:text-base text-gray-700 leading-relaxed text-justify">
                   <li>
-                    Every Shipment shall be charge by its chargeable weight as defined hereunder and not the actual weight. The chargeable weight shall be 
-                    higher of (a) The actual weight rounded off to the next higher half Kg. or one Kg. Or may be more than that or as per the rate category 
-                    agreed to or (b) The Volume weight similarly rounded of as in (a) above.
+                    Every Shipment shall be charge by its chargeable weight as defined hereunder and not the actual weight. The chargeable weight shall be higher of (a) the actual weight rounded off to the next higher half Kg. or one Kg. Or may be more than that or as per the rate category agreed to or (b) The Volume weight similarly rounded of as in (a) above.
                   </li>
                   <li>
-                    Volumetric weight of the shipment in Kg's is its gross cubic cms. i.e Length* Width * Height divided by 5000.
+                    Volumetric weight of the shipment in Kg's is its gross cubic cms. i.e Length* Width * Height divided by 5000 (By Air) For surface L x B x H (cm) ÷ 27000 x 8  = Kg.
                   </li>
                 </ol>
               </div>
@@ -180,17 +174,14 @@ const TermsAndConditions = () => {
                 </h2>
                 <ol className="list-decimal list-inside space-y-3 text-sm md:text-base text-gray-700 leading-relaxed text-justify">
                   <li>
-                    The CONSIGNOR acknowledges "OCL" has right of line on this shipment for any outstanding freight, any other 
-                    application changes. Central State and Local Taxes, duties, levies advances arising out of transportation and warehousing services, whether 
-                    pertaining to past or present outstanding refuse to surrender possession of the shipment until all such changes are paid.
+                    The CONSIGNOR acknowledges "OCL" has right of line on this shipment for any outstanding freight, any other application changes. Central State and Local Taxes, duties, levies advances arising out of transportation and warehousing services, whether pertaining to past or present outstanding refuse to surrender possession of the shipment until all such changes are paid.
                   </li>
                   <li>
                     Further, if such changes are not paid to "OCL" within 10 days, then "OCL" may store the goods at the 
                     defaulting CONSIGNOR's / CONSIGNEE's own risk.
                   </li>
                   <li>
-                    "OCL" does not carry any perishable goods. However, in any case of perishable goods, "OCL" due to 
-                    such perishable goods entering into the network of "OCL".
+                    "OCL" does not carry any perishable goods. However, in any case of perishable goods, "OCL" due to such perishable goods entering into the network of "OCL".
                   </li>
                   <li>
                     If Consignee refuses delivery or the shipment is deemed to be unacceptable or it has been undervalued for customs purposes, or 
@@ -209,25 +200,16 @@ const TermsAndConditions = () => {
                 </h2>
                 <ol className="list-decimal list-inside space-y-3 text-sm md:text-base text-gray-700 leading-relaxed text-justify">
                   <li>
-                    Without prejudice the liability of "OCL" for any loss or damage to the shipment (Which term shall include all document or 
-                    parcels consigned through "OCL") shall be lowest of (a) Rs.250/- or (b) The amount of loss or damage to the document of 
-                    parcel actually sustained for shipment which are not insured as mentioned below the actual value of the document or parcel so determined 
-                    will be without regard to the commercial utility or special value to the Consignors.
+                    Without prejudice the liability of "OCL" for any loss or damage to the shipment (Which term shall include all document or parcels consigned through "OCL") shall be lowest of (a) Rs.250/- or (b) The amount of loss or damage to the document of parcel actually sustained for shipment which are not insured as mentioned below the actual value of the document or parcel so determined will be without regard to the commercial utility or special value to the Consignors.
                   </li>
                   <li>
-                    The actual value of the document or parcel shall be ascertained by reference to the cost of preparation or replacement/reinstruction value at 
-                    the time and place of shipment but under no circumstances shall exceed Rs.250/-
+                    The actual value of the document or parcel shall be ascertained by reference to the cost of preparation or replacement/reinstruction value at the time and place of shipment but under no circumstances shall exceed Rs.250/-
                   </li>
                   <li>
-                    The actual value of the parcel (which terms shall include any item of commercial value of which is transported hereunder) shall be 
-                    ascertained by reference to its cost by repair or replacements/resale or fair market value not exceeding the original cost of the article actually 
-                    paid by CONSIGNOR subject to and within over all limit of Rs.250/-
+                    The actual value of the parcel (which terms shall include any item of commercial value of which is transported hereunder) shall be ascertained by reference to its cost by repair or replacements/resale or fair market value not exceeding the original cost of the article actually paid by CONSIGNOR subject to and within over all limit of Rs.250/-
                   </li>
                   <li>
-                    In the event of any loss or damage to shipment, which are insure by the Consignor, "OCL" may at the request of the 
-                    Consignors, issue loss/damage/shortage certificate with the sole purpose of enabling the Consignor to lodge insurance claim with its 
-                    insurance company. The Consignor agrees and acknowledges that the loss/damage/shortage certificate will be issued by "OCL" without admission of any claim and that "OCL" shall be discharge of all liabilities, if any arising out of the 
-                    shipment on acceptance of the loss/damage/shortage certificate by the Consignor.
+                    In the event of any loss or damage to shipment, which are insure by the Consignor, "OCL" may at the request of the Consignors, issue loss/damage/shortage certificate with the sole purpose of enabling the Consignor to lodge insurance claim with its insurance company. The Consignor agrees and acknowledges that the loss/damage/shortage certificate will be issued by "OCL" without admission of any claim and that "OCL" shall be discharge of all liabilities, if any arising out of the shipment on acceptance of the loss/damage/shortage certificate by the Consignor.
                   </li>
                 </ol>
               </div>
@@ -253,20 +235,16 @@ const TermsAndConditions = () => {
                 </h2>
                 <ol className="list-decimal list-inside space-y-3 text-sm md:text-base text-gray-700 leading-relaxed text-justify">
                   <li>
-                    In particular "OCL" will not be liable for any loss and damage to the shipment or a delay in picking up or a delivering 
-                    shipment if it is,
+                    In particular "OCL" will not be liable for any loss and damage to the shipment or a delay in picking up or a delivering shipment if it is,
                     <ol className="list-lower-alpha list-inside ml-6 mt-2 space-y-2 text-justify">
                       <li>
-                        Due to the act of God force majeure occurrence of any cause reasonable beyond the control of "OCL" or loss or damage 
-                        caused through strikes, riots, political and other disturbance such as fire accident of the vehicle carrying the goods, explosions, beyond the 
-                        control of "OCL" for the goods that are carried by "OCL".
+                        Due to the act of God force majeure occurrence of any cause reasonable beyond the control of "OCL" or loss or damage caused through strikes, riots, political and other disturbance such as fire accident of the vehicle carrying the goods, explosions, beyond the control of "OCL" for the goods that are carried by "OCL".
                       </li>
                       <li>
                         Caused by:
                         <ol className="list-roman list-inside ml-6 mt-2 space-y-2 text-justify">
                           <li>
-                            The act fault or omission/ commission of any act of the CONSIGNOR/ the consignee or any party claiming an interest in the shipment 
-                            (including violation of any terms or condition thereof) or any other person.
+                            The act fault or omission/ commission of any act of the CONSIGNOR/ the consignee or any party claiming an interest in the shipment (including violation of any terms or condition thereof) or any other person.
                           </li>
                           <li>
                             Carriers such as Airlines or Airways not adhering to schedule for any reason whatsoever.
@@ -285,17 +263,13 @@ const TermsAndConditions = () => {
                     </ol>
                   </li>
                   <li>
-                    The CONSIGNOR indemnifies "OCL" against loss, damages, penalties, actions, proceedings etc. That may be instituted 
-                    by any government official in discharge of their official duties including but not limited to Customs/Taxation Inspection etc.
+                    The CONSIGNOR indemnifies "OCL" against loss, damages, penalties, actions, proceedings etc. That may be instituted by any government official in discharge of their official duties including but not limited to Customs/Taxation Inspection etc.
                   </li>
                   <li>
-                    Notwithstanding what is stated above whilst "OCL" will exercise its best efforts to provide expeditious delivery in 
-                    accordance with its regularly delivery "OCL" WILL NOT UNDER ANY CIRCUMSTANCES BE LIABLE FOR DELAY IN 
-                    PICK UP, TRANSPORTATION OR DELIVERY OF ANY SHIPMENT REGARDLESS OF CAUSE OF SUCH DELAYS.
+                    Notwithstanding what is stated above whilst "OCL" will exercise its best efforts to provide expeditious delivery in accordance with its regularly delivery "OCL" WILL NOT UNDER ANY CIRCUMSTANCES BE LIABLE FOR DELAY IN PICK UP, TRANSPORTATION OR DELIVERY OF ANY SHIPMENT REGARDLESS OF CAUSE OF SUCH DELAYS.
                   </li>
                   <li>
-                    No liability is assumed for any errors and/or omissions in any information/date which is imparted in respect of the shipment travelling under 
-                    the air waybill.
+                    No liability is assumed for any errors and/or omissions in any information/date which is imparted in respect of the shipment travelling under the air waybill.
                   </li>
                 </ol>
               </div>
@@ -307,13 +281,10 @@ const TermsAndConditions = () => {
                 </h2>
                 <ol className="list-decimal list-inside space-y-3 text-sm md:text-base text-gray-700 leading-relaxed text-justify">
                   <li>
-                    Any claim must be brought by the CONSIGNOR and delivered, in writing to the office "OCL" nearest of the location at 
-                    which the shipment is accepted within 15days from the date of such acceptance. No claim can be made against "OCL" 
-                    beyond the time limit.
+                    Any claim must be brought by the CONSIGNOR and delivered, in writing to the office "OCL" nearest of the location at which the shipment is accepted within 15 days from the date of such acceptance. No claim can be made against "OCL" beyond the time limit.
                   </li>
                   <li>
-                    No claims for loss or damage will be entertained until all charges have been paid. The amount of any such claim will not deducted from any 
-                    transportation charges owned to "OCL".
+                    No claims for loss or damage will be entertained until all charges have been paid. The amount of any such claim will not deduct from any transportation charges owned to "OCL".
                   </li>
                 </ol>
               </div>
@@ -325,22 +296,16 @@ const TermsAndConditions = () => {
                 </h2>
                 <ol className="list-decimal list-inside space-y-3 text-sm md:text-base text-gray-700 leading-relaxed text-justify">
                   <li>
-                    Except as per written agreement between the Consignor and "OCL", "OCL" will not carry materials as 
-                    under.
+                    Except as per written agreement between the Consignor and "OCL", "OCL" will not carry materials as under.
                   </li>
                   <li>
-                    Classified as hazardous material dangerous goods prohibited, banned or restricted articles by IATA(International Air Transport Association) 
-                    ICAO(International Civil Aviation Organization) any applicable government department or other relevant Organization.
+                    Classified as hazardous material dangerous goods prohibited, banned or restricted articles by IATA (International Air Transport Association) ICAO (International Civil Aviation Organization) any applicable government department or other relevant Organization.
                   </li>
                   <li>
-                    Not permitted by laws/rules/restrictions in force or no customs declaration is made when require by applicable customs regulations and /or 
-                    any other relevant law.
+                    Not permitted by laws/rules/restrictions in force or no customs declaration is made when require by applicable customs regulations and /or any other relevant law.
                   </li>
                   <li>
-                    "OCL" decides if cannot transport an item safely or legally (such items include but are not limited to animals, bullion, 
-                    currency bearer negotiable instruments share certificates and blank shares precious metals and stones, firearms or parts thereof and 
-                    ammunition, human remains, pornography and illegal narcotics/drugs).Details available in all "OCL" offices on request 
-                    and also available on the website.
+                    "OCL" decides if cannot transport an item safely or legally (such items include but are not limited to animals, bullion, currency bearer negotiable instruments share certificates and blank shares precious metals and stones, firearms or parts thereof and ammunition, human remains, pornography and illegal narcotics/drugs). Details available in all "OCL" offices on request and also available on the website.
                   </li>
                 </ol>
               </div>
@@ -397,8 +362,7 @@ const TermsAndConditions = () => {
                         All online bookings are subject to confirmation by 'OCL'.
                       </li>
                       <li>
-                        Payments made through the online platform are subject to the terms and conditions of the respective payment gateway providers. 'Our 
-                        Courier & Logistics' is not responsible for any issues arising from payment gateway failures or discrepancies.
+                        Payments made through the online platform are subject to the terms and conditions of the respective payment gateway providers. 'OCL' is not responsible for any issues arising from payment gateway failures or discrepancies.
                       </li>
                       <li>
                         Any charges, including freight, taxes, duties, and additional service fees, will be clearly displayed on the online platform, and by proceeding 
@@ -456,9 +420,7 @@ const TermsAndConditions = () => {
                     </h3>
                     <ul className="list-disc list-inside space-y-2 text-sm md:text-base text-gray-700 leading-relaxed ml-4 text-justify">
                       <li>
-                        'OCL' will make reasonable efforts to ensure the online platform is available 24/7. However, 'OCL' 
-                        reserves the right to suspend or withdraw access to the platform without notice for maintenance, upgrades, or any other reason. 'Our 
-                        Courier & Logistics' shall not be liable for any loss or inconvenience caused by such unavailability.
+                        'OCL' will make reasonable efforts to ensure the online platform is available 24/7. However, 'OCL' reserves the right to suspend or withdraw access to the platform without notice for maintenance, upgrades, or any other reason. 'OCL' shall not be liable for any loss or inconvenience caused by such unavailability.
                       </li>
                     </ul>
                   </div>
